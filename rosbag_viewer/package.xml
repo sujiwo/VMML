@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rosbag_viewer</name>
+  <version>0.0.1</version>
+
+  <description>Tools, libraries and plugins to work offline (ie. directly from ROS bag files)</description>
+
+  <maintainer email="sujiwo@gmail.com">Adi Sujiwo</maintainer>
+
+  <license>BSD</license>
+
+  <depend>rviz</depend>
+  <depend>roscpp</depend>
+  <depend>rosbag_storage</depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+
+  <export>
+    <rviz plugin="${prefix}/plugin_description.xml"></rviz></export>
+</package>

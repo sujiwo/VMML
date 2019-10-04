@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rviz_offline_plugins</name>
+  <version>0.0.1</version>
+  <description>RViz Plugins to load some objects directly without publishing</description>
+  <maintainer email="sujiwo@gmail.com">Adi Sujiwo</maintainer>
+  <license>BSD</license>
+
+  <depend>rviz</depend>
+  <depend>roscpp</depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+  </export>
+</package>

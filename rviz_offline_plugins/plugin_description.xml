@@ -1,0 +1,15 @@
+<library path="lib/librviz_offline_display">
+
+	<class name="rviz_offline_plugins/PCDFile"
+		type="PCDFileDisplay"
+		base_class_type="rviz::Display">
+	<description>Opens a Point Cloud file to be displayed offline</description>
+	</class>
+	
+	<class name="rviz_offline_plugins/CSVTrajectory"
+		type="CSVTrajectory"
+		base_class_type="rviz::Display">
+	<description>Opens a CSV file filled with vehicle trajectory to be displayed offline</description>
+	</class>
+
+</library>
