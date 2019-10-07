@@ -66,8 +66,6 @@ public:
 	// Project to 2D
 	Eigen::Vector2d project (const Eigen::Vector3d &pt3) const;
 
-	Eigen::Vector2d project (const MapPoint &pt3) const;
-
 	// Similar to above, but with third coordinate value as F
 	Eigen::Vector3d project3 (const Eigen::Vector3d &pt3) const;
 
@@ -187,9 +185,9 @@ public:
 	{
 		inline PointXYI() {}
 
-		inline PointXYI(const float &_x, const float &_y, const unsigned int &_i) :
+		inline PointXYI(const float &_x, const float &_y, const unsigned int &_i=0) :
 			i(_i)
-		{ x=_x; y=_y; }
+		{ x=_x; y=_y; i=_i; }
 
 		unsigned int i;
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -204,6 +202,9 @@ public:
 	const CameraPinholeParams &cameraParams);
 */
 
+	/*
+	 * Project lidar scans to image plane, without considering mapping to original lidar scans
+	 */
 	template<class PointT>
 	static std::vector<PointXYI>
 	projectLidarScan
@@ -218,6 +219,17 @@ public:
 		const TTransform &lidarToCameraTransform)
 	const
 	{ return projectLidarScan(lidarScan, lidarToCameraTransform, cameraParam); }
+
+	/*
+	 * Project lidar scans to image plane, storing mapping from each point in original lidar to its projection.
+	 * Filter those points who fall outside image rectangle
+	 */
+	typedef std::map<uint32_t,PointXYI> ProjectionMap;
+
+	template<class PointT>
+	static void
+	projectLidarScan
+	(const pcl::PointCloud<PointT> &lidarScan, const TTransform &lidarToCameraTransform, const CameraPinholeParams &cameraParams, ProjectionMap &projmap);
 
 	g2o::SBACam forG2O () const;
 	g2o::Sim3 toSim3() const;
@@ -302,6 +314,42 @@ BaseFrame::projectLidarScan
 	}
 
 	return projections;
+}
+
+
+template<class PointT>
+void
+BaseFrame::projectLidarScan
+(const pcl::PointCloud<PointT> &lidarScan, const TTransform &lidarToCameraTransform, const CameraPinholeParams &cameraParams, ProjectionMap &projmap)
+{
+	projmap.clear();
+
+	// Create fake frame
+	BaseFrame frame;
+	frame.setPose(lidarToCameraTransform);
+	frame.setCameraParam(&cameraParams);
+
+	uint j=0;
+	for (auto it=lidarScan.begin(); it!=lidarScan.end(); ++it) {
+		auto &pts = *it;
+		Vector3d pt3d (pts.x, pts.y, pts.z);
+
+		auto p3cam = frame.externalParamMatrix4() * pt3d.homogeneous();
+		if (p3cam.z() >= 0) {
+			auto p2d = frame.project(pt3d);
+			if ((p2d.x()>=0 and p2d.x()<cameraParams.width) and (p2d.y()>=0 and p2d.y()<cameraParams.height)) {
+				projmap.insert(
+					std::make_pair(
+						j,
+						BaseFrame::PointXYI(
+							p2d.x(),
+							p2d.y()
+						)));
+			}
+		}
+		j++;
+	}
+
 }
 
 

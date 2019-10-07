@@ -40,6 +40,9 @@ if (OPENMP_FOUND)
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+add_subdirectory (DBoW2)
+
+
 catkin_package(
 	LIBRARIES vmml
 	CATKIN_DEPENDS roscpp libg2o rosbag_viewer
@@ -47,6 +50,7 @@ catkin_package(
 
 include_directories(
 	include
+	DBoW2
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
@@ -63,4 +67,6 @@ add_library(
 		src/utilities.cpp
 		src/CameraPinholeParams.cpp
 		src/BaseFrame.cpp
+		src/MapPoint.cpp
+		src/Trajectory.cpp
 )

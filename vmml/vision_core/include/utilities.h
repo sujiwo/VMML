@@ -33,6 +33,11 @@ using std::vector;
 
 namespace Vmml {
 
+
+typedef uint64_t kfid;
+typedef uint64_t mpid;
+typedef decltype(cv::DMatch::trainIdx) kpid;
+
 typedef boost::posix_time::ptime ptime;
 typedef boost::posix_time::time_duration tduration;
 
