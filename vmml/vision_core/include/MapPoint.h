@@ -9,6 +9,7 @@
 #define VMML_CORE_MAPPOINT_H_
 
 #include <Eigen/Core>
+#include <memory>
 #include <vector>
 #include <tuple>
 #include <opencv2/core.hpp>
@@ -56,6 +57,8 @@ public:
 
 	// Set by bundle adjustment routines
 	bool hasBa = false;
+
+	typedef std::shared_ptr<MapPoint> Ptr;
 
 protected:
 

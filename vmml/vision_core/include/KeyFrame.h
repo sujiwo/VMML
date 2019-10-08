@@ -10,6 +10,7 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <limits>
+#include <memory>
 
 #include "utilities.h"
 #include "BaseFrame.h"
@@ -26,6 +27,10 @@ class KeyFrame : public BaseFrame
 public:
 	KeyFrame(const std::shared_ptr<VisionMap> _parent);
 	virtual ~KeyFrame();
+
+	// XXX: Define more concrete constructor
+
+	typedef std::shared_ptr<KeyFrame> Ptr;
 
 protected:
 	kfid id;

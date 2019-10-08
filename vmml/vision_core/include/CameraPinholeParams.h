@@ -13,6 +13,8 @@
 #include <boost/serialization/serialization.hpp>
 #include <opencv2/core.hpp>
 
+#include "cvobj_serialization.h"
+
 namespace Vmml {
 
 struct CameraPinholeParams
@@ -22,6 +24,9 @@ struct CameraPinholeParams
 		cx=0, cy=0;
 	int width, height;
 	// XXX: Distortion parameters
+
+	// Mask specific for this camera
+	cv::Mat mask;
 
 	CameraPinholeParams(
 		double _fx, double _fy,

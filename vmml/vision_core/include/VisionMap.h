@@ -29,6 +29,7 @@
 #include "CameraPinholeParams.h"
 #include "MapPoint.h"
 #include "KeyFrame.h"
+#include "ORBVocabulary.h"
 
 
 namespace Vmml {
@@ -46,10 +47,10 @@ public:
 protected:
 
 	std::mutex *keyframeInvIdx_mtx;
-	std::map<kfid, KeyFrame*> keyframeInvIdx;
+	std::map<kfid, KeyFrame::Ptr> keyframeInvIdx;
 
 	std::mutex *mappointInvIdx_mtx;
-	std::map<mpid, MapPoint*> mappointInvIdx;
+	std::map<mpid, MapPoint::Ptr> mappointInvIdx;
 
 	// Relationship between MapPoint and KeyFrames
 
@@ -69,13 +70,10 @@ protected:
 		std::map<kpid, mpid> > framePointsInv;
 
 	// 2D image stuff
-	cv::Mat mask;
 	cv::Ptr<cv::FeatureDetector> featureDetector;
 	cv::Ptr<cv::DescriptorMatcher> descriptorMatcher;
 
 	std::vector<CameraPinholeParams> cameraList;
-
-//	ImageDatabase *imageDB;
 
 	/*
 	 * KeyFrame Graph
@@ -88,15 +86,26 @@ protected:
 	std::map<kfid,KeyFrameGraph::vertex_descriptor> kfVtxMap;
 	std::map<KeyFrameGraph::vertex_descriptor,kfid> kfVtxInvMap;
 	std::mutex covisibilityGraphMtx;
-	// End KeyFrame Graph
-
-	// Information about this map
-	mapKeyValueInfo keyValueInfo;
 
 	void updateCovisibilityGraph(const kfid k);
 
+	// End KeyFrame Graph
+
+	/*
+	 * Information about this map
+	 */
+	mapKeyValueInfo keyValueInfo;
+
 	std::vector<double> mScaleFactors;
 	std::vector<double> mLevelSigma2;
+
+	/*
+	 * Image Database Part
+	 */
+	ORBVocabulary myVoc;
+	std::map<DBoW2::WordId, std::set<kfid> > invertedKeywordDb;
+	std::map<kfid, DBoW2::BowVector> BoWList;
+	std::map<kfid, DBoW2::FeatureVector> FeatVecList;
 
 };
 
