@@ -37,6 +37,7 @@ namespace Vmml {
 typedef uint64_t kfid;
 typedef uint64_t mpid;
 typedef decltype(cv::DMatch::trainIdx) kpid;
+typedef uint64_t sourceId;
 
 typedef boost::posix_time::ptime ptime;
 typedef boost::posix_time::time_duration tduration;

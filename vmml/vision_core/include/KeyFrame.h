@@ -25,16 +25,22 @@ class VisionMap;
 class KeyFrame : public BaseFrame
 {
 public:
+	friend class VisionMap;
+
 	KeyFrame(const std::shared_ptr<VisionMap> _parent);
 	virtual ~KeyFrame();
 
 	// XXX: Define more concrete constructor
+
+	inline kfid getId() const
+	{ return id; }
 
 	typedef std::shared_ptr<KeyFrame> Ptr;
 
 protected:
 	kfid id;
 	int cameraId;
+	sourceId srcId;
 
 	// Time at which the image was taken
 	ptime frCreationTime;

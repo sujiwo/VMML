@@ -29,6 +29,7 @@
 #include "CameraPinholeParams.h"
 #include "MapPoint.h"
 #include "KeyFrame.h"
+#include "Trajectory.h"
 #include "ORBVocabulary.h"
 
 
@@ -41,15 +42,128 @@ public:
 	VisionMap();
 	virtual ~VisionMap();
 
-	// Information about this map
+	void reset();
+
+	int addCameraParameter (const CameraPinholeParams &vscamIntr);
+
+	inline const CameraPinholeParams& getCameraParameter(const int cameraId) const
+	{ return cameraList[cameraId]; }
+
+	int getNumberOfCameras () const
+	{ return cameraList.size(); }
+
+	bool addKeyFrame(KeyFrame::Ptr frame);
+	bool addMapPoint(MapPoint::Ptr mpPoint);
+
+	inline KeyFrame::Ptr getKeyFrameById (const kfid &i) const
+	{ return keyframeInvIdx.at(i); }
+
+	inline MapPoint::Ptr getMapPointById (const mpid &i) const
+	{ return mappointInvIdx.at(i); }
+
+	std::vector<kfid> getKeyFrameList() const;
+	std::vector<mpid> getMapPointList() const;
+
+	inline KeyFrame::Ptr keyframe(const kfid &i) const
+	{ return keyframeInvIdx.at(i); }
+
+	inline MapPoint::Ptr mappoint (const mpid &i) const
+	{ return mappointInvIdx.at(i); }
+
+	std::vector<kfid> allKeyFrames () const;
+	std::vector<mpid> allMapPoints () const;
+
+	int numOfKeyFrames() const
+	{ return keyframeInvIdx.size(); }
+
+	int numOfMapPoints() const
+	{ return mappointInvIdx.size(); }
+
+	std::vector<mpid> getVisibleMapPoints (const kfid &kf) const;
+
+	inline int countRelatedKeyFrames(const mpid &i) const
+	{ return pointAppearances.at(i).size(); }
+
+	inline std::set<kfid> getRelatedKeyFrames (const mpid &i) const
+	{ return pointAppearances.at(i); }
+
+	inline kpid getKeyPointId (const kfid k, const mpid p) const
+	{ return framePoints.at(k).at(p); }
+
+	inline mpid getMapPointByKeypoint (const kfid k, const kpid p)
+	{ return framePointsInv.at(k).at(p); }
+
+	// XXX: Causes SIGSEGV when framePoints are empty
+	std::map<mpid,kpid> allMapPointsAtKeyFrame(const kfid f) const;
+
+	// Map building
+	bool estimateStructure (const kfid &keyFrame1, const kfid &keyFrame2, double translationHint=-1.0);
+
+	bool estimateAndTrack (const kfid &kfid1, const kfid &kfid2, const double metricDisposition=1.0);
+
+	void trackMapPoints (const kfid kf1, const kfid kf2);
+
+	bool removeMapPoint (const mpid &i);
+	bool removeMapPointsBatch (const vector<mpid> &mplist);
+
+	// Writing & Reading a map in disk
+	bool save (const std::string &path) const;
+	bool load (const std::string &path);
+
+	/*
+	 * Map debugging routines
+	 */
+	pcl::PointCloud<pcl::PointXYZ>::Ptr dumpPointCloudFromMapPoints () const;
+
+	std::vector<std::pair<Eigen::Vector3d,Eigen::Quaterniond> >
+		dumpCameraPoses () const;
+
+	void dumpCameraPoses (Trajectory &track) const;
+
+	/*
+	 * Information about this map
+	 */
 	typedef std::map<std::string,std::string> mapKeyValueInfo;
+
+	inline void setInfo (const std::string &key, const std::string &value)
+	{ keyValueInfo[key] = value; };
+
+	inline const std::string getInfo (const std::string &key) const
+	{ return keyValueInfo.at(key); }
+
+	inline const mapKeyValueInfo& getAllInfo() const
+	{ return keyValueInfo; }
+
+	/*
+	 * KeyFrame Graph routines
+	 */
+	std::vector<kfid> getOrderedRelatedKeyFramesFrom (const kfid k, int howMany=-1) const;
+
+	std::vector<kfid> getKeyFramesComeInto (const kfid kTarget) const;
+
+	/*
+	 * 2D Image Stuff
+	 */
+	const cv::Ptr<cv::FeatureDetector>& getFeatureDetector () const
+	{ return featureDetector; }
+	const cv::Ptr<cv::DescriptorMatcher>& getDescriptorMatcher () const
+	{ return descriptorMatcher; }
+
+	/*
+	 * Place Recognition:
+	 * Find matched keyframe candidates from database using BoW method.
+	 * The candidates are sorted according to number of similar words
+	 */
+	std::vector<kfid>
+	findCandidates (const BaseFrame &f) const;
+
 
 protected:
 
-	std::mutex *keyframeInvIdx_mtx;
+	std::shared_ptr<std::mutex> keyframeInvIdx_mtx;
 	std::map<kfid, KeyFrame::Ptr> keyframeInvIdx;
 
-	std::mutex *mappointInvIdx_mtx;
+	std::shared_ptr<std::mutex> mappointInvIdx_mtx;
 	std::map<mpid, MapPoint::Ptr> mappointInvIdx;
 
 	// Relationship between MapPoint and KeyFrames

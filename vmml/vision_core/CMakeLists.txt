@@ -69,4 +69,7 @@ add_library(
 		src/BaseFrame.cpp
 		src/MapPoint.cpp
 		src/Trajectory.cpp
+		src/VisionMap.cpp
+		src/LidarScanBag.cpp
+		src/MapBuilder.cpp
 )
