@@ -35,6 +35,9 @@ public:
 	inline kfid getId() const
 	{ return id; }
 
+	static Ptr
+	create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
+
 	typedef std::shared_ptr<KeyFrame> Ptr;
 
 protected:

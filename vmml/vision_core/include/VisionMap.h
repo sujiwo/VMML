@@ -46,7 +46,7 @@ public:
 
 	int addCameraParameter (const CameraPinholeParams &vscamIntr);
 
-	inline const CameraPinholeParams& getCameraParameter(const int cameraId) const
+	inline const CameraPinholeParams& getCameraParameter(int cameraId) const
 	{ return cameraList[cameraId]; }
 
 	int getNumberOfCameras () const

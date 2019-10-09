@@ -121,7 +121,9 @@ public:
 	 */
 	Eigen::Vector3d normal() const;
 
-	void computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask=cv::Mat());
+	void computeFeatures (cv::Ptr<cv::FeatureDetector> fd);
+
+//	void computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask=cv::Mat());
 
 	void computeFeatures (cv::Ptr<cv::FeatureDetector> fd, std::vector<cv::KeyPoint> &kpList, cv::Mat &descriptors, const cv::Mat &mask) const;
 

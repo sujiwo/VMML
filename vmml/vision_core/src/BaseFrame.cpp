@@ -95,10 +95,17 @@ BaseFrame::normal() const
 }
 
 
+/*
 void
 BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask)
 {
 	computeFeatures(fd, fKeypoints, fDescriptors, mask);
+}
+*/
+void
+BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd)
+{
+	return computeFeatures(fd, fKeypoints, fDescriptors, cameraParam.mask);
 }
 
 

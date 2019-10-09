@@ -17,7 +17,6 @@
 #include <limits>
 #include "utilities.h"
 #include "VisionMap.h"
-#include "RandomAccessBag.h"
 
 
 namespace Vmml {
@@ -28,9 +27,12 @@ public:
 
 	MapBuilder(const CameraPinholeParams &camera0, float zoom);
 
+/*
 	void build(const RandomAccessBag &imageBag,
 		sourceId start=0,
 		sourceId stop=std::numeric_limits<sourceId>::max());
+*/
+	virtual bool feed(cv::Mat inputImage);
 
 	virtual ~MapBuilder();
 
@@ -43,11 +45,11 @@ protected:
 	float zoomRatio;
 
 	void initialize();
-	void feed();
 
 	bool hasInitialized = false;
+	kfid lastAnchor = 0;
 
-	KeyFrame::Ptr createKeyFrame(const RandomAccessBag &imageBag, sourceId n) const;
+//	KeyFrame::Ptr createKeyFrame(const RandomAccessBag &imageBag, sourceId n) const;
 };
 
 } /* namespace Vmml */

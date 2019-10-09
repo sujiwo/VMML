@@ -23,6 +23,7 @@ MapBuilder::MapBuilder(const CameraPinholeParams &camera0, float zoom) :
 }
 
 
+/*
 void
 MapBuilder::build(const RandomAccessBag &imageBag,
 	sourceId startNum,
@@ -41,6 +42,12 @@ MapBuilder::build(const RandomAccessBag &imageBag,
 
 KeyFrame::Ptr
 MapBuilder::createKeyFrame(const RandomAccessBag &imageBag, sourceId n) const
+{
+
+}
+*/
+bool
+MapBuilder::feed(cv::Mat inputImage)
 {
 
 }

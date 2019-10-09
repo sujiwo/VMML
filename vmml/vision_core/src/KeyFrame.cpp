@@ -20,8 +20,21 @@ KeyFrame::KeyFrame() {
 
 }
 
+
 KeyFrame::~KeyFrame() {
 	// TODO Auto-generated destructor stub
+}
+
+
+KeyFrame::Ptr
+KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
+{
+	Ptr newKf(new KeyFrame);
+	newKf->parent = mParent;
+	newKf->image = image;
+	newKf->cameraParam = mParent->getCameraParameter(cameraNumber);
+	newKf->computeFeatures(mParent->getFeatureDetector());
+	return newKf;
 }
 
 } /* namespace Vmml */
