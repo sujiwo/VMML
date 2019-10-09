@@ -72,4 +72,7 @@ add_library(
 		src/VisionMap.cpp
 		src/LidarScanBag.cpp
 		src/MapBuilder.cpp
+		src/Initializer.cpp
+		src/Matcher.cpp
+		src/Triangulation.cpp
 )

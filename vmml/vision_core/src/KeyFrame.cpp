@@ -30,11 +30,18 @@ KeyFrame::Ptr
 KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
 {
 	Ptr newKf(new KeyFrame);
-	newKf->parent = mParent;
+	newKf->mParent = mParent;
 	newKf->image = image;
 	newKf->cameraParam = mParent->getCameraParameter(cameraNumber);
 	newKf->computeFeatures(mParent->getFeatureDetector());
 	return newKf;
+}
+
+
+static Ptr
+KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
+{
+
 }
 
 } /* namespace Vmml */

@@ -30,6 +30,12 @@ public:
 	KeyFrame(const std::shared_ptr<VisionMap> _parent);
 	virtual ~KeyFrame();
 
+	const std::shared_ptr<VisionMap> parent() const
+	{ return mParent; }
+
+	std::shared_ptr<VisionMap> parent()
+	{ return mParent; }
+
 	// XXX: Define more concrete constructor
 
 	inline kfid getId() const
@@ -37,6 +43,9 @@ public:
 
 	static Ptr
 	create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
+
+	static Ptr
+	fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
 
 	typedef std::shared_ptr<KeyFrame> Ptr;
 
@@ -50,7 +59,7 @@ protected:
 
 	static kfid nextId;
 
-	const std::shared_ptr<VisionMap> parent;
+	const std::shared_ptr<VisionMap> mParent;
 };
 
 } /* namespace Vmml */

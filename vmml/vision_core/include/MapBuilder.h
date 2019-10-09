@@ -16,6 +16,7 @@
 #include <memory>
 #include <limits>
 #include "utilities.h"
+#include "CameraPinholeParams.h"
 #include "VisionMap.h"
 
 
@@ -25,7 +26,7 @@ class MapBuilder
 {
 public:
 
-	MapBuilder(const CameraPinholeParams &camera0, float zoom);
+	MapBuilder(const CameraPinholeParams &camera0, float zoom=1.0);
 
 /*
 	void build(const RandomAccessBag &imageBag,
