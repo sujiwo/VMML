@@ -12,8 +12,10 @@ using namespace std;
 
 namespace Vmml {
 
-Initializer::Initializer(BaseFrame::Ptr initFrame) :
-	frame0(initFrame)
+Initializer::Initializer(BaseFrame::Ptr initFrame, float maxDistanceInPixel, int iters) :
+	frame0(initFrame),
+	sigma(maxDistanceInPixel),
+	maxIterations(iters)
 {
 	// TODO Auto-generated constructor stub
 

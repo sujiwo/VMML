@@ -25,6 +25,9 @@ struct KeyMapPoint {
 namespace Vmml {
 
 
+int ORBDescriptorDistance(const cv::Mat &a, const cv::Mat &b);
+
+
 class MapPoint {
 public:
 

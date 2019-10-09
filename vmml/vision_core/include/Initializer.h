@@ -17,13 +17,17 @@ namespace Vmml {
 class Initializer
 {
 public:
-	Initializer(BaseFrame::Ptr initFrame);
+	Initializer(BaseFrame::Ptr initFrame, float maxDistanceInPixel, int iters);
 	virtual ~Initializer();
 
 	bool initialize(BaseFrame::Ptr frameNext);
 
 protected:
 	BaseFrame::Ptr frame0;
+
+	float sigma;
+
+	int maxIterations;
 };
 
 } /* namespace Vmml */
