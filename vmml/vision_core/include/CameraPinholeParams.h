@@ -68,6 +68,9 @@ struct CameraPinholeParams
 
 	inline Eigen::Vector2d principalPoints() const
 	{ return Eigen::Vector2d(cx, cy); }
+
+	// XXX: boilerplate
+	cv::Mat undistort(cv::Mat origin) const;
 };
 
 } /* namespace Vmml */

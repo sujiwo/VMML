@@ -14,6 +14,7 @@
 #include "Matcher.h"
 #include "VisionMap.h"
 #include "Triangulation.h"
+#include "MapPoint.h"
 
 using namespace std;
 using namespace Eigen;
@@ -159,6 +160,26 @@ Matcher::isKeypointInEpipolarLine (const Line2 &epl2, const Eigen::Vector2d &kp2
 		__d = d;
 		return true;
 	}
+}
+
+
+void
+Matcher::matchForInitialization(
+	const BaseFrame &F1,
+	const BaseFrame &F2,
+	Matcher::PairList &featurePairs,
+	int windowSize
+)
+{
+	int nmatches = 0;
+	featurePairs.reserve(F1.numOfKeyPoints());
+
+	vector<int> rotationHistogram[Matcher::HISTOGRAM_LENGTH];
+	for (int i=0; i<Matcher::HISTOGRAM_LENGTH; ++i)
+		rotationHistogram[i].reserve(500);
+	const float factor = 1.0/Matcher::HISTOGRAM_LENGTH;
+
+	// XXX: Unfinished
 }
 
 

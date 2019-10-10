@@ -26,6 +26,17 @@ public:
 	typedef std::pair<kpid,kpid> KpPair;
 	typedef std::vector<KpPair> PairList;
 
+	const static int HISTOGRAM_LENGTH = 30;
+
+	// Matching features for initialization
+	static void
+	matchForInitialization(
+		const BaseFrame &F1,
+		const BaseFrame &F2,
+		PairList &featurePairs,
+		int windowSize=-1
+	);
+
 	// Match with epipolar constraints
 	static void
 	matchAny(

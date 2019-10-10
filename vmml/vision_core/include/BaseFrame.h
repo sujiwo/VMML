@@ -156,6 +156,8 @@ public:
 	 */
 	Eigen::Vector3d keypointn (kpid k) const;
 
+	std::vector<kpid> getKeyPointsInArea (const float x, const float y, const float windowSize, const int minLevel=-1, const int maxLevel=-1) const;
+
 	cv::Mat allDescriptors() const
 	{ return fDescriptors; }
 
@@ -283,6 +285,11 @@ protected:
 	std::vector<cv::KeyPoint> fKeypoints;
 
 	friend class Matcher;
+
+	// KeyPoints are assigned to cells in a grid
+	static const int numberOfGridIn1D = 10;
+	void assignKeyPointsToGrid();
+	std::vector<kpid> featuresGridIdx[numberOfGridIn1D][numberOfGridIn1D];
 };
 
 

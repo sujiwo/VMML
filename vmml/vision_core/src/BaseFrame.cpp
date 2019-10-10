@@ -105,7 +105,8 @@ BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask
 void
 BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd)
 {
-	return computeFeatures(fd, fKeypoints, fDescriptors, cameraParam.mask);
+	computeFeatures(fd, fKeypoints, fDescriptors, cameraParam.mask);
+	assignKeyPointsToGrid();
 }
 
 
@@ -131,6 +132,75 @@ BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, std::vector<cv::Key
 		kpList,
 		descriptors,
 		false);
+}
+
+
+void
+BaseFrame::assignKeyPointsToGrid()
+{
+	for (kpid i=0; i<fKeypoints.size(); ++i) {
+		auto keypoint = fKeypoints[i];
+
+		int gX = round(keypoint.pt.x / (cameraParam.width/float(BaseFrame::numberOfGridIn1D))),
+		gY = round(keypoint.pt.y / (cameraParam.height/float(BaseFrame::numberOfGridIn1D)));
+
+		featuresGridIdx[gX][gY].push_back(i);
+	}
+}
+
+
+vector<kpid>
+BaseFrame::getKeyPointsInArea (const float x, const float y, const float windowSize, const int minLevel, const int maxLevel) const
+{
+	vector<kpid> indices;
+
+    const int nMinCellX = max(0,(int)floor((x-windowSize) / (cameraParam.width/float(BaseFrame::numberOfGridIn1D))));
+    if(nMinCellX>=numberOfGridIn1D)
+        return indices;
+
+    const int nMaxCellX = min((int)numberOfGridIn1D-1,(int)ceil((x+windowSize) / (cameraParam.width/float(BaseFrame::numberOfGridIn1D))));
+    if(nMaxCellX<0)
+        return indices;
+
+    const int nMinCellY = max(0,(int)floor((y-windowSize) / (cameraParam.height/float(BaseFrame::numberOfGridIn1D))));
+    if(nMinCellY>=numberOfGridIn1D)
+        return indices;
+
+    const int nMaxCellY = min((int)numberOfGridIn1D-1,(int)ceil((y+windowSize) / (cameraParam.height/float(BaseFrame::numberOfGridIn1D))));
+    if(nMaxCellY<0)
+        return indices;
+
+    const bool bCheckLevels = (minLevel>0) || (maxLevel>=0);
+    for(int ix = nMinCellX; ix<=nMaxCellX; ix++)
+    {
+        for(int iy = nMinCellY; iy<=nMaxCellY; iy++)
+        {
+            auto vCell = featuresGridIdx[ix][iy];
+            if(vCell.empty())
+                continue;
+
+            for(size_t j=0, jend=vCell.size(); j<jend; j++)
+            {
+                const cv::KeyPoint &kpUn = fKeypoints[vCell[j]];
+                if(bCheckLevels)
+                {
+                    if(kpUn.octave<minLevel)
+                        continue;
+                    if(maxLevel>=0)
+                        if(kpUn.octave>maxLevel)
+                            continue;
+                }
+
+                const float distx = kpUn.pt.x-x;
+                const float disty = kpUn.pt.y-y;
+
+                if(fabs(distx)<windowSize && fabs(disty)<windowSize)
+                    indices.push_back(vCell[j]);
+            }
+        }
+    }
+
+	return indices;
 }
 
 
