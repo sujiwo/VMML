@@ -75,4 +75,5 @@ add_library(
 		src/Initializer.cpp
 		src/Matcher.cpp
 		src/Triangulation.cpp
+		src/VisualOdometry.cpp
 )
