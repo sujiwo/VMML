@@ -6,6 +6,7 @@
  */
 
 #include <algorithm>
+#include <limits>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
@@ -175,11 +176,54 @@ Matcher::matchForInitialization(
 	featurePairs.reserve(F1.numOfKeyPoints());
 
 	vector<int> rotationHistogram[Matcher::HISTOGRAM_LENGTH];
+	vector<int> matchedDistances(F2.numOfKeyPoints(), numeric_limits<int>::max());
+	vector<int> vMatches2(F2.numOfKeyPoints(), -1);
+
 	for (int i=0; i<Matcher::HISTOGRAM_LENGTH; ++i)
 		rotationHistogram[i].reserve(500);
 	const float factor = 1.0/Matcher::HISTOGRAM_LENGTH;
 
 	// XXX: Unfinished
+	for (kpid idx1=0; idx1<F1.numOfKeyPoints(); ++idx1) {
+		auto keypoint1 = F1.keypoint(idx1);
+		int level = keypoint1.octave;
+		if (level > 0)
+			continue;
+
+		auto vIndices2 = F2.getKeyPointsInArea(keypoint1.pt.x, keypoint1.pt.y, windowSize, level, level);
+		if (vIndices2.empty())
+			continue;
+
+		cv::Mat descriptor1 = F1.descriptor(idx1);
+
+		int bestDist = numeric_limits<int>::max(),
+			bestDist2 = numeric_limits<int>::max(),
+			bestIdx2 = -1;
+
+		for (auto &idx2: vIndices2) {
+			cv::Mat descriptor2 = F2.descriptor(idx2);
+			int distance = ORBDescriptorDistance(descriptor1, descriptor2);
+			if (matchedDistances[idx2]<=distance)
+				continue;
+			if (distance < bestDist) {
+				bestDist2 = bestDist;
+				bestDist = distance;
+				bestIdx2 = idx2;
+			}
+			else if (distance < bestDist2) {
+				bestDist2 = distance;
+			}
+		}
+
+		if (bestDist<=Matcher::ORB_DISTANCE_LOW) {
+			if (bestDist < float(bestDist2) * 0.75) {
+				if (vMatches2[bestIdx2]>=0) {
+
+				}
+			}
+		}
+
+	}
 }
 
 

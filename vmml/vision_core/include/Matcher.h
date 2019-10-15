@@ -26,7 +26,10 @@ public:
 	typedef std::pair<kpid,kpid> KpPair;
 	typedef std::vector<KpPair> PairList;
 
-	const static int HISTOGRAM_LENGTH = 30;
+	const static int
+		HISTOGRAM_LENGTH	=	30,
+		ORB_DISTANCE_HIGH	=	100,
+		ORB_DISTANCE_LOW	=	50;
 
 	// Matching features for initialization
 	static void
