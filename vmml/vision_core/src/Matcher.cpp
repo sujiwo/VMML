@@ -743,4 +743,11 @@ Matcher::matchLidarScans(const MeidaiDataItem &frame1, const MeidaiDataItem &fra
 }
 */
 
+
+void
+Matcher::matchViso(const BaseFrame &F1, const BaseFrame &F2, PairList &featurePairs)
+{
+
+}
+
 } /* namespace Vmml */

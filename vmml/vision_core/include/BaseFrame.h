@@ -33,12 +33,28 @@ inline Eigen::Vector2d cv2eigen (const cv::Point2f &p)
 { return Eigen::Vector2d (p.x, p.y); }
 
 
+class BucketFeature : public Grid<std::vector<kpid>>
+{
+public:
+	BucketFeature(int numCellHorizontal, int numCellVertical) :
+		Grid<std::vector<kpid>>(numCellHorizontal, numCellVertical)
+	{}
+
+	inline kpid operator()(const int x, const int y, const int z)
+	{ return mGrid[y][x]->at(z); }
+
+	void assignFeatures(const int imageWidth, const int imageHeight, const std::vector<cv::KeyPoint> &kp);
+};
+
+
 class BaseFrame
 {
 public:
 
 	typedef std::shared_ptr<BaseFrame> Ptr;
 	typedef std::shared_ptr<BaseFrame const> ConstPtr;
+
+	friend class BucketFeature;
 
 	BaseFrame();
 	virtual ~BaseFrame();

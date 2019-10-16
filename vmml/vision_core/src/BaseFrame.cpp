@@ -526,4 +526,19 @@ const
 
 }
 
+
+void
+BucketFeature::assignFeatures(const int imageWidth, const int imageHeight, const std::vector<cv::KeyPoint> &kpList)
+{
+	for (kpid id=0; id<kpList.size(); id++) {
+		auto keypoint = kpList.at(id);
+
+		int gX = round(keypoint.pt.x / (imageWidth/float(BaseFrame::numberOfGridIn1D))),
+		gY = round(keypoint.pt.y / (imageHeight/float(BaseFrame::numberOfGridIn1D)));
+
+		at(gX, gY).push_back(id);
+	}
+}
+
+
 } /* namespace Vmml */

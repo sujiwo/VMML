@@ -10,7 +10,8 @@
 namespace Vmml {
 
 VisualOdometry::VisualOdometry(Parameters par) :
-	param(par)
+	param(par),
+	featureGrid(par.bucket_width, par.bucket_height)
 {
 	// TODO Auto-generated constructor stub
 

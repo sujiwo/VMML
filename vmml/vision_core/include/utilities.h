@@ -14,6 +14,7 @@
 #include <utility>
 #include <limits>
 #include <algorithm>
+#include <memory>
 
 #include <Eigen/Eigen>
 
@@ -209,6 +210,51 @@ pseudoInverse(const Eigen::Matrix<Scalar,r,c> &M, const Scalar cutoff=1e-10)
 
 	return pinv;
 }
+
+
+template<typename T>
+class Grid
+{
+public:
+	Grid()
+	{}
+
+	Grid(int width, int height, T*(constFunc)(int x, int y)=NULL)
+	{
+		mGrid.resize(height);
+		for (int y=0; y<height; y++) {
+			mGrid[y].resize(width);
+			for (int x=0; x<width; x++) {
+				if (constFunc==NULL) {
+					mGrid[y][x].reset(new T);
+				}
+				else
+					mGrid[y][x].reset(constFunc(x, y));
+			}
+		}
+	}
+
+	const T& operator() (const int x, const int y) const
+	{ return *mGrid[y][x]; }
+
+	T& operator() (const int x, const int y)
+	{ return at(x, y); }
+
+	T& at(const int x, const int y)
+	{ return *mGrid[y][x]; }
+
+	int width() const
+	{ return mGrid[0].size(); }
+
+	int height() const
+	{ return mGrid.size(); }
+
+protected:
+	std::vector<std::vector<std::shared_ptr<T>>> mGrid;
+
+};
+
+
 
 }		// namespace Vmml
 

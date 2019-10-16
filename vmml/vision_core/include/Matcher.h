@@ -40,6 +40,8 @@ public:
 		int windowSize=-1
 	);
 
+	static void matchViso(const BaseFrame &F1, const BaseFrame &F2, PairList &featurePairs);
+
 	// Match with epipolar constraints
 	static void
 	matchAny(

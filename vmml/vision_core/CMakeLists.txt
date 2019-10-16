@@ -77,3 +77,15 @@ add_library(
 		src/Triangulation.cpp
 		src/VisualOdometry.cpp
 )
+
+
+add_executable(
+	grid
+		test/grid.cpp
+)
+
+target_link_libraries(
+	grid
+		vmml
+		Boost::system
+)
