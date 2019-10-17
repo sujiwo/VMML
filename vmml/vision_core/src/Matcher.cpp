@@ -337,7 +337,7 @@ TTransform
 Matcher::calculateMovement (
 	const BaseFrame &F1, const BaseFrame &F2,
 	const std::vector<KpPair> &featurePairs,
-	vector<KpPair> &validPairsByTriangulation)
+	PairList &validPairsByTriangulation)
 {
 	validPairsByTriangulation = featurePairs;
 

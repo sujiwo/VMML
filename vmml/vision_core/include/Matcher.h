@@ -59,7 +59,7 @@ public:
 	calculateMovement (
 		const BaseFrame &F1, const BaseFrame &F2,
 		const PairList &featurePairs,
-		std::vector<KpPair> &validPairsByTriangulation);
+		PairList &validPairsByTriangulation);
 
 	// Match with homography constraints.
 	// We have to compute new features based on custom mask
