@@ -25,6 +25,7 @@ class Matcher {
 public:
 	typedef std::pair<kpid,kpid> KpPair;
 	typedef std::vector<KpPair> PairList;
+	typedef std::map<kpid,kpid> PairListIndexed;
 
 	const static int
 		HISTOGRAM_LENGTH	=	30,
@@ -32,12 +33,13 @@ public:
 		ORB_DISTANCE_LOW	=	50;
 
 	// Matching features for initialization
-	static void
+	static int
 	matchForInitialization(
 		const BaseFrame &F1,
 		const BaseFrame &F2,
 		PairList &featurePairs,
-		int windowSize=-1
+		int windowSize=-1,
+		bool checkOrientation=true
 	);
 
 	static void matchViso(const BaseFrame &F1, const BaseFrame &F2, PairList &featurePairs);
@@ -141,6 +143,8 @@ protected:
 		std::vector<bool> &goodFeaturePairs,
 		float &parallax);
 
+	static void
+	ComputeThreeMaxima(vector<int>* histo, const int L, int &ind1, int &ind2, int &ind3);
 };
 
 } /* namespace Vmml */

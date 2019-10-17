@@ -76,16 +76,26 @@ add_library(
 		src/Matcher.cpp
 		src/Triangulation.cpp
 		src/VisualOdometry.cpp
+		src/ImageBag.cpp
 )
 
+set(REQUIRED_LIBS
+	DBoW2
+	${OpenCV_LIBS}
+	${PCL_LIBRARIES}
+	${G2O_LIBRARIES}
+	${catkin_LIBRARIES}
+	Boost::serialization
+	Boost::system
+)
 
 add_executable(
-	grid
-		test/grid.cpp
+	image
+		test/image.cpp
 )
 
 target_link_libraries(
-	grid
+	image
 		vmml
-		Boost::system
+		${REQUIRED_LIBS}
 )

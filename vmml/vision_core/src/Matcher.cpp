@@ -164,19 +164,26 @@ Matcher::isKeypointInEpipolarLine (const Line2 &epl2, const Eigen::Vector2d &kp2
 }
 
 
-void
+int
 Matcher::matchForInitialization(
 	const BaseFrame &F1,
 	const BaseFrame &F2,
 	Matcher::PairList &featurePairs,
-	int windowSize
+	int windowSize,
+	bool checkOrientation
 )
 {
+	if (windowSize==-1) {
+		// Take 16% of width
+		windowSize = round(0.16 * (float)F1.getCameraParameters().width);
+	}
+
 	int nmatches = 0;
 	featurePairs.reserve(F1.numOfKeyPoints());
 
 	vector<int> rotationHistogram[Matcher::HISTOGRAM_LENGTH];
 	vector<int> matchedDistances(F2.numOfKeyPoints(), numeric_limits<int>::max());
+	vector<int> vMatches1(F1.numOfKeyPoints(), -1);
 	vector<int> vMatches2(F2.numOfKeyPoints(), -1);
 
 	for (int i=0; i<Matcher::HISTOGRAM_LENGTH; ++i)
@@ -218,12 +225,46 @@ Matcher::matchForInitialization(
 		if (bestDist<=Matcher::ORB_DISTANCE_LOW) {
 			if (bestDist < float(bestDist2) * 0.75) {
 				if (vMatches2[bestIdx2]>=0) {
+					vMatches1[vMatches2[bestIdx2]]=-1;
+				}
+				vMatches1[idx1]=bestIdx2;
+				vMatches2[bestIdx2] = idx1;
+			}
 
+			if (checkOrientation) {
+				float rot = F1.keypoint(idx1).angle - F2.keypoint(bestIdx2).angle;
+				if (rot<0.0) rot+=360.0f;
+				int bin = round(rot*factor);
+				if (bin==Matcher::HISTOGRAM_LENGTH)
+					bin = 0;
+				assert(bin>=0 and bin<Matcher::HISTOGRAM_LENGTH);
+				rotationHistogram[bin].push_back(idx1);
+			}
+		}
+	}
+
+	if (checkOrientation) {
+		int ind1=-1, ind2=-1, ind3=-1;
+
+		ComputeThreeMaxima(rotationHistogram, Matcher::HISTOGRAM_LENGTH, ind1, ind2, ind3);
+		for (int i=0; i<Matcher::HISTOGRAM_LENGTH; ++i) {
+			if (i==ind1 or i==ind2 or i==ind3)
+				continue;
+			for (uint j=0; j<rotationHistogram[i].size(); ++j) {
+				int idx1 = rotationHistogram[i][j];
+				if (vMatches1[idx1]>=0) {
+					vMatches1[idx1]=-1;
 				}
 			}
 		}
-
 	}
+
+	for (uint idx1=0; idx1<F1.numOfKeyPoints(); idx1++) {
+		if (vMatches1[idx1]>=0)
+			featurePairs.push_back(make_pair((kpid)idx1, (kpid)vMatches1[idx1]));
+	}
+
+	return featurePairs.size();
 }
 
 
@@ -742,6 +783,51 @@ Matcher::matchLidarScans(const MeidaiDataItem &frame1, const MeidaiDataItem &fra
 	return guess12;
 }
 */
+
+
+void
+Matcher::ComputeThreeMaxima(vector<int>* histo, const int L, int &ind1, int &ind2, int &ind3)
+{
+    int max1=0;
+    int max2=0;
+    int max3=0;
+
+    for(int i=0; i<L; i++)
+    {
+        const int s = histo[i].size();
+        if(s>max1)
+        {
+            max3=max2;
+            max2=max1;
+            max1=s;
+            ind3=ind2;
+            ind2=ind1;
+            ind1=i;
+        }
+        else if(s>max2)
+        {
+            max3=max2;
+            max2=s;
+            ind3=ind2;
+            ind2=i;
+        }
+        else if(s>max3)
+        {
+            max3=s;
+            ind3=i;
+        }
+    }
+
+    if(max2<0.1f*(float)max1)
+    {
+        ind2=-1;
+        ind3=-1;
+    }
+    else if(max3<0.1f*(float)max1)
+    {
+        ind3=-1;
+    }
+}
 
 
 void
