@@ -21,10 +21,11 @@ typedef Matrix4d poseMatrix4;
 namespace Vmml {
 
 
-BaseFrame::BaseFrame() {
-	// TODO Auto-generated constructor stub
-
-}
+BaseFrame::BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p) :
+	image(img),
+	mPose(p),
+	cameraParam(cam)
+{}
 
 BaseFrame::~BaseFrame() {
 	// TODO Auto-generated destructor stub
@@ -322,12 +323,9 @@ BaseFrame::FundamentalMatrix(const BaseFrame &F1, const BaseFrame &F2)
 }
 
 
-BaseFrame::Ptr BaseFrame::create(cv::Mat img, const Pose &p, const CameraPinholeParams &cam)
+BaseFrame::Ptr BaseFrame::create(cv::Mat img, const CameraPinholeParams &cam, const Pose &p)
 {
-	BaseFrame::Ptr bframe(new BaseFrame);
-	bframe->image = img;
-	bframe->mPose = p;
-	bframe->cameraParam = cam;
+	BaseFrame::Ptr bframe(new BaseFrame(img, cam, p));
 	return bframe;
 }
 

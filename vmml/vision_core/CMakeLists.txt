@@ -66,13 +66,15 @@ add_library(
 		src/Pose.cpp
 		src/utilities.cpp
 		src/CameraPinholeParams.cpp
+		src/KeyFrame.cpp
 		src/BaseFrame.cpp
 		src/MapPoint.cpp
 		src/Trajectory.cpp
 		src/VisionMap.cpp
 		src/LidarScanBag.cpp
 		src/MapBuilder.cpp
-		src/Initializer.cpp
+#		src/Initializer.cpp
+		src/Triangulation.cpp
 		src/Matcher.cpp
 		src/Triangulation.cpp
 		src/VisualOdometry.cpp

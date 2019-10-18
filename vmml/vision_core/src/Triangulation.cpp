@@ -10,10 +10,13 @@
  * Taken from TheiaSfM
  */
 
+#include <string>
+#include <exception>
 #include "Triangulation.h"
 #include <opencv2/core/eigen.hpp>
 
 
+using namespace std;
 using namespace Eigen;
 
 
@@ -133,17 +136,83 @@ bool TriangulateDLT(const Matrix3x4d& projMat1,
 
 
 bool TriangulateCV(
-		const Matrix3x4d& pose1,
-		const Matrix3x4d& pose2,
-		const Eigen::Vector2d& point1,
-		const Eigen::Vector2d& point2,
-		Eigen::Vector4d &triangulated_point)
+	const BaseFrame &F1, const BaseFrame &F2,
+	const std::vector<Matcher::KpPair> &featurePairs,
+	std::map<uint, Eigen::Vector3d> &trianglPoints
+)
 {
-	cv::Mat posecv1, posecv2;
-	cv::eigen2cv(pose1, posecv1);
-	cv::eigen2cv(pose2, posecv2);
+	const int N = featurePairs.size();
+	const auto
+		pm1 = F1.projectionMatrix(),
+		pm2 = F2.projectionMatrix();
+	cv::Mat projMat1, projMat2;
+	vector<cv::Point2f> pointsInFrame1(N), pointsInFrame2(N);
+	cv::Mat triangulationResults;
+	vector<float> vParallax(N);
 
-	return true;
+	cv::eigen2cv(pm1, projMat1);
+	cv::eigen2cv(pm2, projMat2);
+
+	int i=0;
+	for (auto &pointPair: featurePairs) {
+		pointsInFrame1[i] = F1.keypoint(pointPair.first).pt;
+		pointsInFrame2[i] = F2.keypoint(pointPair.second).pt;
+		++i;
+	}
+
+	cv::triangulatePoints(projMat1, projMat2, pointsInFrame1, pointsInFrame2, triangulationResults);
+	if (N!=triangulationResults.cols)
+		throw runtime_error("Unexpected number of points; should be "+to_string(featurePairs.size()));
+
+	/*
+	 * Check triangulation results
+	 */
+	for (i=0; i<N; ++i) {
+		cv::Vec4f p = triangulationResults.col(i);
+		p /= p[3];
+		Vector3d pointm(p[0], p[1], p[2]);
+
+		auto
+			proj1 = F1.keypointv(featurePairs[i].first),
+			proj2 = F2.keypointv(featurePairs[i].second);
+		auto
+			e1 = F1.keypoint(featurePairs[i].first).octave * Matcher::circleOfConfusionDiameter,
+			e2 = F2.keypoint(featurePairs[i].second).octave * Matcher::circleOfConfusionDiameter;
+
+		// Check for Reprojection Errors
+		float pj1 = (F1.project(pointm) - proj1).norm(),
+			pj2 = (F2.project(pointm) - proj2).norm();
+		if (pj1 > e1 or pj2 > e2)
+			continue;
+
+		// checking for regularity of triangulation result
+		// 1: Point must be in front of camera
+		Vector3d v1 = pointm - F1.position();
+		Vector3d trans1 = F1.transform(pointm);
+		if (trans1.z() < 0)
+			continue;
+
+		Vector3d v2 = pointm - F2.position();
+		Vector3d trans2 = F2.transform(pointm);
+		if (trans2.z() < 0)
+			continue;
+
+		// 2: Must have enough parallax (ie. remove faraway points)
+		double cosParallax = (-v1).dot(-v2) / (v1.norm() * v2.norm());
+		if (cosParallax >= 0.999990481)
+			continue;
+
+		trianglPoints.insert(make_pair(i, pointm));
+
+		// XXX: Find maximum parallax value
+/*
+		mpid newMp = parent.createMapPoint(pointm);
+		newMapPointList.push_back(newMp);
+		mapPointToKeyPointInKeyFrame1[newMp] = kpPair[i].first;
+		mapPointToKeyPointInKeyFrame2[newMp] = kpPair[i].second;
+*/
+	}
+
 }
 
 

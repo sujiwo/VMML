@@ -56,11 +56,11 @@ public:
 
 	friend class BucketFeature;
 
-	BaseFrame();
+	BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p=Pose::Identity());
 	virtual ~BaseFrame();
 
 	static
-	Ptr create(cv::Mat img, const Pose &p, const CameraPinholeParams &cam);
+	Ptr create(cv::Mat img, const CameraPinholeParams &cam, const Pose &p=Pose::Identity());
 
 	const Pose& pose() const
 	{ return mPose; }
@@ -319,9 +319,9 @@ BaseFrame::projectLidarScan
 	std::vector<PointXYI> projections;
 
 	// Create fake frame
-	BaseFrame frame;
-	frame.setPose(lidarToCameraTransform);
-	frame.setCameraParam(&cameraParams);
+	BaseFrame frame(cv::Mat(cv::Size(cameraParams.width, cameraParams.height), CV_8UC1),
+		cameraParams,
+		lidarToCameraTransform);
 
 	projections.resize(lidarScan.size());
 	int i=0, j=0;

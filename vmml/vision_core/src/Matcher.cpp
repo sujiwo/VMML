@@ -165,7 +165,7 @@ Matcher::isKeypointInEpipolarLine (const Line2 &epl2, const Eigen::Vector2d &kp2
 
 
 int
-Matcher::matchForInitialization(
+Matcher::matchBruteForce(
 	const BaseFrame &F1,
 	const BaseFrame &F2,
 	Matcher::PairList &featurePairs,

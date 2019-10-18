@@ -27,7 +27,9 @@ class KeyFrame : public BaseFrame
 public:
 	friend class VisionMap;
 
-	KeyFrame(const std::shared_ptr<VisionMap> _parent);
+	typedef std::shared_ptr<KeyFrame> Ptr;
+
+	KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo=0, const Pose &p=Pose::Identity());
 	virtual ~KeyFrame();
 
 	const std::shared_ptr<VisionMap> parent() const
@@ -47,12 +49,10 @@ public:
 	static Ptr
 	fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
 
-	typedef std::shared_ptr<KeyFrame> Ptr;
-
 protected:
 	kfid id;
 	int cameraId;
-	sourceId srcId;
+	sourceId srcId=0;
 
 	// Time at which the image was taken
 	ptime frCreationTime;

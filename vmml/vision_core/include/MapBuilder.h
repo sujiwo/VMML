@@ -26,13 +26,8 @@ class MapBuilder
 {
 public:
 
-	MapBuilder(const CameraPinholeParams &camera0, float zoom=1.0);
+	MapBuilder(const CameraPinholeParams &camera0);
 
-/*
-	void build(const RandomAccessBag &imageBag,
-		sourceId start=0,
-		sourceId stop=std::numeric_limits<sourceId>::max());
-*/
 	virtual bool feed(cv::Mat inputImage);
 
 	virtual ~MapBuilder();
@@ -43,14 +38,13 @@ public:
 protected:
 
 	std::shared_ptr<VisionMap> vMap;
-	float zoomRatio;
 
-	void initialize();
+	bool initialize(BaseFrame::Ptr &f);
 
 	bool hasInitialized = false;
 	kfid lastAnchor = 0;
+	CameraPinholeParams camera0;
 
-//	KeyFrame::Ptr createKeyFrame(const RandomAccessBag &imageBag, sourceId n) const;
 };
 
 } /* namespace Vmml */

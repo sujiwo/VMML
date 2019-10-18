@@ -45,7 +45,8 @@ bool TriangulateCV(
 		Eigen::Vector4d &triangulated_point
 */
 	const BaseFrame &F1, const BaseFrame &F2,
-	const std::vector<Matcher::KpPair> &featurePairs
+	const std::vector<Matcher::KpPair> &featurePairs,
+	std::map<uint, Eigen::Vector3d> &trianglPoints
 );
 
 }		// namespace Vmml

@@ -34,7 +34,7 @@ public:
 
 	// Matching features for initialization
 	static int
-	matchForInitialization(
+	matchBruteForce(
 		const BaseFrame &F1,
 		const BaseFrame &F2,
 		PairList &featurePairs,

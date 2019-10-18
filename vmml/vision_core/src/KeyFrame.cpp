@@ -5,7 +5,11 @@
  *      Author: sujiwo
  */
 
-#include <KeyFrame.h>
+#include "KeyFrame.h"
+#include "VisionMap.h"
+
+using namespace std;
+
 
 namespace Vmml {
 
@@ -15,9 +19,14 @@ namespace Vmml {
 kfid KeyFrame::nextId = 1;
 
 
-KeyFrame::KeyFrame() {
-	// TODO Auto-generated constructor stub
-
+KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const Pose &p) :
+	BaseFrame(img, _parent->getCameraParameter(cameraNo), p),
+	mParent(_parent),
+	cameraId(cameraNo)
+{
+	id = KeyFrame::nextId;
+	computeFeatures(mParent->getFeatureDetector());
+	nextId++;
 }
 
 
@@ -29,19 +38,15 @@ KeyFrame::~KeyFrame() {
 KeyFrame::Ptr
 KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
 {
-	Ptr newKf(new KeyFrame);
-	newKf->mParent = mParent;
-	newKf->image = image;
-	newKf->cameraParam = mParent->getCameraParameter(cameraNumber);
-	newKf->computeFeatures(mParent->getFeatureDetector());
+	Ptr newKf(new KeyFrame(image, mParent, cameraNumber));
 	return newKf;
 }
 
 
-static Ptr
+KeyFrame::Ptr
 KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
 {
-
+	return create(frameSource.getImage(), mParent, cameraNumber);
 }
 
 } /* namespace Vmml */

@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <iostream>
 #include "VisionMap.h"
 #include "ImageBag.h"
 #include "BaseFrame.h"
@@ -28,17 +29,18 @@ int main(int argc, char *argv[])
 {
 	camera0 = camera0 * enlarge;
 
-	rosbag::Bag inputBag("/Data/MapServer/Logs/campus_loop/campus_loop.bag");
+	rosbag::Bag inputBag("/media/sujiwo/ssd/motoyama/motoyama-ndt.bag");
 	ImageBag images(inputBag, "/camera1/image_raw", enlarge);
 
-	auto frame1 = BaseFrame::create(images.at(180), Pose::Identity(), camera0);
-	auto frame2 = BaseFrame::create(images.at(185), Pose::Identity(), camera0);
+	auto frame1 = BaseFrame::create(images.at(273), camera0);
+	auto frame2 = BaseFrame::create(images.at(282), camera0);
 
 	Matcher::PairList matches12, matches12inliers;
 	frame1->computeFeatures(testMap.getFeatureDetector());
 	frame2->computeFeatures(testMap.getFeatureDetector());
-	int n = Matcher::matchForInitialization(*frame1, *frame2, matches12);
+	int n = Matcher::matchBruteForce(*frame1, *frame2, matches12);
 	TTransform motion = Matcher::calculateMovement(*frame1, *frame2, matches12, matches12inliers);
+	cout << dumpVector(motion) << endl;
 
 	cv::Mat imageFlow = Matcher::drawMatches(*frame1, *frame2, matches12inliers, Matcher::DrawOpticalFlow);
 	cv::imwrite("/tmp/flow.png", imageFlow);
