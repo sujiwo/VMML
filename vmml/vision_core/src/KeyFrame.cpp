@@ -46,7 +46,9 @@ KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int c
 KeyFrame::Ptr
 KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
 {
-	return create(frameSource.getImage(), mParent, cameraNumber);
+	auto frm = create(frameSource.getImage(), mParent, cameraNumber);
+	frm->setPose(frameSource.pose());
+	return frm;
 }
 
 } /* namespace Vmml */

@@ -429,7 +429,6 @@ Matcher::solvePose(
 	const KeyFrame &KFsrc,
 	const BaseFrame &Ft,
 	std::vector<KpPair> &featurePairs,
-	cv::Ptr<cv::DescriptorMatcher> matcher,
 	Pose &newFramePose)
 {
 	Eigen::Matrix4d eKfExt = KFsrc.externalParamMatrix4();

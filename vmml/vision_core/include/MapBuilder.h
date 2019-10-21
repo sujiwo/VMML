@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <limits>
+#include <functional>
 #include "utilities.h"
 #include "CameraPinholeParams.h"
 #include "VisionMap.h"
@@ -40,6 +41,8 @@ protected:
 	std::shared_ptr<VisionMap> vMap;
 
 	bool initialize(BaseFrame::Ptr &f);
+
+	bool track(BaseFrame::Ptr &fr);
 
 	bool hasInitialized = false;
 	kfid lastAnchor = 0;

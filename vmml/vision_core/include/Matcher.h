@@ -91,7 +91,6 @@ public:
 		const KeyFrame &KFsrc,
 		const BaseFrame &Ft,
 		PairList &featurePairs,
-		cv::Ptr<cv::DescriptorMatcher> matcher,
 		Pose &newFramePose);
 
 	enum DrawMode {

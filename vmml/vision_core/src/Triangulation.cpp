@@ -138,8 +138,8 @@ bool TriangulateDLT(const Matrix3x4d& projMat1,
 bool TriangulateCV(
 	const BaseFrame &F1, const BaseFrame &F2,
 	const std::vector<Matcher::KpPair> &featurePairs,
-	std::map<uint, Eigen::Vector3d> &trianglPoints
-)
+	std::map<uint, Eigen::Vector3d> &trianglPoints,
+	float *parallax)
 {
 	const int N = featurePairs.size();
 	const auto
@@ -148,7 +148,8 @@ bool TriangulateCV(
 	cv::Mat projMat1, projMat2;
 	vector<cv::Point2f> pointsInFrame1(N), pointsInFrame2(N);
 	cv::Mat triangulationResults;
-	vector<float> vParallax(N);
+
+	float cosParallaxRet = 0.0;
 
 	cv::eigen2cv(pm1, projMat1);
 	cv::eigen2cv(pm2, projMat2);
@@ -201,6 +202,8 @@ bool TriangulateCV(
 		double cosParallax = (-v1).dot(-v2) / (v1.norm() * v2.norm());
 		if (cosParallax >= 0.999990481)
 			continue;
+		if (cosParallax > cosParallaxRet)
+			cosParallaxRet = cosParallax;
 
 		trianglPoints.insert(make_pair(i, pointm));
 
@@ -213,6 +216,10 @@ bool TriangulateCV(
 */
 	}
 
+	if (parallax!=NULL)
+		*parallax = acos(cosParallaxRet) * 180.0/M_PI;
+
+	return true;
 }
 
 

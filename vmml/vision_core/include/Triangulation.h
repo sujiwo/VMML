@@ -46,7 +46,8 @@ bool TriangulateCV(
 */
 	const BaseFrame &F1, const BaseFrame &F2,
 	const std::vector<Matcher::KpPair> &featurePairs,
-	std::map<uint, Eigen::Vector3d> &trianglPoints
+	std::map<uint, Eigen::Vector3d> &trianglPoints,
+	float *parallax=NULL
 );
 
 }		// namespace Vmml

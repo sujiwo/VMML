@@ -54,6 +54,7 @@ public:
 
 	bool addKeyFrame(KeyFrame::Ptr frame);
 	bool addMapPoint(MapPoint::Ptr mpPoint);
+	void addMapPointVisibility(const mpid &mp, const kfid &kf, const kpid &kp);
 
 	inline KeyFrame::Ptr getKeyFrameById (const kfid &i) const
 	{ return keyframeInvIdx.at(i); }
@@ -97,9 +98,11 @@ public:
 	std::map<mpid,kpid> allMapPointsAtKeyFrame(const kfid f) const;
 
 	// Map building
+/*
 	bool estimateStructure (const kfid &keyFrame1, const kfid &keyFrame2, double translationHint=-1.0);
 
 	bool estimateAndTrack (const kfid &kfid1, const kfid &kfid2, const double metricDisposition=1.0);
+*/
 
 	void trackMapPoints (const kfid kf1, const kfid kf2);
 

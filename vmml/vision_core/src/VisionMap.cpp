@@ -126,6 +126,14 @@ VisionMap::addMapPoint(MapPoint::Ptr mp)
 }
 
 
+void
+VisionMap::addMapPointVisibility(const mpid &mp, const kfid &kf, const kpid &kp)
+{
+	// Add relationship between map point and keyframe, update graph
+	// possibly image database
+}
+
+
 map<mpid,kpid>
 VisionMap::allMapPointsAtKeyFrame(const kfid f)
 const
