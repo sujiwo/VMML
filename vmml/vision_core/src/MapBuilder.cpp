@@ -37,7 +37,12 @@ MapBuilder::feed(cv::Mat inputImage)
 		return vMap->addKeyFrame(K1);
 	}
 	else {
-		initialize(currentFrame);
+		if (initialize(currentFrame)==true) {
+
+		}
+		else {
+
+		}
 	}
 
 	return true;
