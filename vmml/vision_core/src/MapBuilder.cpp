@@ -85,9 +85,13 @@ MapBuilder::initialize(BaseFrame::Ptr &f2)
 	if (mapPoints.size() < 10)
 		return false;
 
+	auto K2 = KeyFrame::fromBaseFrame(*f2, vMap);
+	vMap->addKeyFrame(K2);
+
 	// Add points to Map
 	for (auto &ptPair: mapPoints) {
-
+		auto pt3d = MapPoint::create(ptPair.second);
+		vMap->addMapPoint(pt3d);
 	}
 
 	return true;

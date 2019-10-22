@@ -19,16 +19,11 @@ namespace Vmml {
 mpid MapPoint::nextId = 1;
 
 
-MapPoint::MapPoint() {
-	// TODO Auto-generated constructor stub
-
-}
-
-
 MapPoint::MapPoint(const Vector3d &p) :
 	position(p),
 	id(nextId++)
 {}
+
 
 MapPoint::~MapPoint() {}
 
@@ -115,6 +110,13 @@ MapPoint::createDescriptor(const std::vector<KeyMapPoint> &visibleIn)
 	}
 
 	descriptor = allDescriptors[medIdx].clone();
+}
+
+
+MapPoint::Ptr
+MapPoint::create(const Vector3d &p)
+{
+	return Ptr(new MapPoint(p));
 }
 
 } /* namespace Vmml */

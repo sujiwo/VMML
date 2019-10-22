@@ -31,7 +31,9 @@ int ORBDescriptorDistance(const cv::Mat &a, const cv::Mat &b);
 class MapPoint {
 public:
 
-	MapPoint();
+	typedef std::shared_ptr<MapPoint> Ptr;
+
+//	MapPoint();
 	MapPoint(const Eigen::Vector3d &p);
 	virtual ~MapPoint();
 
@@ -61,7 +63,7 @@ public:
 	// Set by bundle adjustment routines
 	bool hasBa = false;
 
-	typedef std::shared_ptr<MapPoint> Ptr;
+	static Ptr create(const Eigen::Vector3d &p);
 
 protected:
 

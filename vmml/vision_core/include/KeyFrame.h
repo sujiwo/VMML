@@ -29,7 +29,14 @@ public:
 
 	typedef std::shared_ptr<KeyFrame> Ptr;
 
-	KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo=0, const Pose &p=Pose::Identity());
+	KeyFrame(cv::Mat img,
+		const std::shared_ptr<VisionMap> _parent,
+		int cameraNo=0,
+		const Pose &p=Pose::Identity(),
+		bool doComputeFeatures=true);
+
+	KeyFrame(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo=0);
+
 	virtual ~KeyFrame();
 
 	const std::shared_ptr<VisionMap> parent() const

@@ -19,13 +19,25 @@ namespace Vmml {
 kfid KeyFrame::nextId = 1;
 
 
-KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const Pose &p) :
+KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const Pose &p, bool doComputeFeatures) :
 	BaseFrame(img, _parent->getCameraParameter(cameraNo), p),
 	mParent(_parent),
 	cameraId(cameraNo)
 {
 	id = KeyFrame::nextId;
-	computeFeatures(mParent->getFeatureDetector());
+	if (doComputeFeatures==true)
+		computeFeatures(mParent->getFeatureDetector());
+	nextId++;
+}
+
+
+KeyFrame::KeyFrame
+(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo=0) :
+	BaseFrame::BaseFrame(&bsFrame),
+	mParent(_parent),
+	cameraId(cameraNo)
+{
+	id = KeyFrame::nextId;
 	nextId++;
 }
 
@@ -46,9 +58,9 @@ KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int c
 KeyFrame::Ptr
 KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
 {
-	auto frm = create(frameSource.getImage(), mParent, cameraNumber);
-	frm->setPose(frameSource.pose());
-	return frm;
+//	auto frm = create(frameSource.getImage(), mParent, cameraNumber);
+	Ptr kfrm (new KeyFrame(frameSource.getImage(), mParent, cameraNumber, frameSource.pose(), cameraNumber, false));
+	return kfrm;
 }
 
 } /* namespace Vmml */
