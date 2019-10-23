@@ -27,6 +27,16 @@ BaseFrame::BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p)
 	cameraParam(cam)
 {}
 
+BaseFrame::BaseFrame(const BaseFrame &c) :
+	image(c.image.clone()),
+	mPose(c.mPose),
+	cameraParam(c.cameraParam),
+	poseIsValid(c.poseIsValid),
+	fDescriptors(c.fDescriptors.clone()),
+	fKeypoints(c.fKeypoints),
+	featuresGridIdx(c.featuresGridIdx)
+{}
+
 BaseFrame::~BaseFrame() {
 	// TODO Auto-generated destructor stub
 }

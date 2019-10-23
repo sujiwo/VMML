@@ -131,6 +131,13 @@ VisionMap::addMapPointVisibility(const mpid &mp, const kfid &kf, const kpid &kp)
 {
 	// Add relationship between map point and keyframe, update graph
 	// possibly image database
+	framePoints[kf].insert(make_pair(mp, kp));
+	framePointsInv[kf].insert(make_pair(kp, mp));
+	pointAppearances[mp].insert(kf);
+
+	if (pointAppearances[mp].size()>=3) {
+
+	}
 }
 
 

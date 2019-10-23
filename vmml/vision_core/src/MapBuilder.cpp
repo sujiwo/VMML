@@ -53,7 +53,7 @@ MapBuilder::feed(cv::Mat inputImage)
 		}
 
 		// Tracking mode
-
+		track(currentFrame);
 	}
 
 	return true;
@@ -90,10 +90,16 @@ MapBuilder::initialize(BaseFrame::Ptr &f2)
 
 	// Add points to Map
 	for (auto &ptPair: mapPoints) {
+		auto inlierKeyPointPair = f12matchesInliers[ptPair.first];
 		auto pt3d = MapPoint::create(ptPair.second);
 		vMap->addMapPoint(pt3d);
+		vMap->addMapPointVisibility(pt3d->getId(), K1->getId(), inlierKeyPointPair.first);
+		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
 	}
+	K1->computeBoW();
+	K2->computeBoW();
 
+	vMap->updateCovisibilityGraph(K1->getId());
 	return true;
 }
 
@@ -133,8 +139,11 @@ MapBuilder::track(BaseFrame::Ptr &frame)
 	// Estimate pose for KF2
 	Pose PF2;
 	Matcher::solvePose(*kAnchor, *frame, oldMapPointPairs, PF2);
-
 	frame->setPose(PF2);
+	auto Knew = KeyFrame::fromBaseFrame(*frame, vMap);
+	vMap->addKeyFrame(Knew);
+
+	// XXX: Unfinished !
 }
 
 

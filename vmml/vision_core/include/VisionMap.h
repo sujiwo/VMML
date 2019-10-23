@@ -160,8 +160,12 @@ public:
 	std::vector<kfid>
 	findCandidates (const BaseFrame &f) const;
 
+	void updateCovisibilityGraph(const kfid k);
 
 protected:
+
+	friend class KeyFrame;
+	friend class MapPoint;
 
 	std::shared_ptr<std::mutex> keyframeInvIdx_mtx;
 	std::map<kfid, KeyFrame::Ptr> keyframeInvIdx;
@@ -203,8 +207,6 @@ protected:
 	std::map<kfid,KeyFrameGraph::vertex_descriptor> kfVtxMap;
 	std::map<KeyFrameGraph::vertex_descriptor,kfid> kfVtxInvMap;
 	std::mutex covisibilityGraphMtx;
-
-	void updateCovisibilityGraph(const kfid k);
 
 	// End KeyFrame Graph
 

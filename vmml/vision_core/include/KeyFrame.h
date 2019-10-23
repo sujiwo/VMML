@@ -56,6 +56,8 @@ public:
 	static Ptr
 	fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
 
+	void computeBoW();
+
 protected:
 	kfid id;
 	int cameraId;

@@ -57,6 +57,7 @@ public:
 	friend class BucketFeature;
 
 	BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p=Pose::Identity());
+	BaseFrame(const BaseFrame &copy);
 	virtual ~BaseFrame();
 
 	static
