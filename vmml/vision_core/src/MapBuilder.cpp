@@ -143,7 +143,24 @@ MapBuilder::track(BaseFrame::Ptr &frame)
 	auto Knew = KeyFrame::fromBaseFrame(*frame, vMap);
 	vMap->addKeyFrame(Knew);
 
-	// XXX: Unfinished !
+	// Put point appearances
+	for (int i=0; i<oldMapPointPairs.size(); i++) {
+		mpid ptId = vMap->getMapPointByKeypoint(lastAnchor, oldMapPointPairs[i].first);
+		vMap->addMapPointVisibility(ptId, Knew->getId(), oldMapPointPairs[i].second);
+	}
+
+	// Triangulation for new map points
+	map<uint, Vector3d> mapPoints;
+	float parallax;
+	TriangulateCV(*kAnchor, *Knew, newMapPointPairs, mapPoints, &parallax);
+	for (auto &p: mapPoints) {
+		auto ptn = MapPoint::create(p.second);
+		vMap->addMapPoint(ptn);
+		vMap->addMapPointVisibility(ptn->getId(), lastAnchor, newMapPointPairs[p.first].first);
+		vMap->addMapPointVisibility(ptn->getId(), Knew->getId(), newMapPointPairs[p.first].second);
+	}
+
+	return true;
 }
 
 
