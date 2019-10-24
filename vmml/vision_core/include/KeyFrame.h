@@ -58,6 +58,8 @@ public:
 
 	void computeBoW();
 
+	static std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
+
 protected:
 	kfid id;
 	int cameraId;

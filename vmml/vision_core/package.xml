@@ -42,7 +42,6 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <depend>roscpp</depend>
-  <depend>libg2o</depend>
   <depend>rosbag_viewer</depend>
   <buildtool_depend>catkin</buildtool_depend>
 

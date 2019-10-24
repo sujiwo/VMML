@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1.0)
 project(vision_core)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -frtti -fopenmp)
 
 set (CMAKE_MODULE_PATH 
 		${CMAKE_MODULE_PATH} 
@@ -44,8 +44,9 @@ add_subdirectory (DBoW2)
 
 
 catkin_package(
+	INCLUDE_DIRS include
 	LIBRARIES vmml
-	CATKIN_DEPENDS roscpp libg2o rosbag_viewer
+	CATKIN_DEPENDS roscpp rosbag_viewer
 )
 
 include_directories(
@@ -61,8 +62,18 @@ include_directories(
 	${G2O_INCLUDE_DIR}	
 )
 
+set(REQUIRED_LIBS
+	DBoW2
+	${OpenCV_LIBS}
+	${PCL_LIBRARIES}
+	${G2O_LIBRARIES}
+	${catkin_LIBRARIES}
+	Boost::serialization
+	Boost::system
+)
+
 add_library(
-	vmml STATIC
+	vmml 
 		src/Pose.cpp
 		src/utilities.cpp
 		src/CameraPinholeParams.cpp
@@ -81,14 +92,9 @@ add_library(
 		src/ImageBag.cpp
 )
 
-set(REQUIRED_LIBS
-	DBoW2
-	${OpenCV_LIBS}
-	${PCL_LIBRARIES}
-	${G2O_LIBRARIES}
-	${catkin_LIBRARIES}
-	Boost::serialization
-	Boost::system
+target_link_libraries(
+	vmml
+		${REQUIRED_LIBS}
 )
 
 add_executable(

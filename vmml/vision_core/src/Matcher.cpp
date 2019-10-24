@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <omp.h>
 #include <algorithm>
 #include <limits>
 #include <opencv2/core.hpp>

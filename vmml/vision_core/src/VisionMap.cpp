@@ -9,6 +9,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 
+#include "KeyFrame.h"
+#include "MapPoint.h"
 #include "VisionMap.h"
 
 #define MAX_ORB_POINTS_IN_FRAME 9000
@@ -18,16 +20,6 @@ using namespace Eigen;
 
 
 namespace Vmml {
-
-std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors)
-{
-    std::vector<cv::Mat> vDesc;
-    vDesc.reserve(Descriptors.rows);
-    for (int j=0;j<Descriptors.rows;j++)
-        vDesc.push_back(Descriptors.row(j));
-
-    return vDesc;
-}
 
 
 VisionMap::VisionMap() :
@@ -81,6 +73,14 @@ VisionMap::reset()
 }
 
 
+int
+VisionMap::addCameraParameter (const CameraPinholeParams &vscamIntr)
+{
+	cameraList.push_back(vscamIntr);
+	return cameraList.size()-1;
+}
+
+
 bool
 VisionMap::addKeyFrame(KeyFrame::Ptr frame)
 {
@@ -93,7 +93,7 @@ VisionMap::addKeyFrame(KeyFrame::Ptr frame)
 	/*
 	 * image database part
 	 */
-	auto kfDescriptors = toDescriptorVector(frame->allDescriptors());
+	auto kfDescriptors = KeyFrame::toDescriptorVector(frame->allDescriptors());
 	BoWList[nId] = DBoW2::BowVector();
 	FeatVecList[nId] = DBoW2::FeatureVector();
 	myVoc.transform(kfDescriptors, BoWList[nId], FeatVecList[nId], 4);
@@ -130,14 +130,9 @@ void
 VisionMap::addMapPointVisibility(const mpid &mp, const kfid &kf, const kpid &kp)
 {
 	// Add relationship between map point and keyframe, update graph
-	// possibly image database
 	framePoints[kf].insert(make_pair(mp, kp));
 	framePointsInv[kf].insert(make_pair(kp, mp));
 	pointAppearances[mp].insert(kf);
-
-	if (pointAppearances[mp].size()>=3) {
-
-	}
 }
 
 
@@ -268,6 +263,23 @@ VisionMap::updateCovisibilityGraph(const kfid k)
 		boost::add_edge(kfVtxMap[k], kfVtxMap[kfctr.first], kfctr.second, covisibility);
 		covisibilityGraphMtx.unlock();
 	}
+}
+
+
+void
+VisionMap::updateMapPointDescriptor(const mpid mp)
+{
+	auto mPoint = mappoint(mp);
+	vector<KeyMapPoint> vKf;
+	for(auto &kfId: pointAppearances.at(mp)) {
+		auto currentKeyframe = keyframe(kfId);
+		kpid kp = framePoints.at(kfId).at(mp);
+		KeyMapPoint kmp = {*currentKeyframe, kp};
+		vKf.push_back(kmp);
+	}
+
+	if (vKf.size() >= 3)
+		mPoint->createDescriptor(vKf);
 }
 
 

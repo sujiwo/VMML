@@ -176,9 +176,9 @@ bool TriangulateCV(
 		auto
 			proj1 = F1.keypointv(featurePairs[i].first),
 			proj2 = F2.keypointv(featurePairs[i].second);
-		auto
-			e1 = F1.keypoint(featurePairs[i].first).octave * Matcher::circleOfConfusionDiameter,
-			e2 = F2.keypoint(featurePairs[i].second).octave * Matcher::circleOfConfusionDiameter;
+		float
+			e1 = float(F1.keypoint(featurePairs[i].first).octave+1) * Matcher::circleOfConfusionDiameter,
+			e2 = float(F2.keypoint(featurePairs[i].second).octave+1) * Matcher::circleOfConfusionDiameter;
 
 		// Check for Reprojection Errors
 		float pj1 = (F1.project(pointm) - proj1).norm(),

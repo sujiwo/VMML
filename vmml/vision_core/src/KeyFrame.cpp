@@ -19,7 +19,8 @@ namespace Vmml {
 kfid KeyFrame::nextId = 1;
 
 
-std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors)
+std::vector<cv::Mat>
+KeyFrame::toDescriptorVector(const cv::Mat &Descriptors)
 {
     std::vector<cv::Mat> vDesc;
     vDesc.reserve(Descriptors.rows);

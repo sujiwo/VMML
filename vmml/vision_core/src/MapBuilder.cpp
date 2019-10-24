@@ -30,6 +30,7 @@ bool
 MapBuilder::feed(cv::Mat inputImage)
 {
 	auto currentFrame = BaseFrame::create(inputImage, camera0);
+	currentFrame->computeFeatures(vMap->getFeatureDetector());
 
 	// No frame yet
 	if (lastAnchor==0) {
@@ -39,21 +40,23 @@ MapBuilder::feed(cv::Mat inputImage)
 	}
 	else {
 
-		// Try initialization
-		if (initialize(currentFrame)==true) {
-			auto newKf = KeyFrame::fromBaseFrame(*currentFrame, vMap);
-			vMap->addKeyFrame(newKf);
-			lastAnchor = newKf->getId();
-			return true;
-		}
+		if (hasInitialized==false) {
+			// Try initialization
+			if (initialize(currentFrame)==true) {
+				hasInitialized = true;
+				return true;
+			}
 
-		else {
-			vMap->reset();
-			return false;
+			else {
+				// skip to next frame, maybe better
+				return false;
+			}
 		}
 
 		// Tracking mode
-		track(currentFrame);
+		else {
+			track(currentFrame);
+		}
 	}
 
 	return true;
@@ -95,11 +98,13 @@ MapBuilder::initialize(BaseFrame::Ptr &f2)
 		vMap->addMapPoint(pt3d);
 		vMap->addMapPointVisibility(pt3d->getId(), K1->getId(), inlierKeyPointPair.first);
 		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
+		vMap->updateMapPointDescriptor(pt3d->getId());
 	}
 	K1->computeBoW();
 	K2->computeBoW();
 
 	vMap->updateCovisibilityGraph(K1->getId());
+	lastAnchor = K2->getId();
 	return true;
 }
 
@@ -158,7 +163,10 @@ MapBuilder::track(BaseFrame::Ptr &frame)
 		vMap->addMapPoint(ptn);
 		vMap->addMapPointVisibility(ptn->getId(), lastAnchor, newMapPointPairs[p.first].first);
 		vMap->addMapPointVisibility(ptn->getId(), Knew->getId(), newMapPointPairs[p.first].second);
+		vMap->updateMapPointDescriptor(ptn->getId());
 	}
+
+	// XXX: Update descriptors of all related map points before exiting this function
 
 	return true;
 }

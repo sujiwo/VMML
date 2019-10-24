@@ -162,6 +162,8 @@ public:
 
 	void updateCovisibilityGraph(const kfid k);
 
+	void updateMapPointDescriptor(const mpid mp);
+
 protected:
 
 	friend class KeyFrame;
