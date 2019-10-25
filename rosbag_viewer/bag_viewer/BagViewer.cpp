@@ -143,6 +143,17 @@ void BagViewer::on_playButton_clicked(bool checked) {
 
 void BagViewer::on_playProgress_sliderMoved(int i) { updateImage(i); }
 
+void
+BagViewer::on_nextFrameBtn_clicked(bool checked)
+{ updateImage(currentPosition+1); }
+
+void
+BagViewer::on_prevFrameBtn_clicked(bool checked)
+{
+	if (currentPosition==0) return;
+	updateImage(currentPosition-1);
+}
+
 void BagViewer::on_topicSelector_currentIndexChanged(int i) { setTopic(i); }
 
 void BagViewer::on_saveButton_clicked(bool checked) {

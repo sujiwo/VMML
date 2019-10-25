@@ -25,7 +25,7 @@ public:
 	virtual ~RVizConnector();
 
 protected:
-	ros::NodeHandle hdl;
+	ros::NodeHandle *hdl;
 };
 
 } /* namespace Mapper */

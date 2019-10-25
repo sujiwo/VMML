@@ -13,6 +13,7 @@ namespace Mapper {
 RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName)
 {
 	ros::init(argc, argv, nodeName);
+	hdl = new ros::NodeHandle;
 }
 
 RVizConnector::~RVizConnector() {

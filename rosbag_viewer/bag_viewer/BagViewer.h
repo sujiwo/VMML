@@ -64,6 +64,8 @@ public slots:
   void on_playProgress_sliderMoved(int i);
   void on_topicSelector_currentIndexChanged(int i);
   void on_saveButton_clicked(bool checked);
+  void on_nextFrameBtn_clicked(bool checked);
+  void on_prevFrameBtn_clicked(bool checked);
   void timeOffsetIndicator_clicked();
 
 private:

@@ -5,7 +5,7 @@
  *      Author: sujiwo
  */
 
-
+#include <iostream>
 #include "MapBuilder.h"
 #include "RVizConnector.h"
 #include "ImageBag.h"
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 
-	RVizConnector rosHdl(argc, argv, "monocular_mapper");
+//	RVizConnector rosHdl(argc, argv, "monocular_mapper");
 
 	camera0 = camera0 * enlarge;
 	camera0.fps = float(imageBag.size()) / Vmml::toSeconds(imageBag.length().toBoost());
@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 	for (int i=0; i<imageBag.size(); ++i) {
 		auto imageMsg = imageBag.at(i);
 		mapBuilderz.feed(imageMsg);
+		cout << "Counter: " << i << endl;
 	}
 
 	return 0;
