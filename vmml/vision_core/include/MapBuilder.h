@@ -48,6 +48,7 @@ protected:
 	kfid lastAnchor = 0;
 	CameraPinholeParams camera0;
 
+	bool requireNewKeyFrame(const BaseFrame &f);
 };
 
 } /* namespace Vmml */

@@ -173,6 +173,13 @@ MapBuilder::track(BaseFrame::Ptr &frame)
 }
 
 
+bool
+MapBuilder::requireNewKeyFrame(const BaseFrame &f)
+{
+
+}
+
+
 } /* namespace Vmml */
 
 
