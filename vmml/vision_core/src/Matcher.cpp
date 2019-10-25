@@ -30,7 +30,7 @@ typedef
 		WhichKpId;
 
 float
-	Matcher::circleOfConfusionDiameter = 1.0;
+	Matcher::circleOfConfusionDiameter = 4.0;
 
 const cv::Scalar
 	colorBlue(255, 0, 0),

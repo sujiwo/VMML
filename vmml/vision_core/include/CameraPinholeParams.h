@@ -28,6 +28,9 @@ struct CameraPinholeParams
 	// Mask specific for this camera
 	cv::Mat mask;
 
+	// Camera frame rate
+	float fps=10.0;
+
 	CameraPinholeParams(
 		double _fx, double _fy,
 		double _cx, double _cy,

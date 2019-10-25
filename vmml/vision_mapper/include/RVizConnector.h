@@ -8,6 +8,7 @@
 #ifndef VMML_MAPPER_RVIZCONNECTOR_H_
 #define VMML_MAPPER_RVIZCONNECTOR_H_
 
+#include <string>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
@@ -20,10 +21,11 @@ namespace Mapper {
 
 class RVizConnector {
 public:
-	RVizConnector(int argc, char *argv[]);
+	RVizConnector(int argc, char *argv[], const std::string &nodeName);
 	virtual ~RVizConnector();
 
 protected:
+	ros::NodeHandle hdl;
 };
 
 } /* namespace Mapper */

@@ -98,7 +98,7 @@ MapBuilder::initialize(BaseFrame::Ptr &f2)
 		vMap->addMapPoint(pt3d);
 		vMap->addMapPointVisibility(pt3d->getId(), K1->getId(), inlierKeyPointPair.first);
 		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
-		vMap->updateMapPointDescriptor(pt3d->getId());
+//		vMap->updateMapPointDescriptor(pt3d->getId());
 	}
 	K1->computeBoW();
 	K2->computeBoW();
@@ -152,6 +152,7 @@ MapBuilder::track(BaseFrame::Ptr &frame)
 	for (int i=0; i<oldMapPointPairs.size(); i++) {
 		mpid ptId = vMap->getMapPointByKeypoint(lastAnchor, oldMapPointPairs[i].first);
 		vMap->addMapPointVisibility(ptId, Knew->getId(), oldMapPointPairs[i].second);
+		vMap->updateMapPointDescriptor(ptId);
 	}
 
 	// Triangulation for new map points
@@ -163,10 +164,10 @@ MapBuilder::track(BaseFrame::Ptr &frame)
 		vMap->addMapPoint(ptn);
 		vMap->addMapPointVisibility(ptn->getId(), lastAnchor, newMapPointPairs[p.first].first);
 		vMap->addMapPointVisibility(ptn->getId(), Knew->getId(), newMapPointPairs[p.first].second);
-		vMap->updateMapPointDescriptor(ptn->getId());
+//		vMap->updateMapPointDescriptor(ptn->getId());
 	}
 
-	// XXX: Update descriptors of all related map points before exiting this function
+	vMap->updateCovisibilityGraph(lastAnchor);
 
 	return true;
 }

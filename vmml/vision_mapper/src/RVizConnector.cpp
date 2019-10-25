@@ -10,9 +10,9 @@
 namespace Vmml {
 namespace Mapper {
 
-RVizConnector::RVizConnector() {
-	// TODO Auto-generated constructor stub
-
+RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName)
+{
+	ros::init(argc, argv, nodeName);
 }
 
 RVizConnector::~RVizConnector() {

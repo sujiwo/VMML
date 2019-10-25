@@ -52,6 +52,7 @@ include_directories(
 add_executable(
 	simple_bag_mapper
 		nodes/simple_bag_mapper.cpp
+		src/RVizConnector.cpp
 )
 
 target_link_libraries(
