@@ -19,9 +19,22 @@
 #include "utilities.h"
 #include "CameraPinholeParams.h"
 #include "VisionMap.h"
+#include "Matcher.h"
 
 
 namespace Vmml {
+
+
+class MbFrame : public BaseFrame
+{
+public:
+	MbFrame(const BaseFrame &fr);
+	KeyFrame::Ptr toKeyFrame() const;
+
+protected:
+	KeyFrame::Ptr parentKeyFrame;
+};
+
 
 class MapBuilder
 {
@@ -49,6 +62,11 @@ protected:
 	CameraPinholeParams camera0;
 
 	bool requireNewKeyFrame(const BaseFrame &f);
+
+	/*
+	 * Create initial map after tracking two frames.
+	 */
+	void createInitialMap(BaseFrame::Ptr &f);
 };
 
 } /* namespace Vmml */
