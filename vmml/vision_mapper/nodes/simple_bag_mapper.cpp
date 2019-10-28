@@ -9,11 +9,13 @@
 #include "MapBuilder.h"
 #include "RVizConnector.h"
 #include "ImageBag.h"
+#include "utilities.h"
 
 
 using namespace std;
 using Vmml::MapBuilder;
 using Vmml::Mapper::RVizConnector;
+using Vmml::ptime;
 
 
 Vmml::CameraPinholeParams camera0 (
@@ -39,7 +41,8 @@ int main(int argc, char *argv[])
 
 	for (int i=0; i<imageBag.size(); ++i) {
 		auto imageMsg = imageBag.at(i);
-		mapBuilderz.feed(imageMsg);
+		ptime timestamp = imageBag.timeAt(i).toBoost();
+		mapBuilderz.feed(imageMsg, timestamp);
 		cout << "Counter: " << i << endl;
 	}
 

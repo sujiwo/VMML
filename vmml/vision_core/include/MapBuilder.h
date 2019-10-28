@@ -25,48 +25,63 @@
 namespace Vmml {
 
 
-class MbFrame : public BaseFrame
-{
-public:
-	MbFrame(const BaseFrame &fr);
-	KeyFrame::Ptr toKeyFrame() const;
-
-protected:
-	KeyFrame::Ptr parentKeyFrame;
-};
-
-
 class MapBuilder
 {
 public:
 
 	MapBuilder(const CameraPinholeParams &camera0);
 
-	virtual bool feed(cv::Mat inputImage);
+	virtual bool feed(cv::Mat inputImage, const ptime &timestamp);
 
 	virtual ~MapBuilder();
 
 	std::shared_ptr<VisionMap>& getMap()
 	{ return vMap; }
 
+
+	/*
+	 * Temporary structure for map builder only
+	 */
+	struct TmpFrame : public BaseFrame
+	{
+	public:
+		typedef std::shared_ptr<TmpFrame> Ptr;
+
+		TmpFrame(cv::Mat img, std::shared_ptr<VisionMap> &_parent);
+		static Ptr create(cv::Mat img, std::shared_ptr<VisionMap> &_parent);
+
+		KeyFrame::Ptr toKeyFrame() const;
+
+		bool initializeMatch(const KeyFrame::Ptr &key);
+
+		bool track(const kfid &kf);
+
+		bool isOkForKeyFrame() const;
+
+		KeyFrame::Ptr parentKeyFrame;
+		std::shared_ptr<VisionMap> parent;
+		Matcher::PairList
+			matchesToKeyFrame,			// all Inliers of matching to parent keyframe
+			prevMapPointPairs,			// visible map points from parent keyframe
+			candidatesMapPointPairs;	// candidates for new map points
+		ptime timestamp;
+	};
+
 protected:
 
 	std::shared_ptr<VisionMap> vMap;
 
-	bool initialize(BaseFrame::Ptr &f);
+	TmpFrame::Ptr currentWorkframe;
 
-	bool track(BaseFrame::Ptr &fr);
+	bool initialize();
+
+	bool track();
 
 	bool hasInitialized = false;
 	kfid lastAnchor = 0;
 	CameraPinholeParams camera0;
 
-	bool requireNewKeyFrame(const BaseFrame &f);
-
-	/*
-	 * Create initial map after tracking two frames.
-	 */
-	void createInitialMap(BaseFrame::Ptr &f);
+	uint frameCounter = 0;
 };
 
 } /* namespace Vmml */

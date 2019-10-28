@@ -32,10 +32,12 @@ public:
 	KeyFrame(cv::Mat img,
 		const std::shared_ptr<VisionMap> _parent,
 		int cameraNo=0,
+		const ptime &ts=MAX_TIME,
 		const Pose &p=Pose::Identity(),
-		bool doComputeFeatures=true);
+		bool doComputeFeatures=true
+		);
 
-	KeyFrame(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo=0);
+	KeyFrame(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo=0, const ptime &ts=MAX_TIME);
 
 	virtual ~KeyFrame();
 
@@ -51,10 +53,10 @@ public:
 	{ return id; }
 
 	static Ptr
-	create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
+	create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0, const ptime &ts=MAX_TIME);
 
 	static Ptr
-	fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0);
+	fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0, const ptime &ts=MAX_TIME);
 
 	void computeBoW();
 

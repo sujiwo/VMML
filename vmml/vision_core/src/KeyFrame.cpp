@@ -31,10 +31,11 @@ KeyFrame::toDescriptorVector(const cv::Mat &Descriptors)
 }
 
 
-KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const Pose &p, bool doComputeFeatures) :
+KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const ptime &ts, const Pose &p, bool doComputeFeatures) :
 	BaseFrame(img, _parent->getCameraParameter(cameraNo), p),
 	mParent(_parent),
-	cameraId(cameraNo)
+	cameraId(cameraNo),
+	frCreationTime(ts)
 {
 	id = KeyFrame::nextId;
 	if (doComputeFeatures==true)
@@ -44,10 +45,11 @@ KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int ca
 
 
 KeyFrame::KeyFrame
-(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo) :
+(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo, const ptime &ts) :
 	BaseFrame::BaseFrame(bsFrame),
 	mParent(_parent),
-	cameraId(cameraNo)
+	cameraId(cameraNo),
+	frCreationTime(ts)
 {
 	id = KeyFrame::nextId;
 	nextId++;
@@ -60,17 +62,19 @@ KeyFrame::~KeyFrame() {
 
 
 KeyFrame::Ptr
-KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
+KeyFrame::create(cv::Mat image, const std::shared_ptr<VisionMap>& mParent, int cameraNumber, const ptime &ts)
 {
-	Ptr newKf(new KeyFrame(image, mParent, cameraNumber));
+	Ptr newKf(new KeyFrame(image, mParent, cameraNumber, ts));
+	newKf->frCreationTime = ts;
 	return newKf;
 }
 
 
 KeyFrame::Ptr
-KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber)
+KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber, const ptime &ts)
 {
 	Ptr kfrm (new KeyFrame(frameSource, mParent, cameraNumber));
+	kfrm->frCreationTime = ts;
 	return kfrm;
 }
 
