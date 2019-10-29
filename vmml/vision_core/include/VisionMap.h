@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <set>
 #include <map>
 #include <Eigen/Eigen>
@@ -163,6 +164,8 @@ public:
 	void updateCovisibilityGraph(const kfid k);
 
 	void updateMapPointDescriptor(const mpid mp);
+
+	typedef std::shared_ptr<VisionMap> Ptr;
 
 protected:
 

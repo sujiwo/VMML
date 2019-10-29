@@ -38,6 +38,8 @@ public:
 	std::shared_ptr<VisionMap>& getMap()
 	{ return vMap; }
 
+	inline void registerKeyFrameCallback (void (*func)(const BaseFrame &fr))
+	{ newKeyFrameCallbackFunc = func; }
 
 	/*
 	 * Temporary structure for map builder only
@@ -82,6 +84,8 @@ protected:
 	CameraPinholeParams camera0;
 
 	uint frameCounter = 0;
+
+	void (*newKeyFrameCallbackFunc)(const BaseFrame &f) = NULL;
 };
 
 } /* namespace Vmml */

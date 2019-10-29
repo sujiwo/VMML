@@ -32,12 +32,17 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 
-//	RVizConnector rosHdl(argc, argv, "monocular_mapper");
-
 	camera0 = camera0 * enlarge;
 	camera0.fps = float(imageBag.size()) / Vmml::toSeconds(imageBag.length().toBoost());
 
 	MapBuilder mapBuilderz(camera0);
+
+/*
+	RVizConnector rosHdl(argc, argv, "monocular_mapper");
+	auto fcb = [&](const Vmml::BaseFrame &fr)->void
+	{ rosHdl.publishFrame(fr); };
+	mapBuilderz.registerKeyFrameCallback(fcb);
+*/
 
 	for (int i=0; i<imageBag.size(); ++i) {
 		auto imageMsg = imageBag.at(i);

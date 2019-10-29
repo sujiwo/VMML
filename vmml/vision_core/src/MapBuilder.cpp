@@ -75,6 +75,8 @@ MapBuilder::TmpFrame::track(const kfid &kf)
 		}
 	}
 
+	cout << "Tracking; total: " << matchesToKeyFrame.size() << "; map: " << prevMapPointPairs.size() << "; cand: " << candidatesMapPointPairs.size() << endl;
+
 	// XXX: Find solution for insufficient pairs !
 	if (prevMapPointPairs.size() < 4) {
 		cerr << "Insufficient points!\n";
@@ -130,6 +132,8 @@ MapBuilder::feed(cv::Mat inputImage, const ptime &timestamp)
 	if (lastAnchor==0) {
 		auto K1 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 		lastAnchor = K1->getId();
+		if (newKeyFrameCallbackFunc!=NULL)
+			newKeyFrameCallbackFunc(*K1);
 		return vMap->addKeyFrame(K1);
 	}
 	else {
@@ -177,6 +181,7 @@ MapBuilder::initialize()
 		return false;
 
 	auto K2 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
+	if (newKeyFrameCallbackFunc!=NULL) newKeyFrameCallbackFunc(*K2);
 	vMap->addKeyFrame(K2);
 
 	// Add points to Map
@@ -210,6 +215,7 @@ MapBuilder::track()
 		return true;
 
 	auto Knew = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
+	if (newKeyFrameCallbackFunc!=NULL) newKeyFrameCallbackFunc(*Knew);
 	vMap->addKeyFrame(Knew);
 
 	// Put point appearances
@@ -231,6 +237,8 @@ MapBuilder::track()
 		vMap->addMapPointVisibility(ptn->getId(), Knew->getId(), currentWorkframe->candidatesMapPointPairs[p.first].second);
 //		vMap->updateMapPointDescriptor(ptn->getId());
 	}
+
+	// Build connections to previous keyframes, not just last anchor
 
 	vMap->updateCovisibilityGraph(lastAnchor);
 
