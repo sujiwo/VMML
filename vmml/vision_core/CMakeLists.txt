@@ -90,6 +90,7 @@ add_library(
 		src/Triangulation.cpp
 		src/VisualOdometry.cpp
 		src/ImageBag.cpp
+		src/Optimizer.cpp
 )
 
 target_link_libraries(

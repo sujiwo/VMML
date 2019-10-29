@@ -62,6 +62,8 @@ public:
 
 	static std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
 
+	double computeSceneMedianDepth() const;
+
 protected:
 	kfid id;
 	int cameraId;

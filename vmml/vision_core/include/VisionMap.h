@@ -98,6 +98,9 @@ public:
 	// XXX: Causes SIGSEGV when framePoints are empty
 	std::map<mpid,kpid> allMapPointsAtKeyFrame(const kfid f) const;
 
+	inline uint getNumberObservations(const mpid &mp) const
+	{ return pointAppearances.at(mp).size(); }
+
 	// Map building
 /*
 	bool estimateStructure (const kfid &keyFrame1, const kfid &keyFrame2, double translationHint=-1.0);

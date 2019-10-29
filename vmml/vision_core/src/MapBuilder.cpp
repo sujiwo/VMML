@@ -9,6 +9,7 @@
 #include "BaseFrame.h"
 #include "Matcher.h"
 #include "Triangulation.h"
+#include "Optimizer.h"
 
 
 using namespace std;
@@ -173,32 +174,7 @@ MapBuilder::initialize()
 	if (currentWorkframe->initializeMatch(anchorKeyframe)==false)
 		return false;
 
-	// Create map points
-	map<uint, Vector3d> mapPoints;
-	float parallax;
-	TriangulateCV(*anchorKeyframe, *currentWorkframe, currentWorkframe->matchesToKeyFrame, mapPoints, &parallax);
-	if (mapPoints.size() < 10)
-		return false;
-
-	auto K2 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
-	if (newKeyFrameCallbackFunc!=NULL) newKeyFrameCallbackFunc(*K2);
-	vMap->addKeyFrame(K2);
-
-	// Add points to Map
-	for (auto &ptPair: mapPoints) {
-		auto inlierKeyPointPair = currentWorkframe->matchesToKeyFrame[ptPair.first];
-		auto pt3d = MapPoint::create(ptPair.second);
-		vMap->addMapPoint(pt3d);
-		vMap->addMapPointVisibility(pt3d->getId(), anchorKeyframe->getId(), inlierKeyPointPair.first);
-		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
-	}
-	cout << "New map initialized: " << mapPoints.size() << " pts\n";
-	anchorKeyframe->computeBoW();
-	K2->computeBoW();
-
-	vMap->updateCovisibilityGraph(anchorKeyframe->getId());
-	lastAnchor = K2->getId();
-	return true;
+	return createInitialMap();
 }
 
 
@@ -246,6 +222,72 @@ MapBuilder::track()
 }
 
 
+bool
+MapBuilder::createInitialMap()
+{
+	auto anchorKeyframe = vMap->keyframe(lastAnchor);
+
+	// Create map points
+	map<uint, Vector3d> mapPoints;
+	float parallax;
+	TriangulateCV(*anchorKeyframe, *currentWorkframe, currentWorkframe->matchesToKeyFrame, mapPoints, &parallax);
+	if (mapPoints.size() < 10)
+		return false;
+
+	auto K2 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
+	if (newKeyFrameCallbackFunc!=NULL) newKeyFrameCallbackFunc(*K2);
+	vMap->addKeyFrame(K2);
+
+	// Add points to Map
+	for (auto &ptPair: mapPoints) {
+		auto inlierKeyPointPair = currentWorkframe->matchesToKeyFrame[ptPair.first];
+		auto pt3d = MapPoint::create(ptPair.second);
+		vMap->addMapPoint(pt3d);
+		vMap->addMapPointVisibility(pt3d->getId(), anchorKeyframe->getId(), inlierKeyPointPair.first);
+		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
+	}
+	cout << "New map initialized: " << mapPoints.size() << " pts\n";
+	anchorKeyframe->computeBoW();
+	K2->computeBoW();
+
+	vMap->updateCovisibilityGraph(anchorKeyframe->getId());
+	lastAnchor = K2->getId();
+
+	// Call bundle adjustment
+	Optimizer::BundleAdjustment(*vMap);
+
+	// calculate median of point depths
+	double depthMedian = anchorKeyframe->computeSceneMedianDepth();
+	double invDepthMedian = 1.0f / depthMedian;
+	if (depthMedian < 0 or currentWorkframe->prevMapPointPairs.size()<100) {
+		cout << "Wrong initialization" << endl;
+		this->reset();
+		return false;
+	}
+
+	// Scale initial baseline
+	Pose p2=currentWorkframe->pose();
+	Vector3d tr = p2.translation();
+	tr *= invDepthMedian;
+	currentWorkframe->setPose(Pose::from_Pos_Quat(tr, p2.orientation()));
+
+	// scale points
+	for (auto &mpIdx: vMap->allMapPointsAtKeyFrame(lastAnchor)) {
+		auto Pt = vMap->mappoint(mpIdx.first);
+		Pt->setPosition(Pt->getPosition() * invDepthMedian);
+	}
+
+	return true;
+}
+
+
+void
+MapBuilder::reset()
+{
+	vMap->reset();
+	hasInitialized = false;
+	lastAnchor = 0;
+}
 
 
 } /* namespace Vmml */

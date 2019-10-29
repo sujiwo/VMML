@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <string>
 #include "VisionMap.h"
 #include "ImageBag.h"
 #include "BaseFrame.h"
@@ -27,13 +28,20 @@ VisionMap testMap;
 
 int main(int argc, char *argv[])
 {
+	/*
+	 * please run `setup devel/setup.bash' prior to run this program
+	 */
+	auto maskPath = getMyPath() / "samples/meidai_mask.png";
+	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 
-	rosbag::Bag inputBag("/media/sujiwo/ssd/motoyama/motoyama-ndt.bag");
+	rosbag::Bag inputBag(argv[1]);
 	ImageBag images(inputBag, "/camera1/image_raw", enlarge);
 
-	auto frame1 = BaseFrame::create(images.at(273), camera0);
-	auto frame2 = BaseFrame::create(images.at(282), camera0);
+	int i1 = stoi(argv[2]),
+		i2 = stoi(argv[3]);
+	auto frame1 = BaseFrame::create(images.at(i1), camera0);
+	auto frame2 = BaseFrame::create(images.at(i2), camera0);
 
 	Matcher::PairList matches12, matches12inliers;
 	frame1->computeFeatures(testMap.getFeatureDetector());

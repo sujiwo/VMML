@@ -86,6 +86,10 @@ protected:
 	uint frameCounter = 0;
 
 	void (*newKeyFrameCallbackFunc)(const BaseFrame &f) = NULL;
+
+	bool createInitialMap();
+
+	void reset();
 };
 
 } /* namespace Vmml */

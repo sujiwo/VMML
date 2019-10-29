@@ -184,7 +184,7 @@ void debugMsg(const std::string &s, double is_error=false);
 
 
 inline boost::filesystem::path getMyPath()
-{ return boost::filesystem::path(ros::package::getPath("vmml")); }
+{ return boost::filesystem::path(ros::package::getPath("vision_core")); }
 
 
 /*

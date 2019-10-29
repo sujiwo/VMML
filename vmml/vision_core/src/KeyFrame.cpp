@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include "utilities.h"
 #include "KeyFrame.h"
 #include "VisionMap.h"
 
@@ -96,6 +97,25 @@ KeyFrame::computeBoW()
 			mParent->invertedKeywordDb[wrd].insert(this->id);
 		}
 	}
+}
+
+
+double
+KeyFrame::computeSceneMedianDepth() const
+{
+	auto allMps = mParent->allMapPointsAtKeyFrame(id);
+	VectorXx<float> depths(allMps.size());
+	Vector3d R2 = externalParamMatrix4().row(2).head(3);
+	double zcw = externalParamMatrix4()(2,3);
+
+	int i = 0;
+	for (auto &ptPair: allMps) {
+		auto mapPoint = mParent->mappoint(ptPair.first);
+		auto d = R2.dot(mapPoint->getPosition()) + zcw;
+		depths[i] = d;
+	}
+
+	return median(depths);
 }
 
 

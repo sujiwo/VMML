@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <opencv2/highgui.hpp>
 #include "MapBuilder.h"
 #include "RVizConnector.h"
 #include "ImageBag.h"
@@ -32,6 +33,8 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 
+	auto maskPath = Vmml::getMyPath() / "samples/meidai_mask.png";
+	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 	camera0.fps = float(imageBag.size()) / Vmml::toSeconds(imageBag.length().toBoost());
 

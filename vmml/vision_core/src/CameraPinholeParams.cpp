@@ -5,7 +5,9 @@
  *      Author: sujiwo
  */
 
+#include <opencv2/imgproc.hpp>
 #include "CameraPinholeParams.h"
+
 
 using namespace Eigen;
 using namespace std;
@@ -78,6 +80,10 @@ CameraPinholeParams::operator* (const float r) const
 	n.fy *= r;
 	n.cx *= r;
 	n.cy *= r;
+
+	if (!mask.empty()) {
+		cv::resize(mask, n.mask, cv::Size(), r, r);
+	}
 
 	return n;
 }
