@@ -283,4 +283,21 @@ VisionMap::updateMapPointDescriptor(const mpid mp)
 }
 
 
+uint
+VisionMap::getTrackedMapPointsAt(const kfid &kf, const uint minNumberOfObservation) const
+{
+	uint nPoints=0;
+	auto Kf = keyframe(kf);
+
+	for (auto mpPair: framePoints.at(kf)) {
+		auto mp = mpPair.first;
+		if (getNumberObservations(mp)>=minNumberOfObservation) {
+			nPoints++;
+		}
+	}
+
+	return nPoints;
+}
+
+
 } /* namespace Vmml */

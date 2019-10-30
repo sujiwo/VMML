@@ -101,6 +101,8 @@ public:
 	inline uint getNumberObservations(const mpid &mp) const
 	{ return pointAppearances.at(mp).size(); }
 
+	uint getTrackedMapPointsAt(const kfid &kf, const uint minNumberOfObservation=0) const;
+
 	// Map building
 /*
 	bool estimateStructure (const kfid &keyFrame1, const kfid &keyFrame2, double translationHint=-1.0);

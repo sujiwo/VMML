@@ -173,6 +173,10 @@ bool TriangulateCV(
 		p /= p[3];
 		Vector3d pointm(p[0], p[1], p[2]);
 
+		// Purge invalid numbers
+		if (!isfinite(pointm.x()) or !isfinite(pointm.y()) or !isfinite(pointm.z()))
+			continue;
+
 		auto
 			proj1 = F1.keypointv(featurePairs[i].first),
 			proj2 = F2.keypointv(featurePairs[i].second);

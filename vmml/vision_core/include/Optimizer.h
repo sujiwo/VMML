@@ -13,11 +13,15 @@
 
 namespace Vmml {
 
+
+typedef uint64 oid;
+
+
 class Optimizer {
 public:
 
 	static void
-	BundleAdjustment(VisionMap &myMap);
+	BundleAdjustment(VisionMap &myMap, const int bIteration);
 
 	static int
 	OptimizePose (const BaseFrame &frame, Pose &initPose, const VisionMap &vmap);

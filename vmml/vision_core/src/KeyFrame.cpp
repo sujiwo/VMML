@@ -10,6 +10,7 @@
 #include "VisionMap.h"
 
 using namespace std;
+using namespace Eigen;
 
 
 namespace Vmml {
@@ -104,15 +105,22 @@ double
 KeyFrame::computeSceneMedianDepth() const
 {
 	auto allMps = mParent->allMapPointsAtKeyFrame(id);
-	VectorXx<float> depths(allMps.size());
-	Vector3d R2 = externalParamMatrix4().row(2).head(3);
-	double zcw = externalParamMatrix4()(2,3);
+	VectorXx<float> depths=VectorXx<float>::Zero(allMps.size());
+	Matrix4d Cw = externalParamMatrix4();
+	Vector3d R2 = Cw.row(2).head(3);
+	double zcw = Cw(2,3);
 
 	int i = 0;
 	for (auto &ptPair: allMps) {
 		auto mapPoint = mParent->mappoint(ptPair.first);
-		auto d = R2.dot(mapPoint->getPosition()) + zcw;
+		Vector3d mPos = mapPoint->getPosition();
+		double x=mPos.x(), y=mPos.y(), z=mPos.z();
+		if (abs(x)<1e-10 or abs(y)<1e-10 or abs(z)<1e-10) {
+			int m=1;
+		}
+		double d = R2.dot(mPos) + zcw;
 		depths[i] = d;
+		i++;
 	}
 
 	return median(depths);

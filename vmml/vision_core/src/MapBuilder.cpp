@@ -96,10 +96,11 @@ MapBuilder::TmpFrame::track(const kfid &kf)
 bool
 MapBuilder::TmpFrame::isOkForKeyFrame() const
 {
-	const float mapPointThresholdRatio = 0.75;
+	const float mapPointThresholdRatio = 0.3;
 
-	if (candidatesMapPointPairs.size() >= matchesToKeyFrame.size()*(1.0-mapPointThresholdRatio))
+	if (float(candidatesMapPointPairs.size()) / float(matchesToKeyFrame.size()) <= mapPointThresholdRatio) {
 		return true;
+	}
 
 	else return false;
 }
@@ -254,12 +255,12 @@ MapBuilder::createInitialMap()
 	lastAnchor = K2->getId();
 
 	// Call bundle adjustment
-	Optimizer::BundleAdjustment(*vMap);
+	Optimizer::BundleAdjustment(*vMap, 50);
 
 	// calculate median of point depths
 	double depthMedian = anchorKeyframe->computeSceneMedianDepth();
 	double invDepthMedian = 1.0f / depthMedian;
-	if (depthMedian < 0 or currentWorkframe->prevMapPointPairs.size()<100) {
+	if (depthMedian < 0 or vMap->getTrackedMapPointsAt(K2->getId(), 1)<100) {
 		cout << "Wrong initialization" << endl;
 		this->reset();
 		return false;
