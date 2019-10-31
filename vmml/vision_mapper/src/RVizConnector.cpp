@@ -6,6 +6,7 @@
  */
 
 #include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
 #include "RVizConnector.h"
 
 
@@ -29,10 +30,39 @@ RVizConnector::~RVizConnector() {
 void
 RVizConnector::publishFrame(const BaseFrame &fr)
 {
+/*
 	cv_bridge::CvImage cvImg;
 	cvImg.image = fr.getImage();
 	imagePub.publish(cvImg.toImageMsg());
+*/
 }
+
+
+void
+RVizConnector::publishKeyFrame(const KeyFrame &kf)
+{
+	cv_bridge::CvImage cvImg;
+	cvImg.image = kf.getImage();
+	imagePub.publish(createImageMsgFromFrame(kf));
+}
+
+
+sensor_msgs::ImageConstPtr
+RVizConnector::createImageMsgFromFrame(const BaseFrame &fr) const
+{
+	cv_bridge::CvImage cvImg;
+	cvImg.image = fr.getImage();
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+	return cvImg.toImageMsg();
+}
+
+
+cv::Mat
+RVizConnector::drawKeyFrame(const KeyFrame &k)
+{
+	cv::Mat buffer = k.getImage().clone();
+}
+
 
 } /* namespace Mapper */
 } /* namespace Vmml */

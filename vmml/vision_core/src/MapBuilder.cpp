@@ -134,9 +134,10 @@ MapBuilder::feed(cv::Mat inputImage, const ptime &timestamp)
 	if (lastAnchor==0) {
 		auto K1 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 		lastAnchor = K1->getId();
-		if (newKeyFrameCallbackFunc!=NULL)
-			newKeyFrameCallbackFunc(*K1);
-		return vMap->addKeyFrame(K1);
+		vMap->addKeyFrame(K1);
+		if (newKeyFrameCallback)
+			newKeyFrameCallback(*K1);
+		return true;
 	}
 	else {
 
@@ -192,7 +193,7 @@ MapBuilder::track()
 		return true;
 
 	auto Knew = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
-	if (newKeyFrameCallbackFunc!=NULL) newKeyFrameCallbackFunc(*Knew);
+	if (newKeyFrameCallback) newKeyFrameCallback(*Knew);
 	vMap->addKeyFrame(Knew);
 
 	// Put point appearances
@@ -237,8 +238,8 @@ MapBuilder::createInitialMap()
 		return false;
 
 	auto K2 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
-	if (newKeyFrameCallbackFunc!=NULL) newKeyFrameCallbackFunc(*K2);
 	vMap->addKeyFrame(K2);
+	if (newKeyFrameCallback) newKeyFrameCallback(*K2);
 
 	// Add points to Map
 	for (auto &ptPair: mapPoints) {

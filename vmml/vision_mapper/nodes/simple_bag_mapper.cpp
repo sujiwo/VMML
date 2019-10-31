@@ -14,17 +14,18 @@
 
 
 using namespace std;
+using namespace std::placeholders;
 using Vmml::MapBuilder;
 using Vmml::Mapper::RVizConnector;
 using Vmml::ptime;
 
 
 Vmml::CameraPinholeParams camera0 (
-	1150.96938467,
-	1150.96938467,
-	988.511326762,
-	692.803953253,
-	1920, 1440);
+	1150.96938467,	// fx
+	1150.96938467,	// fy
+	988.511326762,	// cx
+	692.803953253,	// cy
+	1920, 1440);	// width, height
 const float enlarge = 0.333333333333;
 
 
@@ -40,14 +41,13 @@ int main(int argc, char *argv[])
 
 	MapBuilder mapBuilderz(camera0);
 
-/*
 	RVizConnector rosHdl(argc, argv, "monocular_mapper");
-	auto fcb = [&](const Vmml::BaseFrame &fr)->void
-	{ rosHdl.publishFrame(fr); };
-	mapBuilderz.registerKeyFrameCallback(fcb);
-*/
+	auto fx=std::bind<void>(&RVizConnector::publishKeyFrame, &rosHdl, std::placeholders::_1);
+	mapBuilderz.registerKeyFrameCallback(fx);
 
-	for (int i=0; i<imageBag.size(); ++i) {
+	auto N = imageBag.size();
+//	auto N = 233;
+	for (int i=0; i<N; ++i) {
 		auto imageMsg = imageBag.at(i);
 		ptime timestamp = imageBag.timeAt(i).toBoost();
 		mapBuilderz.feed(imageMsg, timestamp);

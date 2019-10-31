@@ -11,7 +11,6 @@
 #include <string>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-#include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
@@ -31,6 +30,8 @@ public:
 
 	void publishFrame(const BaseFrame &fr);
 
+	void publishKeyFrame(const KeyFrame &kf);
+
 	void publishPointcloud();
 
 protected:
@@ -39,6 +40,10 @@ protected:
 
 	std::shared_ptr<image_transport::ImageTransport> imagePubTr;
 	image_transport::Publisher imagePub;
+
+	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
+
+	static cv::Mat drawKeyFrame(const KeyFrame &kf);
 };
 
 } /* namespace Mapper */

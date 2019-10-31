@@ -38,8 +38,9 @@ public:
 	std::shared_ptr<VisionMap>& getMap()
 	{ return vMap; }
 
-	inline void registerKeyFrameCallback (void (*func)(const BaseFrame &fr))
-	{ newKeyFrameCallbackFunc = func; }
+	typedef std::function<void(const KeyFrame &kf)> KeyFrameCreationCallback;
+	inline void registerKeyFrameCallback (const KeyFrameCreationCallback &func)
+	{ newKeyFrameCallback = func; }
 
 	/*
 	 * Temporary structure for map builder only
@@ -85,7 +86,7 @@ protected:
 
 	uint frameCounter = 0;
 
-	void (*newKeyFrameCallbackFunc)(const BaseFrame &f) = NULL;
+	KeyFrameCreationCallback newKeyFrameCallback;
 
 	bool createInitialMap();
 
