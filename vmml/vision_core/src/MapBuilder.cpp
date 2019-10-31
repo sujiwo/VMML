@@ -93,6 +93,9 @@ MapBuilder::TmpFrame::track(const kfid &kf)
 }
 
 
+/*
+ * XXX: Check this function
+ */
 bool
 MapBuilder::TmpFrame::isOkForKeyFrame() const
 {
@@ -193,7 +196,6 @@ MapBuilder::track()
 		return true;
 
 	auto Knew = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
-	if (newKeyFrameCallback) newKeyFrameCallback(*Knew);
 	vMap->addKeyFrame(Knew);
 
 	// Put point appearances
@@ -220,6 +222,7 @@ MapBuilder::track()
 
 	vMap->updateCovisibilityGraph(lastAnchor);
 	lastAnchor = Knew->getId();
+	if (newKeyFrameCallback) newKeyFrameCallback(*Knew);
 
 	return true;
 }
@@ -239,7 +242,6 @@ MapBuilder::createInitialMap()
 
 	auto K2 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 	vMap->addKeyFrame(K2);
-	if (newKeyFrameCallback) newKeyFrameCallback(*K2);
 
 	// Add points to Map
 	for (auto &ptPair: mapPoints) {
@@ -280,6 +282,7 @@ MapBuilder::createInitialMap()
 		Pt->setPosition(Pt->getPosition() * invDepthMedian);
 	}
 
+	if (newKeyFrameCallback) newKeyFrameCallback(*K2);
 	return true;
 }
 

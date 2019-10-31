@@ -189,6 +189,22 @@ VisionMap::allMapPoints () const
 }
 
 
+std::vector<mpid>
+VisionMap::getVisibleMapPoints (const kfid &kf) const
+{
+	vector<mpid> rv;
+	map<mpid, kpid> mpList;
+	try {
+		mpList = framePoints.at(kf);
+	} catch (std::out_of_range &e) {
+		return rv;
+	}
+	for (auto &mp: framePoints.at(kf))
+		rv.push_back(mp.first);
+	return rv;
+}
+
+
 bool
 VisionMap::removeMapPoint (const mpid &i)
 {

@@ -5,9 +5,15 @@
  *      Author: sujiwo
  */
 
+#include <Eigen/Eigen>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include "RVizConnector.h"
+
+using namespace std;
+using namespace Eigen;
 
 
 namespace Vmml {
@@ -42,8 +48,10 @@ void
 RVizConnector::publishKeyFrame(const KeyFrame &kf)
 {
 	cv_bridge::CvImage cvImg;
-	cvImg.image = kf.getImage();
-	imagePub.publish(createImageMsgFromFrame(kf));
+	cvImg.image = drawKeyFrame(kf);
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+	cvImg.header.stamp = ros::Time::now();
+	imagePub.publish(cvImg.toImageMsg());
 }
 
 
@@ -61,6 +69,15 @@ cv::Mat
 RVizConnector::drawKeyFrame(const KeyFrame &k)
 {
 	cv::Mat buffer = k.getImage().clone();
+	auto visibleMps = k.parent()->getVisibleMapPoints(k.getId());
+
+	for (auto &mp: visibleMps) {
+		auto mapPoint = k.parent()->mappoint(mp);
+		Vector2d proj = k.project(mapPoint->getPosition());
+		cv::circle(buffer, cv::Point2f(proj.x(), proj.y()), 2.0, cv::Scalar(0,255,0));
+	}
+
+	return buffer;
 }
 
 

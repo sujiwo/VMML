@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
 	auto fx=std::bind<void>(&RVizConnector::publishKeyFrame, &rosHdl, std::placeholders::_1);
 	mapBuilderz.registerKeyFrameCallback(fx);
 
+	// XXX: Put interrupt (ctrl-c) signal handler prior to entering loop
+
 	auto N = imageBag.size();
 //	auto N = 233;
 	for (int i=0; i<N; ++i) {
