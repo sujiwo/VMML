@@ -96,9 +96,9 @@ MapBuilder::TmpFrame::track(const kfid &kf)
 bool
 MapBuilder::TmpFrame::isOkForKeyFrame() const
 {
-	const float mapPointThresholdRatio = 0.3;
+	const float mapPointThresholdRatio = 0.1;
 
-	if (float(candidatesMapPointPairs.size()) / float(matchesToKeyFrame.size()) <= mapPointThresholdRatio) {
+	if (float(candidatesMapPointPairs.size()) / float(matchesToKeyFrame.size()) >= mapPointThresholdRatio) {
 		return true;
 	}
 
@@ -218,6 +218,7 @@ MapBuilder::track()
 	// Build connections to previous keyframes, not just last anchor
 
 	vMap->updateCovisibilityGraph(lastAnchor);
+	lastAnchor = Knew->getId();
 
 	return true;
 }
