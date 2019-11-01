@@ -17,8 +17,6 @@ set (CMAKE_INCLUDE_CURRENT_DIR		ON)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
-	tf
-	cv_bridge
 
 	# For RandomAccessBag
 	rosbag_viewer
@@ -91,6 +89,7 @@ add_library(
 		src/VisualOdometry.cpp
 		src/ImageBag.cpp
 		src/Optimizer.cpp
+		src/LoopClosure.cpp
 )
 
 target_link_libraries(

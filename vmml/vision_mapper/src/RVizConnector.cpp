@@ -16,14 +16,31 @@ using namespace std;
 using namespace Eigen;
 
 
+const string originFrame = "world";
+
+
 namespace Vmml {
 namespace Mapper {
+
+
+tf::Transform createPose(const BaseFrame &f)
+{
+	tf::Transform fPose;
+	auto pos = f.pose().position();
+	auto orn = f.pose().orientation();
+	fPose.setOrigin(tf::Vector3(pos.x(), pos.y(), pos.z()));
+	fPose.setRotation(tf::Quaternion(orn.x(), orn.y(), orn.z(), orn.w()));
+
+	return fPose;
+}
+
 
 RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName)
 {
 	ros::init(argc, argv, nodeName);
 	hdl.reset(new ros::NodeHandle);
 	imagePubTr.reset(new image_transport::ImageTransport(*hdl));
+	posePubTf.reset(new tf::TransformBroadcaster);
 	imagePub = imagePubTr->advertise("imageframe", 1);
 }
 
@@ -47,10 +64,19 @@ RVizConnector::publishFrame(const BaseFrame &fr)
 void
 RVizConnector::publishKeyFrame(const KeyFrame &kf)
 {
+//	posePubTf.
+	auto timestamp = ros::Time::now();
+
+	// Pose
+	const tf::Transform kfPose = createPose(kf);
+	tf::StampedTransform kfStampedPose(kfPose, timestamp, originFrame, "camera");
+	posePubTf->sendTransform(kfStampedPose);
+
+	// Image
 	cv_bridge::CvImage cvImg;
 	cvImg.image = drawKeyFrame(kf);
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
-	cvImg.header.stamp = ros::Time::now();
+	cvImg.header.stamp = timestamp;
 	imagePub.publish(cvImg.toImageMsg());
 }
 

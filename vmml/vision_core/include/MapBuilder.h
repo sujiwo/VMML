@@ -20,6 +20,7 @@
 #include "CameraPinholeParams.h"
 #include "VisionMap.h"
 #include "Matcher.h"
+#include "LoopClosure.h"
 
 
 namespace Vmml {
@@ -89,6 +90,8 @@ protected:
 	KeyFrameCreationCallback newKeyFrameCallback;
 
 	bool createInitialMap();
+
+	bool createNewKeyFrame();
 
 	void reset();
 };

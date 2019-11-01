@@ -10,6 +10,7 @@
 
 #include <string>
 #include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
@@ -20,6 +21,7 @@
 
 namespace Vmml {
 namespace Mapper {
+
 
 class RVizConnector {
 public:
@@ -40,6 +42,7 @@ protected:
 
 	std::shared_ptr<image_transport::ImageTransport> imagePubTr;
 	image_transport::Publisher imagePub;
+	std::shared_ptr<tf::TransformBroadcaster> posePubTf;
 
 	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
 

@@ -287,6 +287,13 @@ MapBuilder::createInitialMap()
 }
 
 
+bool
+MapBuilder::createNewKeyFrame()
+{
+
+}
+
+
 void
 MapBuilder::reset()
 {
