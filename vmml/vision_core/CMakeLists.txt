@@ -38,9 +38,6 @@ if (OPENMP_FOUND)
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-add_subdirectory (DBoW2)
-
-
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES vmml
@@ -70,6 +67,25 @@ set(REQUIRED_LIBS
 	Boost::system
 )
 
+
+# DBoW2 is now handled directly
+add_library(DBoW2
+	DBoW2/BowVector.cpp
+	DBoW2/FORB.cpp      
+	DBoW2/FeatureVector.cpp
+	DBoW2/ScoringObject.cpp
+	DBoW2/DUtils/Random.cpp
+	DBoW2/DUtils/Timestamp.cpp
+)
+
+target_link_libraries(DBoW2 ${OpenCV_LIBS})
+
+install(
+	TARGETS DBoW2
+	DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+# Main Library
 add_library(
 	vmml 
 		src/Pose.cpp
@@ -97,6 +113,12 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 )
 
+install(
+	TARGETS vmml
+	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+# Testing; do not install
 add_executable(
 	image
 		test/image.cpp
@@ -107,3 +129,16 @@ target_link_libraries(
 		vmml
 		${REQUIRED_LIBS}
 )
+
+# Generic Vocabulary handling
+add_custom_target (orb_vocabulary 
+	ALL 
+		bunzip2 -c ${CMAKE_CURRENT_SOURCE_DIR}/samples/ORBvoc.txt.bz2 > ORBvoc.txt
+	DEPENDS samples/ORBvoc.txt.bz2
+	COMMENT "Extracting vocabulary... "
+)
+install(
+	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+

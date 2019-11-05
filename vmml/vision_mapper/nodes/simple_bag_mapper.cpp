@@ -34,16 +34,21 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 
+	// Find vocabulary
+	auto vocabPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "ORBvoc.txt";
+
 	auto maskPath = Vmml::getMyPath() / "samples/meidai_mask.png";
 	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 	camera0.fps = float(imageBag.size()) / Vmml::toSeconds(imageBag.length().toBoost());
 
-	MapBuilder mapBuilderz(camera0);
+	MapBuilder mapBuilderz(camera0, vocabPath.string());
 
+/*
 	RVizConnector rosHdl(argc, argv, "monocular_mapper");
 	auto fx=std::bind<void>(&RVizConnector::publishKeyFrame, &rosHdl, std::placeholders::_1);
 	mapBuilderz.registerKeyFrameCallback(fx);
+*/
 
 	// XXX: Put interrupt (ctrl-c) signal handler prior to entering loop
 

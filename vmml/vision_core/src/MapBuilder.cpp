@@ -118,11 +118,13 @@ MapBuilder::TmpFrame::toKeyFrame() const
 }
 
 
-MapBuilder::MapBuilder(const CameraPinholeParams &mycam) :
+MapBuilder::MapBuilder(const CameraPinholeParams &mycam, const std::string &mapVocabularyPath) :
 	camera0(mycam)
 {
 	vMap.reset(new VisionMap);
 	vMap->addCameraParameter(camera0);
+	if (mapVocabularyPath.size()!=0)
+		vMap->loadVocabulary(mapVocabularyPath);
 }
 
 
@@ -218,7 +220,8 @@ MapBuilder::track()
 //		vMap->updateMapPointDescriptor(ptn->getId());
 	}
 
-	// Build connections to previous keyframes, not just last anchor
+	// XXX: Build connections to previous keyframes, not just last anchor
+
 
 	vMap->updateCovisibilityGraph(lastAnchor);
 	lastAnchor = Knew->getId();

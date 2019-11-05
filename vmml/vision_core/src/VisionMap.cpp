@@ -73,6 +73,13 @@ VisionMap::reset()
 }
 
 
+bool
+VisionMap::loadVocabulary(const std::string &vocabPath)
+{
+	return myVoc.loadFromTextFile(vocabPath);
+}
+
+
 int
 VisionMap::addCameraParameter (const CameraPinholeParams &vscamIntr)
 {

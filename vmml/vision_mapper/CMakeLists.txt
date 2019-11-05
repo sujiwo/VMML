@@ -65,3 +65,9 @@ target_link_libraries(
 		${OpenCV_LIBS}
 )
 
+install(
+	TARGETS simple_bag_mapper
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+

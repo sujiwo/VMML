@@ -47,6 +47,8 @@ public:
 
 	int addCameraParameter (const CameraPinholeParams &vscamIntr);
 
+	bool loadVocabulary(const std::string &vocabPath);
+
 	inline const CameraPinholeParams& getCameraParameter(int cameraId) const
 	{ return cameraList[cameraId]; }
 
