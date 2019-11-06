@@ -32,7 +32,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	VertexCameraMono() : g2o::VertexSE3Expmap() {}
 
-	void set(KeyFrame::Ptr _f);
+	void set(KeyFrame::Ptr &_f);
 
 	void updateToMap()
 	{ return kf->setPose(estimate()); }
@@ -50,7 +50,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	VertexMapPoint() : g2o::VertexSBAPointXYZ() {}
 
-	void set(MapPoint::Ptr _mp);
+	void set(MapPoint::Ptr &_mp);
 
 	void updateToMap()
 	{ return mp->setPosition(estimate()); }

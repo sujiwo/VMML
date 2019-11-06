@@ -5,7 +5,8 @@
  *      Author: sujiwo
  */
 
-
+#include <random>
+#include <algorithm>
 #include "Optimizer.h"
 
 
@@ -25,6 +26,112 @@ createSolverAlgorithm()
 
 
 namespace Vmml {
+
+const float thHuber2D = sqrt(5.99);
+const float thHuber3D = sqrt(7.815);
+
+
+class PoseDisturb
+{
+public:
+	typedef std::uniform_real_distribution<double> UDistT;
+	typedef std::shared_ptr<UDistT> UDistPtr;
+
+
+	PoseDisturb(const Vector3d &means):
+		meanShift(means),
+		distributions(vector<UDistPtr>(3, nullptr))
+	{
+		if (meanShift.x()!=0.0) {
+			distributions[0] = createUniformDistribution(meanShift.x());
+		}
+		if (meanShift.y()!=0.0) {
+			distributions[1] = createUniformDistribution(meanShift.y());
+		}
+		if (meanShift.z()!=0.0) {
+			distributions[2] = createUniformDistribution(meanShift.z());
+		}
+	}
+
+	Pose disturb(const Pose &p)
+	{
+		Vector3d sh = getRandomShift();
+		return p.shift(sh);
+	}
+
+	static UDistPtr createUniformDistribution(const double &m)
+	{
+		return UDistPtr(new UDistT(-m, m));
+	}
+
+protected:
+	Vector3d meanShift;
+	default_random_engine generator;
+	vector<UDistPtr> distributions;
+
+	Vector3d getRandomShift()
+	{
+		Vector3d sh = Vector3d::Zero();
+		for (int i=0; i<3; ++i)
+			if (distributions[i]!=nullptr) {
+				UDistT &dist = *distributions[i];
+				sh[i] = dist(generator);
+			}
+
+		return sh;
+	}
+};
+
+
+void VertexCameraMono::set(KeyFrame::Ptr &_f)
+{
+	kf = _f;
+	setEstimate(kf->toSE3Quat());
+}
+
+
+void VertexMapPoint::set(MapPoint::Ptr &_p)
+{
+	mp = _p;
+	setEstimate(mp->getPosition());
+}
+
+
+void EdgeProjectMonocular::set(VertexCameraMono *frame, VertexMapPoint *point)
+{
+	auto myMap = frame->kf->parent();
+	Vector2d obs = frame->kf->keypointv(point->getKeyPointId(frame));
+	setMeasurement(obs);
+	setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(point));
+	setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(frame));
+
+	auto mKeypoint = frame->kf->keypoint(point->getKeyPointId(frame));
+	Matrix2d edgeInfo = Matrix2d::Identity() * 1.2 * (mKeypoint.octave+1);
+	setInformation(Matrix2d::Identity() * 1.2 * (mKeypoint.octave+1));
+}
+
+
+Vector3d EdgeProjectMonocular::transformWorldPointToFrame
+(const Vector3d &pointInWorld)
+const
+{
+	const auto *vKf = static_cast<const VertexCameraMono*>(vertex(1));
+	auto est = vKf->estimate();
+	return est.map(pointInWorld);
+}
+
+
+bool EdgeProjectMonocular::isDepthPositive() const
+{
+	const g2o::VertexSBAPointXYZ &point = *static_cast<const g2o::VertexSBAPointXYZ*>(_vertices[0]);
+	Vector3d ptByCam = transformWorldPointToFrame(point.estimate());
+	return (ptByCam.z() >= 0.0);
+}
+
+
+G2O_REGISTER_TYPE(VERTEX_CAMERA_MONO, VertexCameraMono);
+G2O_REGISTER_TYPE(VERTEX_MAP_POINT, VertexMapPoint);
+G2O_REGISTER_TYPE(EDGE_PROJECT_MONOCULAR, EdgeProjectMonocular);
 
 
 g2o::SE3Quat toSE3Quat (const KeyFrame &kf)
@@ -278,7 +385,7 @@ Optimizer::LocalBundleAdjustment(VisionMap &origMap, const kfid &targetKf)
 	int j = 0;
 	for (auto &mp: relatedMps) {
 		auto *vertexMp = new VertexMapPoint;
-		auto Mp = origMap->mappoint(mp);
+		auto Mp = origMap.mappoint(mp);
 		vertexMp->setFixed(false);
 		vertexMp->set(Mp);
 		vertexMp->setId(vId);
@@ -300,7 +407,7 @@ Optimizer::LocalBundleAdjustment(VisionMap &origMap, const kfid &targetKf)
 			// Debugging purpose
 			Vector3d
 				transvec1 = edge->transformWorldPointToFrame(Mp->getPosition()),
-				transvec2 = origMap->keyframe(kf)->transform(Mp->getPosition());
+				transvec2 = origMap.keyframe(kf)->transform(Mp->getPosition());
 
 			auto *robustKernel = new g2o::RobustKernelHuber;
 			edge->setRobustKernel(robustKernel);
