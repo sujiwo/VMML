@@ -79,8 +79,7 @@ public:
 	matchMapPoints(
 		const KeyFrame &KFsrc,
 		const BaseFrame &Ft,
-		PairList &featurePairs,
-		cv::Ptr<cv::DescriptorMatcher> matcher);
+		PairList &featurePairs);
 
 	/*
 	 * Solve pose from matched keypoints in KFsrc to Ft

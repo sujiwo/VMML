@@ -220,8 +220,23 @@ MapBuilder::track()
 //		vMap->updateMapPointDescriptor(ptn->getId());
 	}
 
-	// XXX: Build connections to previous keyframes, not just last anchor
+	// Build connections to previous keyframes
+	vector<kfid> kfInsToAnchor = vMap->getKeyFramesComeInto(lastAnchor);
+	const kfid targetKfId = lastAnchor;
+	for (auto &kfx: kfInsToAnchor) {
+		trackMapPoints(kfx, lastAnchor);
+	}
 
+	// Check whether we need local BA
+	kfInsToAnchor = vMap->getKeyFramesComeInto(lastAnchor);
+/*
+	if (std::find(kfInsToAnchor.begin(), kfInsToAnchor.end(), localBAAnchor)==kfInsToAnchor.end()) {
+		cout << "Local BA running\n";
+		auto vAnchors = cMap->getKeyFramesComeInto(lastAnchor);
+		local_bundle_adjustment(cMap, lastAnchor);
+		localBAAnchor = lastAnchor;
+	}
+*/
 
 	vMap->updateCovisibilityGraph(lastAnchor);
 	lastAnchor = Knew->getId();
@@ -287,6 +302,45 @@ MapBuilder::createInitialMap()
 
 	if (newKeyFrameCallback) newKeyFrameCallback(*K2);
 	return true;
+}
+
+
+const int matchCountThreshold = 15;
+
+void
+MapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
+{
+	auto KF1 = vMap->keyframe(ki1),
+		KF2 = vMap->keyframe(ki2);
+
+	// Track Map Points from KF1 that are visible in KF2
+	vector<Matcher::KpPair> pairList12;
+	TTransform T12;
+	Matcher::matchMapPoints(*KF1, *KF2, pairList12);
+
+	map<kpid, mpid> kf1kp2mp = vMap->getAllMapPointProjectionsAt(ki1);
+	// Check the matching with projection
+	int pointMatchCounter = 0;
+	for (int i=0; i<pairList12.size(); i++) {
+		auto &p = pairList12[i];
+		const mpid ptId = kf1kp2mp[p.first];
+
+		// Try projection
+		Vector2d kpf = KF2->project(vMap->mappoint(ptId)->getPosition());
+		double d = ( kpf-KF2->keypointv(p.second) ).norm();
+		if (d >= 4.0)
+			continue;
+
+		// This particular mappoint is visible in KF2
+		pointMatchCounter += 1;
+		vMap->addMapPointVisibility(ptId, ki2, p.second);
+	}
+
+	if (pointMatchCounter > matchCountThreshold) {
+		vMap->updateCovisibilityGraph(ki1);
+		cerr << "Backtrace: Found " << pointMatchCounter << "pts\n";
+	}
+
 }
 
 

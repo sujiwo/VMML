@@ -323,4 +323,21 @@ VisionMap::getTrackedMapPointsAt(const kfid &kf, const uint minNumberOfObservati
 }
 
 
+std::vector<kfid>
+VisionMap::getKeyFramesComeInto (const kfid kTarget) const
+{
+	set<kfid> kfListSrc;
+
+	auto kvtx = kfVtxMap.at(kTarget);
+	auto k_in_edges = boost::in_edges(kvtx, covisibility);
+	for (auto vp=k_in_edges.first; vp!=k_in_edges.second; ++vp) {
+		auto v = boost::source(*vp, covisibility);
+		int w = boost::get(boost::edge_weight_t(), covisibility, *vp);
+		kfListSrc.insert(kfVtxInvMap.at(v));
+	}
+
+	return vector<kfid>(kfListSrc.begin(), kfListSrc.end());
+}
+
+
 } /* namespace Vmml */

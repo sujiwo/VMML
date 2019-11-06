@@ -5,14 +5,6 @@
  *      Author: sujiwo
  */
 
-#include "g2o/core/block_solver.h"
-#include "g2o/core/optimization_algorithm_levenberg.h"
-#include "g2o/solvers/eigen/linear_solver_eigen.h"
-#include "g2o/solvers/dense/linear_solver_dense.h"
-#include "g2o/solvers/structure_only/structure_only_solver.h"
-#include "g2o/types/sba/types_six_dof_expmap.h"
-#include "g2o/core/robust_kernel_impl.h"
-#include "g2o/core/factory.h"
 
 #include "Optimizer.h"
 
@@ -192,6 +184,168 @@ Optimizer::BundleAdjustment(VisionMap &orgMap, const int baIteration)
 		g2o::VertexSBAPointXYZ *vMp = static_cast<g2o::VertexSBAPointXYZ*> (optimizer.vertex(vId));
 		mp->setPosition(vMp->estimate());
 	}
+}
+
+
+void
+Optimizer::LocalBundleAdjustment(VisionMap &origMap, const kfid &targetKf)
+{
+	// Find connected keyframes from targetKf
+	vector<kfid> neighbourKfs = origMap.getKeyFramesComeInto(targetKf);
+	std::sort(neighbourKfs.begin(), neighbourKfs.end());
+	neighbourKfs.push_back(targetKf);
+
+	// Local MapPoints seen in Local KeyFrames
+	set<mpid> relatedMps;
+	for (auto &kfl: neighbourKfs) {
+		for (auto &mpair: origMap.allMapPointsAtKeyFrame(kfl)) {
+			relatedMps.insert(mpair.first);
+		}
+	}
+
+	// Fixed KeyFrames: those that see local MapPoints but not included in connected keyframes
+	set<kfid> fixedKfs;
+	for (auto &mp: relatedMps) {
+		auto curRelatedKf = origMap.getRelatedKeyFrames(mp);
+		for (auto &kf: curRelatedKf) {
+			if (std::find(neighbourKfs.begin(), neighbourKfs.end(), kf) != neighbourKfs.end())
+				continue;
+			fixedKfs.insert(kf);
+		}
+	}
+
+	// Setup optimizer
+	g2o::SparseOptimizer optimizer;
+	auto solver = createSolverAlgorithm<
+			g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>,
+			g2o::BlockSolver_6_3,
+			g2o::OptimizationAlgorithmLevenberg >();
+	optimizer.setAlgorithm(solver);
+	optimizer.setVerbose(true);
+
+	map<int, kfid> vertexKfMap;
+	map<kfid, int> vertexKfMapInv;
+	map<mpid, int> vertexMpMapInv;
+	int vId = 1;
+
+	// Local KeyFrame vertices
+	int i = 0;
+	for (auto &kf: neighbourKfs) {
+		auto Kf = origMap.keyframe(kf);
+		auto localKfVertex = new VertexCameraMono;
+		localKfVertex->set(Kf);
+		localKfVertex->setId(vId);
+		localKfVertex->setFixed(vId==1);
+		optimizer.addVertex(localKfVertex);
+		vertexKfMap[vId] = kf;
+		vertexKfMapInv[kf] = vId;
+		++i;
+		vId++;
+	}
+
+	// Fixed keyframe vertices
+	i = 0;
+	for (auto &kf: fixedKfs) {
+		auto Kf = origMap.keyframe(kf);
+		auto fixedKfVertex = new VertexCameraMono;
+		fixedKfVertex->set(Kf);
+		fixedKfVertex->setId(vId);
+		fixedKfVertex->setFixed(true);
+		optimizer.addVertex(fixedKfVertex);
+		vertexKfMap[vId] = kf;
+		vertexKfMapInv[kf] = vId;
+		++i;
+		vId++;
+	}
+
+	// How many edges do we need ?
+	int numEdges = 0;
+	for (auto &mp: relatedMps)
+		numEdges += origMap.countRelatedKeyFrames(mp);
+
+	// Camera Parameter
+	auto Camera0 = origMap.getCameraParameter(0);
+	auto* myCamera = new g2o::CameraParameters(Camera0.f(), Camera0.principalPoints(), 0);
+	myCamera->setId(0);
+	optimizer.addParameter(myCamera);
+
+	const double thHuberDelta = sqrt(5.991);
+
+	// MapPoint Vertices
+//	vector<g2o::VertexSBAPointXYZ> relatedMpVertices(relatedMps.size());
+	vector<EdgeProjectMonocular*> edgesMpKf(numEdges);
+	i = 0;
+	int j = 0;
+	for (auto &mp: relatedMps) {
+		auto *vertexMp = new VertexMapPoint;
+		auto Mp = origMap->mappoint(mp);
+		vertexMp->setFixed(false);
+		vertexMp->set(Mp);
+		vertexMp->setId(vId);
+		vertexMp->setMarginalized(true);
+		optimizer.addVertex(vertexMp);
+
+		vertexMpMapInv[mp] = vId;
+
+		// Create Edges
+		for (auto &kf: origMap.getRelatedKeyFrames(mp)) {
+
+			auto *edge = new EdgeProjectMonocular;
+			edge->setParameterId(0, 0);
+			edgesMpKf[j] = edge;
+
+			auto vKf = dynamic_cast<VertexCameraMono*>(optimizer.vertex(vertexKfMapInv.at(kf)));
+			edge->set(vKf, vertexMp);
+
+			// Debugging purpose
+			Vector3d
+				transvec1 = edge->transformWorldPointToFrame(Mp->getPosition()),
+				transvec2 = origMap->keyframe(kf)->transform(Mp->getPosition());
+
+			auto *robustKernel = new g2o::RobustKernelHuber;
+			edge->setRobustKernel(robustKernel);
+			robustKernel->setDelta(thHuberDelta);
+
+			optimizer.addEdge(edge);
+			j++;
+		}
+
+		++i;
+		vId++;
+	}
+
+	optimizer.initializeOptimization();
+	optimizer.optimize(5);
+
+	// Check inliers
+	for (auto edge: edgesMpKf) {
+		double c = edge->chi2();
+		auto dp = edge->isDepthPositive();
+		if (c > 5.991 or !dp) {
+			edge->setLevel(1);
+		}
+
+		edge->setRobustKernel(nullptr);
+	}
+
+	// Re-optimize without outliers
+	optimizer.initializeOptimization(0);
+	optimizer.optimize(10);
+
+	// Recover optimized data
+	for (auto &kfl: neighbourKfs) {
+		auto kfVtxId = vertexKfMapInv.at(kfl);
+		auto vKf = static_cast<VertexCameraMono*> (optimizer.vertex(kfVtxId));
+		vKf->updateToMap();
+	}
+
+	for (auto &mp: relatedMps) {
+		auto mpVtxId = vertexMpMapInv.at(mp);
+		auto vPoint = static_cast<VertexMapPoint*> (optimizer.vertex(mpVtxId));
+		vPoint->updateToMap();
+	}
+
+	cout << "Local BA Done\n";
 }
 
 

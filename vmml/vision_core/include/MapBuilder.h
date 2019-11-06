@@ -93,6 +93,8 @@ protected:
 
 	bool createNewKeyFrame();
 
+	void trackMapPoints(const kfid k1, const kfid k2);
+
 	void reset();
 };
 

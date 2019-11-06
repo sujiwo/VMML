@@ -85,6 +85,9 @@ public:
 
 	std::vector<mpid> getVisibleMapPoints (const kfid &kf) const;
 
+	inline std::map<kpid,mpid> getAllMapPointProjectionsAt (const kfid &kf) const
+	{ return framePointsInv.at(kf); }
+
 	inline int countRelatedKeyFrames(const mpid &i) const
 	{ return pointAppearances.at(i).size(); }
 

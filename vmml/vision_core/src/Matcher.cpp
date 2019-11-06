@@ -371,10 +371,11 @@ void
 Matcher::matchMapPoints(
 	const KeyFrame &KFsrc,
 	const BaseFrame &Ft,
-	std::vector<KpPair> &featurePairs,
-	cv::Ptr<cv::DescriptorMatcher> matcher)
+	std::vector<KpPair> &featurePairs)
 {
 	featurePairs.clear();
+
+	auto matcher = cv::BFMatcher::create();
 
 	// Establish initial correspondences, with mask
 	vector<cv::DMatch> initialMatches;
