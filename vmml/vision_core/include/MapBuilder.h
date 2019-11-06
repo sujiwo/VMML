@@ -39,12 +39,8 @@ public:
 	std::shared_ptr<VisionMap>& getMap()
 	{ return vMap; }
 
-	typedef std::function<void(const KeyFrame &kf)> KeyFrameCreationCallback;
-	inline void registerKeyFrameCallback (const KeyFrameCreationCallback &func)
-	{ newKeyFrameCallback = func; }
-
 	/*
-	 * Temporary structure for map builder only
+	 * Temporary structure for map builder
 	 */
 	struct TmpFrame : public BaseFrame
 	{
@@ -71,6 +67,10 @@ public:
 		ptime timestamp;
 	};
 
+	typedef std::function<void(const TmpFrame &)> FrameCreationCallback;
+	inline void registerFrameCallback (const FrameCreationCallback &func)
+	{ newFrameCallback = func; }
+
 protected:
 
 	std::shared_ptr<VisionMap> vMap;
@@ -87,7 +87,7 @@ protected:
 
 	uint frameCounter = 0;
 
-	KeyFrameCreationCallback newKeyFrameCallback;
+	FrameCreationCallback newFrameCallback;
 
 	bool createInitialMap();
 
@@ -96,6 +96,12 @@ protected:
 	void trackMapPoints(const kfid k1, const kfid k2);
 
 	void reset();
+
+	inline void callFrameFunction() const
+	{
+		if (newFrameCallback)
+			newFrameCallback(*currentWorkframe);
+	}
 };
 
 } /* namespace Vmml */

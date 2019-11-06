@@ -17,6 +17,7 @@
 #include <image_transport/image_transport.h>
 #include "BaseFrame.h"
 #include "VisionMap.h"
+#include "MapBuilder.h"
 
 
 namespace Vmml {
@@ -30,9 +31,7 @@ public:
 
 	void setMap(const VisionMap::Ptr &vmap);
 
-	void publishFrame(const BaseFrame &fr);
-
-	void publishKeyFrame(const KeyFrame &kf);
+	void publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame);
 
 	void publishPointcloud();
 
@@ -46,7 +45,7 @@ protected:
 
 	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
 
-	static cv::Mat drawKeyFrame(const KeyFrame &kf);
+	static cv::Mat drawFrame(const MapBuilder::TmpFrame &workFrame);
 };
 
 } /* namespace Mapper */

@@ -51,30 +51,19 @@ RVizConnector::~RVizConnector() {
 
 
 void
-RVizConnector::publishFrame(const BaseFrame &fr)
-{
-/*
-	cv_bridge::CvImage cvImg;
-	cvImg.image = fr.getImage();
-	imagePub.publish(cvImg.toImageMsg());
-*/
-}
-
-
-void
-RVizConnector::publishKeyFrame(const KeyFrame &kf)
+RVizConnector::publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame)
 {
 //	posePubTf.
 	auto timestamp = ros::Time::now();
 
 	// Pose
-	const tf::Transform kfPose = createPose(kf);
+	const tf::Transform kfPose = createPose(workFrame);
 	tf::StampedTransform kfStampedPose(kfPose, timestamp, originFrame, "camera");
 	posePubTf->sendTransform(kfStampedPose);
 
 	// Image
 	cv_bridge::CvImage cvImg;
-	cvImg.image = drawKeyFrame(kf);
+	cvImg.image = drawFrame(workFrame);
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
 	cvImg.header.stamp = timestamp;
 	imagePub.publish(cvImg.toImageMsg());
@@ -92,9 +81,14 @@ RVizConnector::createImageMsgFromFrame(const BaseFrame &fr) const
 
 
 cv::Mat
-RVizConnector::drawKeyFrame(const KeyFrame &k)
+RVizConnector::drawFrame(const MapBuilder::TmpFrame &workFrame)
 {
-	cv::Mat buffer = k.getImage().clone();
+	cv::Mat buffer = workFrame.getImage().clone();
+	for (auto &keypointId: workFrame.prevMapPointPairs) {
+		auto keypoint = workFrame.keypoint(keypointId.second);
+		cv::circle(buffer, keypoint.pt, 2.0, cv::Scalar(0,255,0));
+	}
+/*
 	auto visibleMps = k.parent()->getVisibleMapPoints(k.getId());
 
 	for (auto &mp: visibleMps) {
@@ -102,6 +96,7 @@ RVizConnector::drawKeyFrame(const KeyFrame &k)
 		Vector2d proj = k.project(mapPoint->getPosition());
 		cv::circle(buffer, cv::Point2f(proj.x(), proj.y()), 2.0, cv::Scalar(0,255,0));
 	}
+*/
 
 	return buffer;
 }

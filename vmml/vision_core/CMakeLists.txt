@@ -106,6 +106,7 @@ add_library(
 		src/ImageBag.cpp
 		src/Optimizer.cpp
 		src/LoopClosure.cpp
+		src/MapBuilderLidar.cpp
 )
 
 target_link_libraries(
@@ -141,4 +142,11 @@ install(
 	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+# Sample Mask
+install(
+	FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/meidai_mask.png
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 

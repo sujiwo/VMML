@@ -89,6 +89,10 @@ MapBuilder::TmpFrame::track(const kfid &kf)
 	Matcher::solvePose(*parentKeyFrame, *this, prevMapPointPairs, PF2);
 	this->setPose(PF2);
 
+	// Debugging
+	TTransform movement = parentKeyFrame->pose().inverse() * PF2;
+	double dx = movement.translation().norm();
+
 	return true;
 }
 
@@ -99,7 +103,7 @@ MapBuilder::TmpFrame::track(const kfid &kf)
 bool
 MapBuilder::TmpFrame::isOkForKeyFrame() const
 {
-	const float mapPointThresholdRatio = 0.1;
+	const float mapPointThresholdRatio = 0.3;
 
 	if (float(candidatesMapPointPairs.size()) / float(matchesToKeyFrame.size()) >= mapPointThresholdRatio) {
 		return true;
@@ -140,8 +144,7 @@ MapBuilder::feed(cv::Mat inputImage, const ptime &timestamp)
 		auto K1 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 		lastAnchor = K1->getId();
 		vMap->addKeyFrame(K1);
-		if (newKeyFrameCallback)
-			newKeyFrameCallback(*K1);
+		callFrameFunction();
 		return true;
 	}
 	else {
@@ -194,8 +197,10 @@ MapBuilder::track()
 	/*
 	 * It's OK, we only continue when there has been enough 'innovation'
 	 */
-	if (currentWorkframe->isOkForKeyFrame()==false)
+	if (currentWorkframe->isOkForKeyFrame()==false) {
+		callFrameFunction();
 		return true;
+	}
 
 	auto Knew = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 	vMap->addKeyFrame(Knew);
@@ -223,9 +228,11 @@ MapBuilder::track()
 	// Build connections to previous keyframes
 	vector<kfid> kfInsToAnchor = vMap->getKeyFramesComeInto(lastAnchor);
 	const kfid targetKfId = lastAnchor;
+/*
 	for (auto &kfx: kfInsToAnchor) {
 		trackMapPoints(kfx, lastAnchor);
 	}
+*/
 
 	// Check whether we need local BA
 	kfInsToAnchor = vMap->getKeyFramesComeInto(lastAnchor);
@@ -240,7 +247,7 @@ MapBuilder::track()
 
 	vMap->updateCovisibilityGraph(lastAnchor);
 	lastAnchor = Knew->getId();
-	if (newKeyFrameCallback) newKeyFrameCallback(*Knew);
+	callFrameFunction();
 
 	return true;
 }
@@ -274,7 +281,7 @@ MapBuilder::createInitialMap()
 	K2->computeBoW();
 
 	vMap->updateCovisibilityGraph(anchorKeyframe->getId());
-	lastAnchor = K2->getId();
+
 
 	// Call bundle adjustment
 	Optimizer::BundleAdjustment(*vMap, 50);
@@ -292,7 +299,7 @@ MapBuilder::createInitialMap()
 	Pose p2=currentWorkframe->pose();
 	Vector3d tr = p2.translation();
 	tr *= invDepthMedian;
-	currentWorkframe->setPose(Pose::from_Pos_Quat(tr, p2.orientation()));
+	K2->setPose(Pose::from_Pos_Quat(tr, p2.orientation()));
 
 	// scale points
 	for (auto &mpIdx: vMap->allMapPointsAtKeyFrame(lastAnchor)) {
@@ -300,7 +307,8 @@ MapBuilder::createInitialMap()
 		Pt->setPosition(Pt->getPosition() * invDepthMedian);
 	}
 
-	if (newKeyFrameCallback) newKeyFrameCallback(*K2);
+	lastAnchor = K2->getId();
+	callFrameFunction();
 	return true;
 }
 
