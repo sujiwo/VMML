@@ -27,6 +27,8 @@ public:
 
 	bool save(unsigned int position, const std::string &filename);
 
+	typedef std::shared_ptr<ImageBag> Ptr;
+
 protected:
 	float zoomRatio;
 };

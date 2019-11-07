@@ -107,6 +107,7 @@ add_library(
 		src/Optimizer.cpp
 		src/LoopClosure.cpp
 		src/MapBuilderLidar.cpp
+		src/LocalLidarMapper.cpp
 )
 
 target_link_libraries(
