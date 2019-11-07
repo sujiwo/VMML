@@ -28,7 +28,8 @@ public:
 		const rosbag::Bag &bagFd,
 		const std::string &velodyneCalibrationFilePath,
 		const std::string &velodyneTopic,
-		const std::string &imageTopic);
+		const std::string &imageTopic,
+		const float imageScale=1.0);
 
 protected:
 

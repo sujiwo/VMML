@@ -78,9 +78,6 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	EdgeProjectMonocular() : g2o::EdgeProjectXYZ2UV() {}
 
-	/*
-	 * Perform multiple jobs: set estimation and information matrix
-	 */
 	void set(VertexCameraMono *_f, VertexMapPoint *_p);
 	Vector3d transformWorldPointToFrame(const Vector3d &pointInWorld) const;
 	bool isDepthPositive() const;

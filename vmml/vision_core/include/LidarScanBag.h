@@ -101,6 +101,12 @@ public:
 		float _velodyneMinRange = velodyneMinRange,
 		float _velodyneMaxRange = velodyneMaxRange);
 
+	inline LidarScanBag(rosbag::Bag const &bag,
+		const std::string &topic,
+		const std::string &velodyneCalibrationFile) :
+			LidarScanBag(bag, topic, ros::TIME_MIN, ros::TIME_MAX, velodyneCalibrationFile)
+	{}
+
 
 	template<typename PointT>
 	ScanConstPtr<PointT>
@@ -112,7 +118,7 @@ public:
 		return convertMessage<PointT>(msgP);
 	}
 
-	template<typename PointT>
+	template<typename PointT=pcl::PointXYZ>
 	ScanConstPtr<PointT>
 	getFiltered(int position, boost::posix_time::ptime *msgTime=nullptr)
 	{
@@ -123,7 +129,7 @@ public:
 		return scan;
 	}
 
-	template<typename PointT>
+	template<typename PointT=pcl::PointXYZ>
 	ScanConstPtr<PointT>
 	getUnfiltered(int position, boost::posix_time::ptime *msgTime=nullptr)
 	{
