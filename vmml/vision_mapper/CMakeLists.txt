@@ -70,4 +70,32 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+add_executable(
+	imagelidar_bag_mapper
+		nodes/imagelidar_bag_mapper.cpp
+		src/RVizConnector.cpp
+)
 
+target_link_libraries(
+	imagelidar_bag_mapper
+		${catkin_LIBRARIES}
+		${vision_core_LIBRARIES}
+		${OpenCV_LIBS}
+)
+
+install(
+	TARGETS imagelidar_bag_mapper
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+# Default Velodyne HDL-64E-S2 calibration file
+install(
+	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai-64e-S2.yaml
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Default mask
+install(
+	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai_mask.png
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

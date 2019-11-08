@@ -32,6 +32,12 @@ const float enlarge = 0.333333333333;
 RVizConnector *rosHdl;
 
 
+void textfileFrameHandler(const Vmml::MapBuilder::TmpFrame &frame)
+{
+
+}
+
+
 int main(int argc, char *argv[])
 {
 	rosbag::Bag mybag(argv[1]);
@@ -54,6 +60,9 @@ int main(int argc, char *argv[])
 		rosHdl = new RVizConnector(argc, argv, "monocular_mapper");
 		auto fx=std::bind<void>(&RVizConnector::publishFrame, rosHdl, std::placeholders::_1);
 		mapBuilderz.registerFrameCallback(fx);
+	}
+	else {
+		mapBuilderz.registerFrameCallback(textfileFrameHandler);
 	}
 
 	// XXX: Put interrupt (ctrl-c) signal handler prior to entering loop

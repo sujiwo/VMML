@@ -79,6 +79,8 @@ public:
 
 	void feed(CloudType::ConstPtr cloud, const ptime &lidarTimestamp, ScanProcessLog &procLog);
 
+	void matching2nd(CloudType::ConstPtr cloud, const TTransform &hint);
+
 	inline const ScanProcessLog& getScanLog(const int64 scanID) const
 	{ return scanResults.at(scanID); }
 

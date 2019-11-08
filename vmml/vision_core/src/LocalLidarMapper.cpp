@@ -112,8 +112,11 @@ LocalLidarMapper::feed(CloudType::ConstPtr newScan, const ptime &messageTime, Sc
 			lastScanFrame = currentScanId;
 
 			submap_size += shift;
+			// Delay map increment until 2nd matching
+/*
 			currentMap += *transformed_scan_ptr;
 			currentSubmap += *transformed_scan_ptr;
+*/
 			added_pose = current_pose;
 			isMapUpdate = true;
 		}
@@ -153,5 +156,22 @@ LocalLidarMapper::feed(CloudType::ConstPtr newScan, const ptime &messageTime, Sc
 		currentScanId++;
 	}
 }
+
+
+void
+LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &hint)
+{
+	CloudType::Ptr map_ptr(new CloudType(currentMap));
+
+	// Apply voxel grid filter.
+	// The result of this filter will be used to match current submap
+	CloudType::Ptr filtered_scan_ptr (new CloudType);
+	mVoxelGridFilter.setInputCloud(cloud);
+	mVoxelGridFilter.filter(*filtered_scan_ptr);
+
+	mNdt.setInputTarget(map_ptr);
+	mNdt.setInputSource(filtered_scan_ptr);
+}
+
 
 } /* namespace Vmml */

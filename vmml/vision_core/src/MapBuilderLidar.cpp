@@ -65,7 +65,7 @@ MapBuilderLidar::run(
 		LocalLidarMapper::ScanProcessLog cLog;
 		lidarTracker.feed(lidarScan, lidarTs, cLog);
 
-		// initialized ?
+		// first frame ?
 		if (lastAnchor==0) {
 			ptime imageTs;
 			currentFrame->setImage(getImage(lidarTs, imageTs));
@@ -102,6 +102,13 @@ MapBuilderLidar::getImage(const ptime &ts, ptime &imageTs)
 bool
 MapBuilderLidar::track()
 {
+	if (hasInitialized==false) {
+
+	}
+
+	else {
+
+	}
 
 	return true;
 }
