@@ -31,6 +31,9 @@ struct CameraPinholeParams
 	// Camera frame rate
 	float fps=10.0;
 
+	// Height of camera from ground
+	double heightFg = 1.0;
+
 	CameraPinholeParams(
 		double _fx, double _fy,
 		double _cx, double _cy,

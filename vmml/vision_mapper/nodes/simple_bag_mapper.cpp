@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <opencv2/highgui.hpp>
 #include "MapBuilder.h"
@@ -19,6 +20,7 @@ using namespace std::placeholders;
 using Vmml::MapBuilder;
 using Vmml::Mapper::RVizConnector;
 using Vmml::ptime;
+using Vmml::Pose;
 
 
 Vmml::CameraPinholeParams camera0 (
@@ -34,7 +36,15 @@ RVizConnector *rosHdl;
 
 void textfileFrameHandler(const Vmml::MapBuilder::TmpFrame &frame)
 {
+	static ofstream logFileFd;
 
+	if (logFileFd.is_open()==false) {
+		cerr << "Log file is used" << endl;
+		logFileFd.open("simple_bag_mapper.csv", ios::trunc);
+	}
+
+	Pose pframe = frame.pose();
+	logFileFd << pframe.x() << " " << pframe.y() << " " << pframe.z() << endl;
 }
 
 
@@ -45,7 +55,7 @@ int main(int argc, char *argv[])
 
 	// Find vocabulary & mask
 	auto vocabPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "ORBvoc.txt";
-	auto maskPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "meidai_mask.png";
+	auto maskPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai_mask.png";
 	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 	camera0.fps = float(imageBag.size()) / Vmml::toSeconds(imageBag.length().toBoost());
@@ -53,10 +63,11 @@ int main(int argc, char *argv[])
 	MapBuilder mapBuilderz(camera0, vocabPath.string());
 
 	/*
-	 * Disable ROS connector when debugging
+	 * Disable ROS connector when debugging (set __NOROS environment variable to 1)
 	 */
 	auto checkDebug=getenv("__NOROS");
 	if (checkDebug==NULL or strcmp(checkDebug, "1")!=0) {
+		cerr << "ROS is used" << endl;
 		rosHdl = new RVizConnector(argc, argv, "monocular_mapper");
 		auto fx=std::bind<void>(&RVizConnector::publishFrame, rosHdl, std::placeholders::_1);
 		mapBuilderz.registerFrameCallback(fx);

@@ -76,6 +76,7 @@ VisionMap::reset()
 bool
 VisionMap::loadVocabulary(const std::string &vocabPath)
 {
+	cerr << "Loading vocabulary... \n";
 	return myVoc.loadFromTextFile(vocabPath);
 }
 

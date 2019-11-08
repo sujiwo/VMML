@@ -308,6 +308,7 @@ MapBuilder::createInitialMap()
 	}
 
 	lastAnchor = K2->getId();
+	currentWorkframe->setPose(K2->pose());
 	callFrameFunction();
 	return true;
 }
