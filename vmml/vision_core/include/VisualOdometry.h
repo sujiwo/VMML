@@ -11,6 +11,8 @@
 #include <memory>
 #include "utilities.h"
 #include "CameraPinholeParams.h"
+#include "BaseFrame.h"
+#include "Matcher.h"
 #include "Pose.h"
 
 
@@ -34,9 +36,16 @@ public:
 	VisualOdometry(Parameters par);
 	virtual ~VisualOdometry();
 
+	bool process (cv::Mat img);
+
+//	bool process (const BaseFrame &newFrame, const Matcher::PairList &matchList);
+
 protected:
+	BaseFrame::Ptr mCurrentImage;
 	Parameters param;
 	Grid<std::vector<cv::KeyPoint>> featureGrid;
+
+	void updateMotion();
 };
 
 } /* namespace Vmml */

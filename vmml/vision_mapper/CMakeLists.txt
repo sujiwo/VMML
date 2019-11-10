@@ -88,6 +88,23 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+add_executable(
+	test_vo
+		nodes/test_vo.cpp
+)
+
+target_link_libraries(
+	test_vo
+		${catkin_LIBRARIES}
+		${vision_core_LIBRARIES}
+		${OpenCV_LIBS}
+)
+
+install(
+	TARGETS test_vo
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 # Default Velodyne HDL-64E-S2 calibration file
 install(
 	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai-64e-S2.yaml

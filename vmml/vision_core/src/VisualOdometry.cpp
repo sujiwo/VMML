@@ -5,7 +5,8 @@
  *      Author: sujiwo
  */
 
-#include <VisualOdometry.h>
+#include "VisualOdometry.h"
+
 
 namespace Vmml {
 
@@ -13,12 +14,18 @@ VisualOdometry::VisualOdometry(Parameters par) :
 	param(par),
 	featureGrid(par.bucket_width, par.bucket_height)
 {
-	// TODO Auto-generated constructor stub
-
 }
 
-VisualOdometry::~VisualOdometry() {
-	// TODO Auto-generated destructor stub
+
+VisualOdometry::~VisualOdometry()
+{
+}
+
+
+bool
+VisualOdometry::process(cv::Mat img)
+{
+
 }
 
 } /* namespace Vmml */
