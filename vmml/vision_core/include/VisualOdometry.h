@@ -9,6 +9,7 @@
 #define VMML_CORE_VISUALODOMETRY_H_
 
 #include <memory>
+#include <opencv2/features2d.hpp>
 #include "utilities.h"
 #include "CameraPinholeParams.h"
 #include "BaseFrame.h"
@@ -21,13 +22,16 @@ namespace Vmml {
 
 class VisualOdometry {
 public:
+
 	struct Parameters {
 		CameraPinholeParams camera;
 		uint ransac_iters;
 
 		double inlier_threshold,
-		       motion_threshold;
+		       motion_threshold=100.0;
 		bool multiPass = false;
+
+		double cameraHeight = 1.0;
 
 		int bucket_width = 10,
 			bucket_height = 10;
@@ -41,11 +45,17 @@ public:
 //	bool process (const BaseFrame &newFrame, const Matcher::PairList &matchList);
 
 protected:
-	BaseFrame::Ptr mCurrentImage;
+
 	Parameters param;
+	cv::Ptr<cv::FeatureDetector> featureDetector;
 	Grid<std::vector<cv::KeyPoint>> featureGrid;
 
-	void updateMotion();
+	BaseFrame::Ptr
+		mAnchorImage=nullptr,
+		mCurrentImage=nullptr;
+	Matcher::PairList matcherToAnchor;
+
+	TTransform estimateMotion();
 };
 
 } /* namespace Vmml */

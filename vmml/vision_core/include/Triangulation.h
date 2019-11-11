@@ -37,15 +37,9 @@ bool TriangulateDLT(
 	Eigen::Vector4d &triangulated_point);
 
 bool TriangulateCV(
-/*
-		const Matrix3x4d& pose1,
-		const Matrix3x4d& pose2,
-		const Eigen::Vector2d& point1,
-		const Eigen::Vector2d& point2,
-		Eigen::Vector4d &triangulated_point
-*/
 	const BaseFrame &F1, const BaseFrame &F2,
 	const std::vector<Matcher::KpPair> &featurePairs,
+	// This variable stores which feature pairs that gives correct 3D points
 	std::map<uint, Eigen::Vector3d> &trianglPoints,
 	float *parallax=NULL
 );
