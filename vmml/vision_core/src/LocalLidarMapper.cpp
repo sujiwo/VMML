@@ -189,6 +189,14 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &trans
 
 	Pose current_pose = t_localizer_final;
 
+	// Map increment
+}
+
+
+Trajectory
+LocalLidarMapper::getTrajectory() const
+{
+	// XXX: stub
 }
 
 

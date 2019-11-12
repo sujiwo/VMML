@@ -79,6 +79,7 @@ MapBuilderLidar::run(
 			ptime imageTs;
 			currentFrame->setImage(getImage(lidarTs, imageTs));
 			currentFrame->timestamp = imageTs;
+//			setPoseFromLidar(Pose::Identity(), *currentFrame);
 
 			auto K1 = KeyFrame::fromBaseFrame(*currentFrame, vMap, 0, imageTs);
 			vMap->addKeyFrame(K1);
@@ -152,5 +153,11 @@ MapBuilderLidar::track()
 	return true;
 }
 
+
+void
+MapBuilderLidar::setPoseFromLidar(const Pose &p, BaseFrame &f)
+{
+	f.setPose(p * lidarToCamera);
+}
 
 } /* namespace Vmml */

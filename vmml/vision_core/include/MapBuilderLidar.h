@@ -25,6 +25,9 @@ public:
 	MapBuilderLidar(const CameraPinholeParams &camera0, const std::string &mapVocabularyPath="");
 	virtual ~MapBuilderLidar();
 
+	inline void setTransformationFromLidarToCamera(const TTransform &tx)
+	{ lidarToCamera = tx; }
+
 	struct LidarImageFrame : public MapBuilder::TmpFrame
 	{
 		typedef std::shared_ptr<LidarImageFrame> Ptr;
@@ -56,7 +59,11 @@ protected:
 
 	LidarImageFrame::Ptr currentFrame = nullptr;
 
+	TTransform lidarToCamera = TTransform::Identity();
+
 	bool track();
+
+	void setPoseFromLidar(const Pose &p, BaseFrame &f);
 
 	LocalLidarMapper lidarTracker;
 };

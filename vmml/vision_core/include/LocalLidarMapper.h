@@ -61,11 +61,11 @@ public:
 			fitness_score 					= std::numeric_limits<float>::max(),
 			transformation_probability 		= std::numeric_limits<float>::max();
 		int num_of_iteration;
-		Pose poseAtScan;
+		Pose poseAtScan=Pose::Identity();
 		float shift;
 		double submap_size = 0;
 		ptime submap_origin_stamp;
-		Pose submap_origin_pose;
+		Pose submap_origin_pose=Pose::Identity();
 		tduration matchingTime 				= boost::posix_time::seconds(0);
 
 		bool hasScanFrame					= false;
@@ -83,6 +83,8 @@ public:
 
 	inline const ScanProcessLog& getScanLog(const int64 scanID) const
 	{ return scanResults.at(scanID); }
+
+	Trajectory getTrajectory() const;
 
 protected:
 	Param param;
@@ -111,7 +113,7 @@ protected:
 	double submap_size = 0;
 	uint32_t submap_id = 0;
 	ptime submapOriginTimestamp;
-	Pose submapOriginPose;
+	Pose submapOriginPose=Pose::Identity();
 	double accum_distance = 0.0;
 	int64_t lastScanFrame = -1;
 

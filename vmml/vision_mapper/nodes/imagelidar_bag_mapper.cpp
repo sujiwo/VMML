@@ -23,6 +23,10 @@ CameraPinholeParams camera0 (
 	1920, 1440);	// width, height
 const float enlarge = 0.333333333333;
 
+// XXX: Supply your own values!
+const TTransform tLidarToCamera = TTransform::from_XYZ_RPY(
+	Eigen::Vector3d(0.9, 0.3, -0.6),
+	-1.520777, -0.015, -1.5488);
 
 int main(int argc, char *argv[])
 {
@@ -35,6 +39,7 @@ int main(int argc, char *argv[])
 
 	rosbag::Bag mybag(argv[1]);
 	MapBuilderLidar mapBuilderz(camera0, vocabPath.string());
+	mapBuilderz.setTransformationFromLidarToCamera(tLidarToCamera);
 	mapBuilderz.run(mybag, calibPath.string(), "/velodyne_packets", "/camera1/image_raw", enlarge);
 
 	return 0;
