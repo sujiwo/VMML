@@ -33,11 +33,11 @@ public:
 
 		static Ptr create(cv::Mat img, LocalLidarMapper::CloudType::ConstPtr &scan, std::shared_ptr<VisionMap> &_parent, ptime lidarTs);
 
-		inline void setImage(cv::Mat i)
-		{ image = i; }
+		void setImage(cv::Mat i);
 
 		LocalLidarMapper::CloudType::ConstPtr lidarScan;
 		ptime lidarTs;
+		LocalLidarMapper::ScanProcessLog frLog;
 	};
 
 	void run(

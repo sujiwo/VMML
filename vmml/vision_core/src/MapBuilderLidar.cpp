@@ -6,6 +6,8 @@
  */
 
 #include "MapBuilderLidar.h"
+#include "Matcher.h"
+#include "Triangulation.h"
 
 
 using namespace std;
@@ -36,6 +38,14 @@ MapBuilderLidar::LidarImageFrame::LidarImageFrame(cv::Mat img, LocalLidarMapper:
 {}
 
 
+void
+MapBuilderLidar::LidarImageFrame::setImage(cv::Mat img)
+{
+	image = img;
+	computeFeatures(parent->getFeatureDetector());
+}
+
+
 MapBuilderLidar::LidarImageFrame::Ptr
 MapBuilderLidar::LidarImageFrame::create(cv::Mat img, LocalLidarMapper::CloudType::ConstPtr &_scan, std::shared_ptr<VisionMap> &_parent, ptime _lidarTs)
 { return Ptr(new LidarImageFrame(img, _scan, _parent, _lidarTs)); }
@@ -57,18 +67,19 @@ MapBuilderLidar::run(
 
 		// Fetch lidar scan
 		ptime lidarTs;
-		auto lidarScan = velScanSource->getUnfiltered<PointXYZ>(0, &lidarTs);
+		auto lidarScan = velScanSource->getUnfiltered<PointXYZ>(ild, &lidarTs);
 		// Delay fetching images
 		currentFrame = LidarImageFrame::create(cv::Mat(), lidarScan, vMap, lidarTs);
 
 		// Run NDT
-		LocalLidarMapper::ScanProcessLog cLog;
-		lidarTracker.feed(lidarScan, lidarTs, cLog);
+		lidarTracker.feed(lidarScan, lidarTs, currentFrame->frLog);
 
 		// first frame ?
 		if (lastAnchor==0) {
 			ptime imageTs;
 			currentFrame->setImage(getImage(lidarTs, imageTs));
+			currentFrame->timestamp = imageTs;
+
 			auto K1 = KeyFrame::fromBaseFrame(*currentFrame, vMap, 0, imageTs);
 			vMap->addKeyFrame(K1);
 			lastAnchor = K1->getId();
@@ -76,9 +87,10 @@ MapBuilderLidar::run(
 		}
 
 		else {
-			if (cLog.hasScanFrame==true) {
+			if (currentFrame->frLog.hasScanFrame==true) {
 				ptime imageTs;
 				currentFrame->setImage(getImage(lidarTs, imageTs));
+				currentFrame->timestamp = imageTs;
 				track();
 			}
 		}
@@ -102,14 +114,41 @@ MapBuilderLidar::getImage(const ptime &ts, ptime &imageTs)
 bool
 MapBuilderLidar::track()
 {
-	if (hasInitialized==false) {
+	auto Knext = KeyFrame::fromBaseFrame(*currentFrame, vMap, 0, currentFrame->timestamp);
+	auto Kanchor = vMap->keyframe(lastAnchor);
+	vMap->addKeyFrame(Knext);
 
-	}
+	// Get pose in metric
+	const auto &prevFrameLog = lidarTracker.getScanLog(currentFrame->frLog.prevScanFrame);
+	TTransform metricMove = prevFrameLog.poseAtScan.inverse() * currentFrame->frLog.poseAtScan;
+	Pose currentFramePose = Kanchor->pose() * metricMove;
 
-	else {
+	// Image matching
+	Matcher::PairList vFeatPairs1;
+	int Ns1 = Matcher::matchBruteForce(*Kanchor, *currentFrame, vFeatPairs1);
 
-	}
+	// Find transformation
+	Matcher::PairList vFeatPairs2;
+	TTransform motion = Matcher::calculateMovement(*Kanchor, *currentFrame, vFeatPairs1, vFeatPairs2);
+	if (vFeatPairs2.size()<10)
+		return false;
 
+	// Scale translation
+	Vector3d t = motion.translation();
+	t = t * double(metricMove.translation().norm());
+	motion = TTransform::from_Pos_Quat(t, motion.orientation());
+	Pose newFramePose = Kanchor->pose() * motion;
+	Kanchor->setPose(newFramePose);
+
+	// Build point cloud from image triangulation
+	map<uint, Vector3d> mapPoints;
+	float parallax;
+	TriangulateCV(*Kanchor, *currentFrame, vFeatPairs2, mapPoints, &parallax);
+
+	// Call NDT for 2nd time
+	lidarTracker.matching2nd(currentFrame->lidarScan, motion);
+
+	lastAnchor = Knext->getId();
 	return true;
 }
 

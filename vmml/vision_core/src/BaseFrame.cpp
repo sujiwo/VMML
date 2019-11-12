@@ -116,6 +116,8 @@ BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask
 void
 BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd)
 {
+	if (image.empty()==true)
+		return;
 	computeFeatures(fd, fKeypoints, fDescriptors, cameraParam.mask);
 	assignKeyPointsToGrid();
 }

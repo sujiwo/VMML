@@ -159,7 +159,7 @@ LocalLidarMapper::feed(CloudType::ConstPtr newScan, const ptime &messageTime, Sc
 
 
 void
-LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &hint)
+LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &transFromLastFrame)
 {
 	CloudType::Ptr map_ptr(new CloudType(currentMap));
 
@@ -171,6 +171,24 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &hint)
 
 	mNdt.setInputTarget(map_ptr);
 	mNdt.setInputSource(filtered_scan_ptr);
+
+	// Guess pose
+	auto &lastLog = scanResults.at(currentScanId-1);
+	auto prevFrameLog = scanResults.at(lastLog.prevScanFrame);
+	Pose fpx = prevFrameLog.poseAtScan * transFromLastFrame;
+
+	CloudType::Ptr output_cloud(new CloudType);
+	ptime trun1 = getCurrentTime();
+	mNdt.align(*output_cloud, fpx.matrix().cast<float>());
+	ptime trun2 = getCurrentTime();
+	lastLog.matchingTime += (trun2 - trun1);
+
+	TTransform t_localizer_final = mNdt.getFinalTransformation().cast<double>();
+	CloudType::Ptr transformed_scan_ptr(new CloudType);
+	pcl::transformPointCloud(*cloud, *transformed_scan_ptr, t_localizer_final);
+
+	Pose current_pose = t_localizer_final;
+
 }
 
 
