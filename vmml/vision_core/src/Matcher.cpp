@@ -333,6 +333,7 @@ Matcher::matchAny(
 /*
  * Calculate Essential Matrix from F1 & F2, using featurePairs selected by matchAny().
  * We assume that those pairs obey epipolar geometry principle.
+ * At the end, inliers are put into the fourth parameter
  */
 TTransform
 Matcher::calculateMovement (

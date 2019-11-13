@@ -97,6 +97,17 @@ LocalLidarMapper::matching1st(CloudType::ConstPtr cloud, const ptime &lidarTimes
 			hasSubmapIdIncremented = false;
 		}
 
+		// Calculate shift (in X-Y plane only) from last scan frame
+		auto lastFrameLog = scanResults.at(lastScanFrame);
+		const double shift = Vector2d(current_pose.x()-lastFrameLog.poseAtScan.x(), current_pose.y()-lastFrameLog.poseAtScan.y()).norm();
+		// Update the map when horizontal shift is larger than minimum range
+		if (shift >= param.min_add_scan_shift) {
+			// tell parent to create new scanframe
+			feedResult.hasScanFrame = true;
+			feedResult.prevScanFrame = lastScanFrame;
+			lastScanFrame = currentScanId;
+		}
+
 		feedResult.poseAtScan = current_pose;
 		feedResult.submap_id = submap_id;
 		feedResult.fitness_score = mNdt.getFitnessScore();
@@ -114,7 +125,7 @@ LocalLidarMapper::matching1st(CloudType::ConstPtr cloud, const ptime &lidarTimes
 
 
 Pose
-LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &transFromLastFrame)
+LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &hint)
 {
 	CloudType::Ptr map_ptr(new CloudType(currentMap));
 
@@ -123,8 +134,8 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &trans
 
 	// Guess pose
 	auto &lastLog = scanResults.at(currentScanId-1);
-	auto prevFrameLog = scanResults.at(currentScanId-2);
-	Pose fpx = prevFrameLog.poseAtScan * transFromLastFrame;
+	auto prevFrameLog = scanResults.at(lastLog.prevScanFrame);
+	Pose fpx = prevFrameLog.poseAtScan * hint;
 
 	CloudType::Ptr output_cloud(new CloudType);
 	ptime trun1 = getCurrentTime();
@@ -142,25 +153,17 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &trans
 	lastDisplacement = prevFrameLog.poseAtScan.inverse() * current_pose;
 	lastLog.currentVelocity = Twist(lastDisplacement, toSeconds(lastLog.timestamp-prevFrameLog.timestamp));
 
-	// Calculate shift (in X-Y plane only)
-	double shift = Vector2d(current_pose.x()-added_pose.x(), current_pose.y()-added_pose.y()).norm();
-	// Update the map when horizontal shift is larger than minimum range
-	if (shift >= param.min_add_scan_shift) {
+	if (lastLog.hasScanFrame) {
 		auto lastMapShift = added_pose.inverse() * current_pose;
 
 		// add to pose graph
 		accum_distance += lastMapShift.translation().norm();
 		lastLog.accum_distance = accum_distance;
 
-		// tell parent to create new scanframe
-		lastLog.hasScanFrame = true;
-		lastLog.prevScanFrame = lastScanFrame;
-		lastScanFrame = currentScanId-1;
-
-		submap_size += shift;
+		submap_size += Vector2d(current_pose.x()-added_pose.x(), current_pose.y()-added_pose.y()).norm();;
+		added_pose = current_pose;
 		currentMap += *transformed_scan_ptr;
 		currentSubmap += *transformed_scan_ptr;
-		added_pose = current_pose;
 		isMapUpdate = true;
 	}
 

@@ -90,10 +90,12 @@ MapBuilderLidar::run(
 		}
 
 		else {
-			ptime imageTs;
-			currentFrame->setImage(getImage(lidarTs, imageTs));
-			currentFrame->timestamp = imageTs;
-			track();
+			if (currentFrame->frLog.hasScanFrame==true) {
+				ptime imageTs;
+				currentFrame->setImage(getImage(lidarTs, imageTs));
+				currentFrame->timestamp = imageTs;
+				track();
+			}
 		}
 
 	}
@@ -122,9 +124,8 @@ MapBuilderLidar::track()
 //	lidarTracker.getTrajectory().dump("/tmp/tx.csv");
 
 	// Get pose in metric
-	const auto &prevFrameLog = lidarTracker.getScanLog(currentFrame->frLog.sequence_num-1);
+	const auto &prevFrameLog = lidarTracker.getScanLog(currentFrame->frLog.prevScanFrame);
 	TTransform metricMove = prevFrameLog.poseAtScan.inverse() * currentFrame->frLog.poseAtScan;
-	Pose currentFramePose = Kanchor->pose() * metricMove;
 
 	// Image matching
 	Matcher::PairList vFeatPairs1;
@@ -132,15 +133,15 @@ MapBuilderLidar::track()
 
 	// Find transformation
 	Matcher::PairList vFeatPairs2;
-	TTransform motion = Matcher::calculateMovement(*Kanchor, *currentFrame, vFeatPairs1, vFeatPairs2);
+	TTransform motionCam = Matcher::calculateMovement(*Kanchor, *currentFrame, vFeatPairs1, vFeatPairs2);
 	if (vFeatPairs2.size()<10)
 		return false;
 
 	// Scale translation
-	Vector3d t = motion.translation();
+	Vector3d t = motionCam.translation();
 	t = t * double(metricMove.translation().norm());
-	motion = TTransform::from_Pos_Quat(t, motion.orientation());
-	Pose newFramePose = Kanchor->pose() * motion;
+	motionCam = TTransform::from_Pos_Quat(t, motionCam.orientation());
+	Pose newFramePose = Kanchor->pose() * motionCam;
 	Knext->setPose(newFramePose);
 	TTransform realMotion = Kanchor->pose().inverse() * Knext->pose();
 
