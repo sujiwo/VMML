@@ -67,19 +67,21 @@ MapBuilderLidar::run(
 
 		// Fetch lidar scan
 		ptime lidarTs;
-		auto lidarScan = velScanSource->getUnfiltered<PointXYZ>(ild, &lidarTs);
+		auto lidarScan = velScanSource->getUnfiltered<LocalLidarMapper::PointType>(ild, &lidarTs);
+//		auto lidarScanFiltered = velScanSource->getFiltered<LocalLidarMapper::PointType>(ild, &lidarTs);
 		// Delay fetching images
 		currentFrame = LidarImageFrame::create(cv::Mat(), lidarScan, vMap, lidarTs);
 
 		// Run NDT
-		lidarTracker.feed(lidarScan, lidarTs, currentFrame->frLog);
+		Pose lidarPose = lidarTracker.matching1st(lidarScan, lidarTs);
+		currentFrame->frLog = lidarTracker.getLastLog();
 
 		// first frame ?
 		if (lastAnchor==0) {
 			ptime imageTs;
 			currentFrame->setImage(getImage(lidarTs, imageTs));
 			currentFrame->timestamp = imageTs;
-			setPoseFromLidar(Pose::Identity(), *currentFrame);
+			setPoseFromLidar(lidarPose, *currentFrame);
 
 			auto K1 = KeyFrame::fromBaseFrame(*currentFrame, vMap, 0, imageTs);
 			vMap->addKeyFrame(K1);
@@ -88,12 +90,10 @@ MapBuilderLidar::run(
 		}
 
 		else {
-			if (currentFrame->frLog.hasScanFrame==true) {
-				ptime imageTs;
-				currentFrame->setImage(getImage(lidarTs, imageTs));
-				currentFrame->timestamp = imageTs;
-				track();
-			}
+			ptime imageTs;
+			currentFrame->setImage(getImage(lidarTs, imageTs));
+			currentFrame->timestamp = imageTs;
+			track();
 		}
 
 	}
@@ -119,8 +119,10 @@ MapBuilderLidar::track()
 	auto Kanchor = vMap->keyframe(lastAnchor);
 	vMap->addKeyFrame(Knext);
 
+//	lidarTracker.getTrajectory().dump("/tmp/tx.csv");
+
 	// Get pose in metric
-	const auto &prevFrameLog = lidarTracker.getScanLog(currentFrame->frLog.prevScanFrame);
+	const auto &prevFrameLog = lidarTracker.getScanLog(currentFrame->frLog.sequence_num-1);
 	TTransform metricMove = prevFrameLog.poseAtScan.inverse() * currentFrame->frLog.poseAtScan;
 	Pose currentFramePose = Kanchor->pose() * metricMove;
 
@@ -139,16 +141,22 @@ MapBuilderLidar::track()
 	t = t * double(metricMove.translation().norm());
 	motion = TTransform::from_Pos_Quat(t, motion.orientation());
 	Pose newFramePose = Kanchor->pose() * motion;
-	setPoseFromLidar(newFramePose, *Knext);
+	Knext->setPose(newFramePose);
 	TTransform realMotion = Kanchor->pose().inverse() * Knext->pose();
+
+	// Call NDT for 2nd time
+	auto lastLidarPose = lidarTracker.matching2nd(currentFrame->lidarScan, realMotion);
 
 	// Build point cloud from image triangulation
 	map<uint, Vector3d> mapPoints;
 	float parallax;
 	TriangulateCV(*Kanchor, *Knext, vFeatPairs2, mapPoints, &parallax);
-
-	// Call NDT for 2nd time
-	lidarTracker.matching2nd(currentFrame->lidarScan, realMotion);
+	for (auto &ptPair: mapPoints) {
+		auto pt = MapPoint::create(ptPair.second);
+		vMap->addMapPoint(pt);
+		vMap->addMapPointVisibility(pt->getId(), Kanchor->getId(), vFeatPairs2[ptPair.first].first);
+		vMap->addMapPointVisibility(pt->getId(), Knext->getId(), vFeatPairs2[ptPair.first].second);
+	}
 
 	// Build visibility graph
 

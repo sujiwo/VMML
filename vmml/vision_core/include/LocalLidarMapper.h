@@ -49,6 +49,7 @@ public:
 	};
 
 	LocalLidarMapper();
+	LocalLidarMapper(Param p);
 	virtual ~LocalLidarMapper();
 
 	// XXX: Subject to change
@@ -77,14 +78,17 @@ public:
 		std::string dump();
 	};
 
-	void feed(CloudType::ConstPtr cloud, const ptime &lidarTimestamp, ScanProcessLog &procLog);
+	TTransform matching1st(CloudType::ConstPtr cloud, const ptime &lidarTimestamp);
 
-	void matching2nd(CloudType::ConstPtr cloud, const TTransform &hint);
+	Pose matching2nd(CloudType::ConstPtr cloud, const TTransform &hint);
 
 	inline const ScanProcessLog& getScanLog(const int64 scanID) const
 	{ return scanResults.at(scanID); }
 
 	Trajectory getTrajectory() const;
+
+	const ScanProcessLog& getLastLog() const
+	{ return scanResults.at(currentScanId-1); }
 
 protected:
 	Param param;
@@ -93,6 +97,8 @@ protected:
 	pcl::NormalDistributionsTransform<PointType, PointType> mNdt;
 	// Need our own voxel grid filter
 	pcl::VoxelGrid<PointType> mVoxelGridFilter;
+
+	CloudType::Ptr filteredScanPtr;
 
 	// Counters
 	bool initial_scan_loaded = false;

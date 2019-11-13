@@ -37,7 +37,7 @@ using ScanConstPtr = boost::shared_ptr<const pcl::PointCloud<PointT>>;
  * XXX: These values may need to be adjusted
  */
 const float
-	velodyneMinRange = 2.0,
+	velodyneMinRange = 5.0,
 	velodyneMaxRange = 130,
 	velodyneViewDirection = 0,
 	velodyneViewWidth = 2*M_PI;
