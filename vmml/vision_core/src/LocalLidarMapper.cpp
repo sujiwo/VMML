@@ -161,6 +161,12 @@ LocalLidarMapper::feed(CloudType::ConstPtr newScan, const ptime &messageTime, Sc
 void
 LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &transFromLastFrame)
 {
+	// XXX: debug
+	double
+		r1=transFromLastFrame.roll(),
+		p1=transFromLastFrame.pitch(),
+		y1=transFromLastFrame.yaw();
+
 	CloudType::Ptr map_ptr(new CloudType(currentMap));
 
 	// Apply voxel grid filter.
@@ -176,6 +182,11 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &trans
 	auto &lastLog = scanResults.at(currentScanId-1);
 	auto prevFrameLog = scanResults.at(lastLog.prevScanFrame);
 	Pose fpx = prevFrameLog.poseAtScan * transFromLastFrame;
+
+	double
+		r2=lastLog.poseAtScan.roll(),
+		p2=lastLog.poseAtScan.pitch(),
+		y2=lastLog.poseAtScan.yaw();
 
 	CloudType::Ptr output_cloud(new CloudType);
 	ptime trun1 = getCurrentTime();
@@ -196,6 +207,13 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &trans
 Trajectory
 LocalLidarMapper::getTrajectory() const
 {
+	Trajectory ldTrack;
+	for (const auto &fr: scanResults) {
+		PoseStamped pstamp(fr.second.poseAtScan, fr.second.timestamp);
+		ldTrack.push_back(pstamp);
+	}
+
+	return ldTrack;
 	// XXX: stub
 }
 

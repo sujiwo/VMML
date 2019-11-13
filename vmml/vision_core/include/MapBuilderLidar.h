@@ -66,6 +66,8 @@ protected:
 	void setPoseFromLidar(const Pose &p, BaseFrame &f);
 
 	LocalLidarMapper lidarTracker;
+
+	uint imageFrameNumber;
 };
 
 } /* namespace Vmml */

@@ -182,6 +182,15 @@ struct TTransform : public Eigen::Affine3d
 	const double qw() const
 	{ return orientation().w(); }
 
+	inline double roll() const
+	{ return orientation().roll(); }
+
+	inline double pitch() const
+	{ return orientation().pitch(); }
+
+	inline double yaw() const
+	{ return orientation().yaw(); }
+
 	bool isValid() const;
 
 	TTransform shift(const Eigen::Vector3d &vs) const;

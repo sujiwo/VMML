@@ -79,7 +79,7 @@ MapBuilderLidar::run(
 			ptime imageTs;
 			currentFrame->setImage(getImage(lidarTs, imageTs));
 			currentFrame->timestamp = imageTs;
-//			setPoseFromLidar(Pose::Identity(), *currentFrame);
+			setPoseFromLidar(Pose::Identity(), *currentFrame);
 
 			auto K1 = KeyFrame::fromBaseFrame(*currentFrame, vMap, 0, imageTs);
 			vMap->addKeyFrame(K1);
@@ -103,9 +103,9 @@ MapBuilderLidar::run(
 cv::Mat
 MapBuilderLidar::getImage(const ptime &ts, ptime &imageTs)
 {
-	uint n = imageSource->getPositionAtTime(ros::Time::fromBoost(ts));
-	imageTs = imageSource->timeAt(n).toBoost();
-	return imageSource->at(n);
+	imageFrameNumber = imageSource->getPositionAtTime(ros::Time::fromBoost(ts));
+	imageTs = imageSource->timeAt(imageFrameNumber).toBoost();
+	return imageSource->at(imageFrameNumber);
 }
 
 
@@ -139,15 +139,18 @@ MapBuilderLidar::track()
 	t = t * double(metricMove.translation().norm());
 	motion = TTransform::from_Pos_Quat(t, motion.orientation());
 	Pose newFramePose = Kanchor->pose() * motion;
-	Kanchor->setPose(newFramePose);
+	setPoseFromLidar(newFramePose, *Knext);
+	TTransform realMotion = Kanchor->pose().inverse() * Knext->pose();
 
 	// Build point cloud from image triangulation
 	map<uint, Vector3d> mapPoints;
 	float parallax;
-	TriangulateCV(*Kanchor, *currentFrame, vFeatPairs2, mapPoints, &parallax);
+	TriangulateCV(*Kanchor, *Knext, vFeatPairs2, mapPoints, &parallax);
 
 	// Call NDT for 2nd time
-	lidarTracker.matching2nd(currentFrame->lidarScan, motion);
+	lidarTracker.matching2nd(currentFrame->lidarScan, realMotion);
+
+	// Build visibility graph
 
 	lastAnchor = Knext->getId();
 	return true;
