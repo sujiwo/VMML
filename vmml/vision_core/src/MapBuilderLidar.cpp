@@ -138,15 +138,17 @@ MapBuilderLidar::track()
 		return false;
 
 	// Scale translation
+	auto R = motionCam.orientation();
 	Vector3d t = motionCam.translation();
+	t = -R.matrix() * t;
 	t = t * double(metricMove.translation().norm());
 	motionCam = TTransform::from_Pos_Quat(t, motionCam.orientation());
 	Pose newFramePose = Kanchor->pose() * motionCam;
 	Knext->setPose(newFramePose);
 
-	TTransform realMotion = Kanchor->pose().inverse() * Knext->pose();
+	Pose guessPoseLidar = newFramePose * lidarToCamera.inverse();
 	// Call NDT for 2nd time
-	auto lastLidarPose = lidarTracker.matching2nd(currentFrame->lidarScan, realMotion);
+	auto lastLidarPose = lidarTracker.matching2nd(currentFrame->lidarScan, guessPoseLidar);
 
 	// Build point cloud from image triangulation
 	map<uint, Vector3d> mapPoints;

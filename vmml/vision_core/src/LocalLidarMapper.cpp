@@ -125,7 +125,7 @@ LocalLidarMapper::matching1st(CloudType::ConstPtr cloud, const ptime &lidarTimes
 
 
 Pose
-LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &hint)
+LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &guessPose)
 {
 	CloudType::Ptr map_ptr(new CloudType(currentMap));
 
@@ -135,11 +135,10 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &hint)
 	// Guess pose
 	auto &lastLog = scanResults.at(currentScanId-1);
 	auto prevFrameLog = scanResults.at(lastLog.prevScanFrame);
-	Pose fpx = prevFrameLog.poseAtScan * hint;
 
 	CloudType::Ptr output_cloud(new CloudType);
 	ptime trun1 = getCurrentTime();
-	mNdt.align(*output_cloud, fpx.matrix().cast<float>());
+	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
 	ptime trun2 = getCurrentTime();
 	lastLog.matchingTime += (trun2 - trun1);
 

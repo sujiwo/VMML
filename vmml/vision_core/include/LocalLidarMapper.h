@@ -80,7 +80,7 @@ public:
 
 	TTransform matching1st(CloudType::ConstPtr cloud, const ptime &lidarTimestamp);
 
-	Pose matching2nd(CloudType::ConstPtr cloud, const TTransform &hint);
+	Pose matching2nd(CloudType::ConstPtr cloud, const Pose &guesNewPose);
 
 	inline const ScanProcessLog& getScanLog(const int64 scanID) const
 	{ return scanResults.at(scanID); }
