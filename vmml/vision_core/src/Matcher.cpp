@@ -363,9 +363,32 @@ Matcher::calculateMovement (
 	cv2eigen(R12e, R12);
 	cv2eigen(te, t);
 
-//	return T12;
 	return TTransform::from_R_t(t, R12);
 }
+
+
+/*
+ * Perform motion estimation with hint from metric odometry
+ */
+TTransform
+Matcher::calculateMovement2(const BaseFrame &F1, const BaseFrame &F2,
+	const PairList &featurePairs,
+	PairList &validPairsByTriangulation, const TTransform &hint)
+{
+	validPairsByTriangulation = featurePairs;
+
+	vector<cv::Point2f> pointsIn1(featurePairs.size()), pointsIn2(featurePairs.size());
+	for (int i=0; i<featurePairs.size(); ++i) {
+		auto &m = featurePairs[i];
+		pointsIn1[i] = F1.fKeypoints[m.first].pt;
+		pointsIn2[i] = F2.fKeypoints[m.second].pt;
+	}
+
+	cv::Mat E12, R12e, te, mask;
+	E12 = cv::findEssentialMat(pointsIn1, pointsIn2, F1.cameraParam.toCvMat(), cv::RANSAC, 0.999, 3.84*Matcher::circleOfConfusionDiameter, mask);
+
+}
+
 
 
 void

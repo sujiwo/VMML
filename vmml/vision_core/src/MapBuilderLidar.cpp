@@ -143,8 +143,8 @@ MapBuilderLidar::track()
 	motionCam = TTransform::from_Pos_Quat(t, motionCam.orientation());
 	Pose newFramePose = Kanchor->pose() * motionCam;
 	Knext->setPose(newFramePose);
-	TTransform realMotion = Kanchor->pose().inverse() * Knext->pose();
 
+	TTransform realMotion = Kanchor->pose().inverse() * Knext->pose();
 	// Call NDT for 2nd time
 	auto lastLidarPose = lidarTracker.matching2nd(currentFrame->lidarScan, realMotion);
 

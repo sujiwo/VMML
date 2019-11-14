@@ -61,6 +61,14 @@ public:
 		const PairList &featurePairs,
 		PairList &validPairsByTriangulation);
 
+	/*
+	 * Perform motion estimation with hint from metric odometry
+	 */
+	static TTransform
+	calculateMovement2(const BaseFrame &F1, const BaseFrame &F2,
+		const PairList &featurePairs,
+		PairList &validPairsByTriangulation, const TTransform &hint);
+
 	// Match with homography constraints.
 	// We have to compute new features based on custom mask
 	static void
