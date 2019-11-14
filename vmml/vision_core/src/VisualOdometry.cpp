@@ -37,43 +37,29 @@ VisualOdometry::~VisualOdometry()
 
 
 bool
-VisualOdometry::process(cv::Mat img)
+VisualOdometry::process(cv::Mat img, const ptime &timestamp)
 {
 	mCurrentImage = BaseFrame::create(img, param.camera);
 	mCurrentImage->computeFeatures(featureDetector);
 
 	if (mAnchorImage==nullptr) {
 		mAnchorImage = mCurrentImage;
+		mAnchorImage->setPose(Pose::Identity());
+		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
 		return false;
 	}
 	Matcher::matchBruteForce(*mAnchorImage, *mCurrentImage, matcherToAnchor);
 
 	// Get transformation, and inliers
-	Matcher::PairList f12matchesInliers;
-	TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, f12matchesInliers);
-	if (f12matchesInliers.size()<=10)
+	TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, matcherToAnchor);
+	if (matcherToAnchor.size()<=10)
 		return false;
 
-	// Find 3D points
-	float parallax;
-	std::map<uint, Eigen::Vector3d> trianglPoints;
-	TriangulateCV(*mAnchorImage, *mCurrentImage, matcherToAnchor, trianglPoints, &parallax);
-	if (trianglPoints.size()<=10)
-		return false;
+	Pose pCurrent = mAnchorImage->pose() * motion;
+	mCurrentImage->setPose(pCurrent);
+	mVoTrack.push_back(PoseStamped(mCurrentImage->pose(), timestamp));
 
-	// Find median
-	VectorXx<float> distance=VectorXx<float>::Zero(trianglPoints.size());
-	int i=0;
-	for (auto &p: trianglPoints) {
-		auto p3d = p.second;
-		distance[i] = fabs(p3d.x()) + fabs(p3d.y()) + fabs(p3d.z());
-		i++;
-	}
-	float sceneMedian = median(distance);
-	if (sceneMedian > param.motion_threshold)
-		return false;
-
-	// XXX: Unfinished
+	mAnchorImage = mCurrentImage;
 
 	return true;
 }

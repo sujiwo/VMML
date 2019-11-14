@@ -64,6 +64,7 @@ BagViewer::BagViewer(QWidget *parent)
   ui->statusbar->addPermanentWidget(timeOffsetIndicator);
   this->connect(timeOffsetIndicator, SIGNAL(clicked()), this,
                 SLOT(timeOffsetIndicator_clicked()));
+  ui->imagePlace->setOuterLayout(ui->imageLayout);
 }
 
 BagViewer::~BagViewer() { delete ui; }
@@ -189,7 +190,7 @@ void BagViewer::updateImage(int n) {
             ->image;
   }
 
-  QImage curImage(currentImage.data, currentImage.cols, currentImage.rows,
+  const QImage curImage(currentImage.data, currentImage.cols, currentImage.rows,
                   currentImage.step[0], QImage::Format_RGB888);
   ui->imagePlace->setImage(curImage);
 //   ui->imageFrame->setImage(curImage);

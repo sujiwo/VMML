@@ -40,8 +40,8 @@ include_directories(
 	include
 )
 
-link_directories(
-	${catkin_LIBRARY_DIRS})
+#link_directories(
+#	${catkin_LIBRARY_DIRS})
 
 
 #add_library(
@@ -74,10 +74,10 @@ add_executable(bag_viewer
 	bag_viewer/main.cpp
 	bag_viewer/BagViewer.cpp
 	bag_viewer/ClickableLabel.cpp
-# 	bag_viewer/ratio_layouted_frame.cpp
-# 	bag_viewer/ratio_layouted_frame.h
-    bag_viewer/ImageRatioEqualViewer.cpp
-    bag_viewer/ImageRatioEqualViewer.h
+ 	bag_viewer/ratio_layouted_frame.cpp
+ 	bag_viewer/ratio_layouted_frame.h
+#    bag_viewer/ImageRatioEqualViewer.cpp
+#    bag_viewer/ImageRatioEqualViewer.h
 	bag_viewer/BagViewer.ui
 	bag_viewer/ClickableLabel.h
 )

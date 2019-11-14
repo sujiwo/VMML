@@ -18,11 +18,18 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="ImageRatioEqualViewer" name="imagePlace">
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="imageLayout">
+        <item>
+         <widget class="RatioLayoutedFrame" name="imagePlace">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -35,7 +42,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="go-previous"/>
+           <iconset theme="go-previous">
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </widget>
         </item>
@@ -45,7 +53,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="media-playback-start"/>
+           <iconset theme="media-playback-start">
+            <normaloff>.</normaloff>.</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -58,7 +67,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="go-next"/>
+           <iconset theme="go-next">
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </widget>
         </item>
@@ -75,7 +85,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="document-save"/>
+           <iconset theme="document-save">
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </widget>
         </item>
@@ -99,9 +110,10 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ImageRatioEqualViewer</class>
-   <extends>QLabel</extends>
-   <header location="global">ImageRatioEqualViewer.h</header>
+   <class>RatioLayoutedFrame</class>
+   <extends>QFrame</extends>
+   <header>ratio_layouted_frame.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

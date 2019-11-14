@@ -14,7 +14,7 @@
 #include "CameraPinholeParams.h"
 #include "BaseFrame.h"
 #include "Matcher.h"
-#include "Pose.h"
+#include "Trajectory.h"
 
 
 namespace Vmml {
@@ -40,7 +40,13 @@ public:
 	VisualOdometry(Parameters par);
 	virtual ~VisualOdometry();
 
-	bool process (cv::Mat img);
+	bool process (cv::Mat img, const ptime &timestamp);
+
+	inline const Trajectory& getTrajectory() const
+	{ return mVoTrack; }
+
+	inline uint getInlier() const
+	{ return matcherToAnchor.size(); }
 
 //	bool process (const BaseFrame &newFrame, const Matcher::PairList &matchList);
 
@@ -49,6 +55,7 @@ protected:
 	Parameters param;
 	cv::Ptr<cv::FeatureDetector> featureDetector;
 	Grid<std::vector<cv::KeyPoint>> featureGrid;
+	Trajectory mVoTrack;
 
 	BaseFrame::Ptr
 		mAnchorImage=nullptr,

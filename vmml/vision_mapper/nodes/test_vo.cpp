@@ -5,7 +5,8 @@
  *      Author: sujiwo
  */
 
-
+#include <iostream>
+#include <string>
 #include <opencv2/highgui.hpp>
 #include "VisualOdometry.h"
 #include "utilities.h"
@@ -13,6 +14,7 @@
 
 
 using namespace Vmml;
+using namespace std;
 
 
 Vmml::CameraPinholeParams camera0 (
@@ -27,18 +29,27 @@ const float enlarge = 0.333333333333;
 int main(int argc, char *argv[])
 {
 	VisualOdometry::Parameters voPars;
+	camera0.mask = cv::imread((boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai_mask.png").string(), cv::IMREAD_GRAYSCALE);
 	voPars.camera = camera0 * enlarge;
-	voPars.camera.mask = cv::imread((boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai_mask.png").string(), cv::IMREAD_GRAYSCALE);
 
 	VisualOdometry VoRunner(voPars);
 
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 
-	for (int n=0; n<imageBag.size(); ++n) {
+	int limit;
+	if (argc>=2)
+		limit = stoi(argv[2]);
+	else limit = imageBag.size();
+
+	for (int n=0; n<limit; ++n) {
 		auto imageMsg = imageBag.at(n);
 		ptime timestamp = imageBag.timeAt(n).toBoost();
+		VoRunner.process(imageMsg, timestamp);
+		cout << n << ": " << VoRunner.getInlier() << endl;
 	}
+	const auto voTrack = VoRunner.getTrajectory();
+	voTrack.dump("/tmp/x.csv");
 
 	return 0;
 }
