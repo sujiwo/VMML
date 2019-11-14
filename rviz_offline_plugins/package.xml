@@ -10,6 +10,6 @@
   <depend>roscpp</depend>
   <buildtool_depend>catkin</buildtool_depend>
   <export>
-    <!-- Other tools can request additional information be placed here -->
+  	<rviz plugin="${prefix}/plugin_description.xml" />
   </export>
 </package>

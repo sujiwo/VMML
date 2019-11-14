@@ -9,13 +9,9 @@
 
   <license>BSD</license>
 
-  <depend>rviz</depend>
   <depend>roscpp</depend>
   <depend>rosbag_storage</depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 
-
-  <export>
-    <rviz plugin="${prefix}/plugin_description.xml"></rviz></export>
 </package>

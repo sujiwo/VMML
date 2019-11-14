@@ -9,7 +9,6 @@ set (CMAKE_AUTOUIC					ON)
 
 
 find_package(catkin REQUIRED COMPONENTS 
-	rviz
 	cv_bridge
 	pcl_ros
 	rosbag_storage)
@@ -24,11 +23,9 @@ find_package (OpenCV REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 
-  	rviz_offline_display
   	random_access_bag
   CATKIN_DEPENDS 
 	roscpp 
-	rviz 
 	rosbag_storage
 )
 
@@ -43,21 +40,6 @@ include_directories(
 #link_directories(
 #	${catkin_LIBRARY_DIRS})
 
-
-#add_library(
-#	rviz_offline_display
-#		rviz_plugins/PCDFileDisplay.cpp
-#		rviz_plugins/CSVTrajectory.cpp
-#		rviz_plugins/FileProperty.cpp
-#)
-
-#target_link_libraries(
-#	rviz_offline_display
-#		Qt5::Core
-#		Qt5::Widgets
-#		${catkin_LIBRARIES}
-#		${PCL_LIBRARIES}
-#)
 
 add_library(
 	random_access_bag
@@ -76,8 +58,6 @@ add_executable(bag_viewer
 	bag_viewer/ClickableLabel.cpp
  	bag_viewer/ratio_layouted_frame.cpp
  	bag_viewer/ratio_layouted_frame.h
-#    bag_viewer/ImageRatioEqualViewer.cpp
-#    bag_viewer/ImageRatioEqualViewer.h
 	bag_viewer/BagViewer.ui
 	bag_viewer/ClickableLabel.h
 )
