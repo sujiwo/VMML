@@ -39,6 +39,9 @@ public:
 	std::shared_ptr<VisionMap>& getMap()
 	{ return vMap; }
 
+	const std::shared_ptr<VisionMap>& getMap() const
+	{ return vMap; }
+
 	/*
 	 * Temporary structure for map builder
 	 */

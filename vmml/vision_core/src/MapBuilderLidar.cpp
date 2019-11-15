@@ -63,12 +63,13 @@ MapBuilderLidar::run(
 	velScanSource.reset(new LidarScanBag(bagFd, velodyneTopic, velodyneCalibrationFilePath));
 
 	const int N = velScanSource->size();
+	cout << "Num of velodyne frames: " << N << endl;
+
 	for (int ild=0; ild<N; ++ild) {
 
 		// Fetch lidar scan
 		ptime lidarTs;
 		auto lidarScan = velScanSource->getUnfiltered<LocalLidarMapper::PointType>(ild, &lidarTs);
-//		auto lidarScanFiltered = velScanSource->getFiltered<LocalLidarMapper::PointType>(ild, &lidarTs);
 		// Delay fetching images
 		currentFrame = LidarImageFrame::create(cv::Mat(), lidarScan, vMap, lidarTs);
 
@@ -97,7 +98,6 @@ MapBuilderLidar::run(
 				track();
 			}
 		}
-
 	}
 }
 
@@ -154,6 +154,8 @@ MapBuilderLidar::track()
 	map<uint, Vector3d> mapPoints;
 	float parallax;
 	TriangulateCV(*Kanchor, *Knext, vFeatPairs2, mapPoints, &parallax);
+	cout << "Found " << mapPoints.size() << " new triangulation points" << endl;
+
 	for (auto &ptPair: mapPoints) {
 		auto pt = MapPoint::create(ptPair.second);
 		vMap->addMapPoint(pt);

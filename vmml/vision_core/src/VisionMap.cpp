@@ -6,6 +6,7 @@
  */
 
 #include <memory>
+#include <algorithm>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 
@@ -338,6 +339,37 @@ VisionMap::getKeyFramesComeInto (const kfid kTarget) const
 	}
 
 	return vector<kfid>(kfListSrc.begin(), kfListSrc.end());
+}
+
+
+std::vector<KeyFrame::Ptr>
+VisionMap::getSortedKeyframes() const
+{
+	vector<KeyFrame::Ptr> kfList(keyframeInvIdx.size());
+
+	int i=0;
+	for (auto &p: keyframeInvIdx) {
+		kfList[i] = p.second;
+		i++;
+	}
+
+	sort(kfList.begin(), kfList.end(), [&](const KeyFrame::Ptr &k1, const KeyFrame::Ptr &k2){
+		return k1->frCreationTime < k2->frCreationTime;
+	});
+	return kfList;
+}
+
+Trajectory
+VisionMap::dumpCameraTrajectory () const
+{
+	Trajectory camTrack;
+
+	auto kfList = getSortedKeyframes();
+	for (auto &cameraKey: kfList) {
+		camTrack.push_back(PoseStamped(cameraKey->pose(), cameraKey->frCreationTime));
+	}
+
+	return camTrack;
 }
 
 

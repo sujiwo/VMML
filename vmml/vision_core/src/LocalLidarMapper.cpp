@@ -6,6 +6,7 @@
  */
 
 #include <utility>
+#include <iostream>
 #include "LocalLidarMapper.h"
 
 using namespace Eigen;
@@ -85,6 +86,7 @@ LocalLidarMapper::matching1st(CloudType::ConstPtr cloud, const ptime &lidarTimes
 
 		CloudType::Ptr output_cloud(new CloudType);
 
+		cout << "First NDT matching in frame #" << currentScanId << endl;
 		ptime trun1 = getCurrentTime();
 		mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
 		ptime trun2 = getCurrentTime();
@@ -136,6 +138,7 @@ LocalLidarMapper::matching2nd(CloudType::ConstPtr cloud, const TTransform &guess
 	auto &lastLog = scanResults.at(currentScanId-1);
 	auto prevFrameLog = scanResults.at(lastLog.prevScanFrame);
 
+	cout << "Second NDT matching in frame #" << currentScanId-1 << endl;
 	CloudType::Ptr output_cloud(new CloudType);
 	ptime trun1 = getCurrentTime();
 	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());

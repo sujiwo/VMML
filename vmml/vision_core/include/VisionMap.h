@@ -132,7 +132,7 @@ public:
 	std::vector<std::pair<Eigen::Vector3d,Eigen::Quaterniond> >
 		dumpCameraPoses () const;
 
-	void dumpCameraPoses (Trajectory &track) const;
+	Trajectory dumpCameraTrajectory () const;
 
 	/*
 	 * Information about this map
@@ -241,6 +241,7 @@ protected:
 	std::map<kfid, DBoW2::BowVector> BoWList;
 	std::map<kfid, DBoW2::FeatureVector> FeatVecList;
 
+	std::vector<KeyFrame::Ptr> getSortedKeyframes() const;
 };
 
 } /* namespace Vmml */

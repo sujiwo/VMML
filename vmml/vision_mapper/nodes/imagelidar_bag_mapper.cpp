@@ -42,5 +42,9 @@ int main(int argc, char *argv[])
 	mapBuilderz.setTransformationFromLidarToCamera(tLidarToCamera);
 	mapBuilderz.run(mybag, calibPath.string(), "/velodyne_packets", "/camera1/image_raw", enlarge);
 
+	// Profit!
+	auto visionMapTrajectory = mapBuilderz.getMap()->dumpCameraTrajectory();
+	visionMapTrajectory.dump("/tmp/mapping-vision.csv");
+
 	return 0;
 }
