@@ -108,6 +108,7 @@ add_library(
 		src/LoopClosure.cpp
 		src/MapBuilderLidar.cpp
 		src/LocalLidarMapper.cpp
+		src/ImageDatabaseBuilder.cpp
 )
 
 target_link_libraries(

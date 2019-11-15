@@ -15,6 +15,7 @@
 #include "BaseFrame.h"
 #include "Matcher.h"
 #include "Trajectory.h"
+#include "MapBuilderLidar.h"
 
 
 namespace Vmml {
@@ -45,6 +46,9 @@ public:
 	inline const Trajectory& getTrajectory() const
 	{ return mVoTrack; }
 
+	inline const LocalLidarMapper::CloudType::Ptr getPoints() const
+	{ return points3d; }
+
 	inline uint getInlier() const
 	{ return matcherToAnchor.size(); }
 
@@ -56,6 +60,7 @@ protected:
 	cv::Ptr<cv::FeatureDetector> featureDetector;
 	Grid<std::vector<cv::KeyPoint>> featureGrid;
 	Trajectory mVoTrack;
+	LocalLidarMapper::CloudType::Ptr points3d;
 
 	BaseFrame::Ptr
 		mAnchorImage=nullptr,

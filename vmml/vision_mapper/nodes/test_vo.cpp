@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <opencv2/highgui.hpp>
+#include <pcl/io/pcd_io.h>
 #include "VisualOdometry.h"
 #include "utilities.h"
 #include "ImageBag.h"
@@ -48,8 +49,12 @@ int main(int argc, char *argv[])
 		VoRunner.process(imageMsg, timestamp);
 		cout << n << ": " << VoRunner.getInlier() << endl;
 	}
+	cout << "Done\n";
+
 	const auto voTrack = VoRunner.getTrajectory();
+	const auto cloudBuild = VoRunner.getPoints();
 	voTrack.dump("/tmp/x.csv");
+	pcl::io::savePCDFileBinary("/tmp/mapVoTest.pcd", *cloudBuild);
 
 	return 0;
 }
