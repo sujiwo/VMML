@@ -41,6 +41,22 @@ ImageBag::at(unsigned int position)
 }
 
 
+cv::Mat
+ImageBag::at(const ptime &t)
+{
+	return at(ros::Time::fromBoost(t));
+}
+
+
+cv::Mat
+ImageBag::at(const ros::Time &t)
+{
+	uint N = getPositionAtTime(t);
+	return at(N);
+}
+
+
+
 bool
 ImageBag::save(unsigned int position, const string &filename)
 {

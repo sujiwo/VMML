@@ -105,6 +105,23 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+add_executable(
+	imagedb_mapper
+		nodes/imagedb_mapper.cpp
+)
+
+target_link_libraries(
+	imagedb_mapper
+		${catkin_LIBRARIES}
+		${vision_core_LIBRARIES}
+		${OpenCV_LIBS}
+)
+
+install(
+	TARGETS imagedb_mapper
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 # Default Velodyne HDL-64E-S2 calibration file
 install(
 	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai-64e-S2.yaml

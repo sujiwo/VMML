@@ -13,8 +13,7 @@
 #include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
 #include "MapBuilder.h"
-#include "LidarScanBag.h"
-#include "ImageBag.h"
+#include "Trajectory.h"
 
 
 namespace Vmml {
@@ -47,12 +46,12 @@ public:
 	{
 		typedef std::shared_ptr<IdbWorkFrame> Ptr;
 
-		IdbWorkFrame(CloudT::Ptr &cl, const ptime &lstamp, cv::Mat img, const ptime &istamp, const CameraPinholeParams &cam);
+		IdbWorkFrame(CloudT::ConstPtr &cl, const ptime &lstamp, cv::Mat img, const ptime &istamp, const CameraPinholeParams &cam);
 
-		static Ptr create(CloudT::Ptr &cl, const ptime &lstamp, cv::Mat img, const ptime &istamp, const CameraPinholeParams &cam)
+		static Ptr create(CloudT::ConstPtr &cl, const ptime &lstamp, cv::Mat img, const ptime &istamp, const CameraPinholeParams &cam)
 		{ return Ptr(new IdbWorkFrame(cl, lstamp, img, istamp, cam)); }
 
-		CloudT::Ptr lidarScan;
+		CloudT::ConstPtr lidarScan;
 		ptime lidarTimestamp;
 		ptime imageTimestamp;
 
@@ -62,7 +61,10 @@ public:
 	ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath);
 	virtual ~ImageDatabaseBuilder();
 
-	void feed(CloudT::Ptr cloudInp, const ptime& cloudTimestamp, cv::Mat img, const ptime& imageTimestamp);
+	bool feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestamp, cv::Mat img, const ptime& imageTimestamp);
+
+	const Trajectory& getTrajectory() const
+	{ return rigTrack; }
 
 protected:
 
@@ -74,9 +76,12 @@ protected:
 	TTransform lastDisplacement = TTransform::Identity();
 	Pose previousPose;
 
-	TTransform runMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
+	TTransform runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
 	void addKeyframe(IdbWorkFrame::Ptr keyframe);
+	void buildVisionMap(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
 
+	CloudT::Ptr tempLidarCloudmap;
+	Trajectory rigTrack;
 };
 
 } /* namespace Vmml */

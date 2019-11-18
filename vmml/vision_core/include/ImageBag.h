@@ -24,6 +24,8 @@ public:
 	virtual ~ImageBag();
 
 	cv::Mat at(unsigned int position);
+	cv::Mat at(const ptime &t);
+	cv::Mat at(const ros::Time &t);
 
 	bool save(unsigned int position, const std::string &filename);
 

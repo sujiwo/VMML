@@ -13,7 +13,8 @@ namespace Vmml {
 
 ImageDatabaseBuilder::ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath):
 	MapBuilder(camera0, mapVocabularyPath),
-	mParams(_p)
+	mParams(_p),
+	tempLidarCloudmap(new CloudT)
 {
 	// Parameter set
 	mNdt.setResolution(mParams.ndt_res);
@@ -31,7 +32,7 @@ ImageDatabaseBuilder::~ImageDatabaseBuilder()
 }
 
 
-ImageDatabaseBuilder::IdbWorkFrame::IdbWorkFrame(CloudT::Ptr &cl, const ptime &lstamp, cv::Mat img, const ptime &istamp, const CameraPinholeParams &cam):
+ImageDatabaseBuilder::IdbWorkFrame::IdbWorkFrame(CloudT::ConstPtr &cl, const ptime &lstamp, cv::Mat img, const ptime &istamp, const CameraPinholeParams &cam):
 	BaseFrame(img, cam),
 	lidarScan(cl),
 	lidarTimestamp(lstamp),
@@ -39,8 +40,11 @@ ImageDatabaseBuilder::IdbWorkFrame::IdbWorkFrame(CloudT::Ptr &cl, const ptime &l
 {}
 
 
-void
-ImageDatabaseBuilder::feed(CloudT::Ptr cloudInp, const ptime& cloudTimestamp, cv::Mat img, const ptime& imageTimestamp)
+/*
+ * True when a frame is keyframe, otherwise false
+ */
+bool
+ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestamp, cv::Mat img, const ptime& imageTimestamp)
 {
 	auto frmWork = IdbWorkFrame::create(cloudInp, cloudTimestamp, img, imageTimestamp, vMap->getCameraParameter(0));
 
@@ -48,18 +52,23 @@ ImageDatabaseBuilder::feed(CloudT::Ptr cloudInp, const ptime& cloudTimestamp, cv
 		anchorFrame = frmWork;
 		anchorFrame->setPose(Pose::Identity());
 		addKeyframe(frmWork);
-		return;
+		rigTrack.push_back(PoseStamped(Pose::Identity(), imageTimestamp));
+		return true;
 	}
 
-	TTransform displacement = runMatch(anchorFrame, frmWork);
+	TTransform displacement = runNdtMatch(anchorFrame, frmWork);
 
+	bool hasKeyframe=false;
 	double linearDispl, angularDispl;
 	anchorFrame->pose().displacement(frmWork->pose(), linearDispl, angularDispl);
 	if (linearDispl>=mParams.min_linear_move or angularDispl>=mParams.min_angular_move) {
-		frmWork->setPose(anchorFrame->pose() * displacement);
 		addKeyframe(frmWork);
 		anchorFrame = frmWork;
+		hasKeyframe = true;
+		rigTrack.push_back(PoseStamped(frmWork->pose(), imageTimestamp));
 	}
+
+	return hasKeyframe;
 }
 
 
@@ -72,8 +81,11 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 }
 
 
+/*
+ * Returns transformation from previous pose. The frame will be set with current pose
+ */
 TTransform
-ImageDatabaseBuilder::runMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2)
+ImageDatabaseBuilder::runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2)
 {
 	mNdt.setInputTarget(frame1->lidarScan);
 
@@ -95,6 +107,7 @@ ImageDatabaseBuilder::runMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame
 
 	lastDisplacement = previousPose.inverse() * currentPose;
 	previousPose = currentPose;
+	frame2->setPose(currentPose);
 	return lastDisplacement;
 }
 
