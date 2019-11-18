@@ -6,6 +6,7 @@
  */
 
 #include "ImageDatabaseBuilder.h"
+#include "utilities.h"
 
 
 namespace Vmml {
@@ -13,7 +14,15 @@ namespace Vmml {
 ImageDatabaseBuilder::ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath):
 	MapBuilder(camera0, mapVocabularyPath),
 	mParams(_p)
-{}
+{
+	// Parameter set
+	mNdt.setResolution(mParams.ndt_res);
+	mNdt.setStepSize(mParams.step_size);
+	mNdt.setTransformationEpsilon(mParams.trans_eps);
+	mNdt.setMaximumIterations(mParams.max_iter);
+
+	mVoxelGridFilter.setLeafSize(mParams.voxel_leaf_size, mParams.voxel_leaf_size, mParams.voxel_leaf_size);
+}
 
 
 ImageDatabaseBuilder::~ImageDatabaseBuilder()
@@ -38,10 +47,11 @@ ImageDatabaseBuilder::feed(CloudT::Ptr cloudInp, const ptime& cloudTimestamp, cv
 	if (anchorFrame==nullptr) {
 		anchorFrame = frmWork;
 		anchorFrame->setPose(Pose::Identity());
+		addKeyframe(frmWork);
 		return;
 	}
 
-	TTransform displacement = runMatch(frmWork);
+	TTransform displacement = runMatch(anchorFrame, frmWork);
 
 	double linearDispl, angularDispl;
 	anchorFrame->pose().displacement(frmWork->pose(), linearDispl, angularDispl);
@@ -54,16 +64,38 @@ ImageDatabaseBuilder::feed(CloudT::Ptr cloudInp, const ptime& cloudTimestamp, cv
 
 
 void
-ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr keyframe)
+ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 {
-	keyframe->computeFeatures(vMap->getFeatureDetector());
+	kfCandidate->computeFeatures(vMap->getFeatureDetector());
+	auto kfNew = KeyFrame::fromBaseFrame(*kfCandidate, vMap, 0, kfCandidate->imageTimestamp);
+	vMap->addKeyFrame(kfNew);
 }
 
 
 TTransform
-ImageDatabaseBuilder::runMatch(IdbWorkFrame::Ptr targetFrame)
+ImageDatabaseBuilder::runMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2)
 {
+	mNdt.setInputTarget(frame1->lidarScan);
 
+	CloudT::Ptr filteredTargetScan(new CloudT);
+	mVoxelGridFilter.setInputCloud(frame2->lidarScan);
+	mVoxelGridFilter.filter(*filteredTargetScan);
+
+	mNdt.setInputSource(filteredTargetScan);
+	// Guess Pose
+	Vector3d rot = quaternionToRPY(lastDisplacement.orientation());
+	TTransform guessDisplacement = TTransform::from_XYZ_RPY(lastDisplacement.translation(), 0, 0, rot.z());
+	Pose guessPose = previousPose * guessDisplacement;
+
+	CloudT::Ptr output_cloud(new CloudT);
+	ptime trun1 = getCurrentTime();
+	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
+	ptime trun2 = getCurrentTime();
+	Pose currentPose = mNdt.getFinalTransformation().cast<double>();
+
+	lastDisplacement = previousPose.inverse() * currentPose;
+	previousPose = currentPose;
+	return lastDisplacement;
 }
 
 } /* namespace Vmml */

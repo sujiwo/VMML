@@ -71,8 +71,10 @@ protected:
 	IdbWorkFrame::Ptr anchorFrame=nullptr;
 	pcl::NormalDistributionsTransform<PointT, PointT> mNdt;
 	pcl::VoxelGrid<PointT> mVoxelGridFilter;
+	TTransform lastDisplacement = TTransform::Identity();
+	Pose previousPose;
 
-	TTransform runMatch(IdbWorkFrame::Ptr targetFrame);
+	TTransform runMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
 	void addKeyframe(IdbWorkFrame::Ptr keyframe);
 
 };
