@@ -16,6 +16,16 @@
 
 #include "BaseFrame.h"
 
+
+namespace Vmml { class MapPoint; }
+namespace boost {
+namespace serialization {
+	template <class Archive>
+		void serialize (Archive & ar, Vmml::MapPoint &keyframe, const unsigned int version);
+}
+}
+
+
 struct KeyMapPoint {
 	const Vmml::BaseFrame &keyframe;
 	int keypointIdx;

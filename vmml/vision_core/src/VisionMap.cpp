@@ -7,12 +7,21 @@
 
 #include <memory>
 #include <algorithm>
+#include <fstream>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/graph/adj_list_serialize.hpp>
 
 #include "KeyFrame.h"
 #include "MapPoint.h"
 #include "VisionMap.h"
+#include "MapObjectSerialization.h"
 
 #define MAX_ORB_POINTS_IN_FRAME 9000
 
@@ -370,6 +379,96 @@ VisionMap::dumpCameraTrajectory () const
 	}
 
 	return camTrack;
+}
+
+
+bool
+VisionMap::save (const std::string &path) const
+{
+	fstream mapFileFd;
+	mapFileFd.open(path, fstream::out | fstream::trunc);
+	if (!mapFileFd.is_open())
+		throw runtime_error("Unable to create map file");
+	boost::archive::binary_oarchive mapStore(mapFileFd);
+
+	mapStore << keyframeInvIdx.size();
+	mapStore << mappointInvIdx.size();
+
+	mapStore << pointAppearances;
+	mapStore << framePoints;
+	mapStore << framePointsInv;
+
+	mapStore << cameraList;
+
+	mapStore << covisibility;
+	mapStore << kfVtxMap;
+	mapStore << kfVtxInvMap;
+
+	mapStore << keyValueInfo;
+
+	for (auto &kfPtr: keyframeInvIdx) {
+		auto &kf = kfPtr.second;
+		mapStore << *kf;
+	}
+
+	// Mappoints
+	for (auto &mpPtr: mappointInvIdx) {
+		auto &mp = mpPtr.second;
+		mapStore << *mp;
+	}
+
+	// Image Database
+	mapStore << myVoc;
+	mapStore << invertedKeywordDb;
+	mapStore << BoWList;
+	mapStore << FeatVecList;
+
+	mapFileFd.close();
+	return true;
+}
+
+
+bool
+VisionMap::load (const std::string &path)
+{
+	fstream mapFileFd;
+	mapFileFd.open(path.c_str(), fstream::in);
+	if (!mapFileFd.is_open())
+		throw runtime_error(string("Unable to open map file: ") + path);
+
+	boost::archive::binary_iarchive mapStore (mapFileFd);
+
+	uint numOfKf, numOfMp;
+	mapStore >> numOfKf;
+	mapStore >> numOfMp;
+
+	mapStore >> pointAppearances;
+	mapStore >> framePoints;
+	mapStore >> framePointsInv;
+
+	mapStore >> cameraList;
+
+	mapStore >> covisibility;
+	mapStore >> kfVtxMap;
+	mapStore >> kfVtxInvMap;
+
+	mapStore >> keyValueInfo;
+
+	for (int i=0; i<numOfKf; ++i) {
+
+	}
+
+	for (int i=0; i<numOfMp; ++i) {
+
+	}
+
+	mapStore >> myVoc;
+	mapStore >> invertedKeywordDb;
+	mapStore >> BoWList;
+	mapStore >> FeatVecList;
+
+	mapFileFd.close();
+	return true;
 }
 
 

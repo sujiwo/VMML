@@ -16,6 +16,15 @@
 #include "BaseFrame.h"
 
 
+namespace Vmml { class KeyFrame; }
+namespace boost {
+namespace serialization {
+	template <class Archive>
+		void serialize (Archive & ar, Vmml::KeyFrame &keyframe, const unsigned int version);
+}
+}
+
+
 namespace Vmml {
 
 
@@ -65,6 +74,10 @@ public:
 	double computeSceneMedianDepth() const;
 
 protected:
+
+	template <class Archive>
+    friend void boost::serialization::serialize (Archive & ar, Vmml::KeyFrame &keyframe, const unsigned int version);
+
 	kfid id;
 	int cameraId;
 	sourceId srcId=0;
