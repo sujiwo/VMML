@@ -54,6 +54,7 @@ public:
 		CloudT::ConstPtr lidarScan;
 		ptime lidarTimestamp;
 		ptime imageTimestamp;
+		kfid keyframeRel=0;
 
 		double accumDistance=0.0;
 	};

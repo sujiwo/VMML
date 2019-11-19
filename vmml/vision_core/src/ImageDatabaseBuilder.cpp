@@ -5,8 +5,10 @@
  *      Author: sujiwo
  */
 
+#include "Matcher.h"
 #include "ImageDatabaseBuilder.h"
 #include "utilities.h"
+#include "Triangulation.h"
 
 
 namespace Vmml {
@@ -88,6 +90,18 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 	kfCandidate->computeFeatures(vMap->getFeatureDetector());
 	auto kfNew = KeyFrame::fromBaseFrame(*kfCandidate, vMap, 0, kfCandidate->imageTimestamp);
 	vMap->addKeyFrame(kfNew);
+	kfCandidate->keyframeRel = kfNew->getId();
+
+	// Add new map points
+	Matcher::PairList frameMatchesAtoC;
+	int Ns1 = Matcher::matchBruteForce(*anchorFrame, *kfCandidate, frameMatchesAtoC);
+	map<uint, Vector3d> mapPoints;
+	float parallax;
+	TriangulateCV(*anchorFrame, *kfCandidate, frameMatchesAtoC, mapPoints, &parallax);
+	for (auto &mpPair: mapPoints) {
+		vMap->addMapPoint(MapPoint::create(mpPair.second));
+	}
+
 	rigTrack.push_back(PoseStamped(kfCandidate->pose(), kfCandidate->imageTimestamp));
 }
 
@@ -116,9 +130,15 @@ ImageDatabaseBuilder::runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr fr
 	ptime trun2 = getCurrentTime();
 	Pose currentPose = mNdt.getFinalTransformation().cast<double>();
 
+	// Information of lidar matching
+	cout << "Converged: " << (mNdt.hasConverged() ? "Y" : "N") << endl;
+	cout << "Iteration: " << mNdt.getFinalNumIteration() << endl;
+	cout << "Time (s): " << toSeconds(trun2-trun1) << endl;
+
 	lastDisplacement = previousPose.inverse() * currentPose;
 	previousPose = currentPose;
 	frame2->setPose(currentPose);
+	frame2->accumDistance = frame1->accumDistance + lastDisplacement.translation().norm();
 	return lastDisplacement;
 }
 

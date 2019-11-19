@@ -69,24 +69,33 @@ BagViewer::BagViewer(QWidget *parent)
 
 BagViewer::~BagViewer() { delete ui; }
 
-void BagViewer::setBagFile(const std::string &bagfilename) {
-  bagFdPtr = std::shared_ptr<rosbag::Bag>(
-      new rosbag::Bag(bagfilename, rosbag::BagMode::Read));
+void BagViewer::setBagFile(const std::string &bagfilename)
+{
+	currentBagHasLidar = false;
 
-  ui->topicSelector->clear();
+	bagFdPtr = std::shared_ptr<rosbag::Bag>(
+	  new rosbag::Bag(bagfilename, rosbag::BagMode::Read));
 
-  auto vTopicList = RandomAccessBag::getTopicList(*bagFdPtr);
-  for (auto vi : vTopicList) {
+	ui->topicSelector->clear();
 
-    if (vi.second == "sensor_msgs/Image" or
-        vi.second == "sensor_msgs/CompressedImage") {
-      RandomAccessBag::Ptr smImg(new RandomAccessBag(*bagFdPtr, vi.first));
-      imageBagList.push_back(smImg);
-      ui->topicSelector->addItem(QString(vi.first.c_str()));
-    }
-  }
+	auto vTopicList = RandomAccessBag::getTopicList(*bagFdPtr);
+	for (auto vi : vTopicList) {
 
-  setTopic(0);
+		if (vi.second == "sensor_msgs/Image" or
+			vi.second == "sensor_msgs/CompressedImage") {
+			RandomAccessBag::Ptr smImg(new RandomAccessBag(*bagFdPtr, vi.first));
+			imageBagList.push_back(smImg);
+			ui->topicSelector->addItem(QString(vi.first.c_str()));
+		}
+
+		// Found lidar scan topic
+		if (vi.second == "velodyne_msgs/VelodyneScan") {
+			currentBagHasLidar = true;
+			lidarBag = RandomAccessBag::Ptr(new RandomAccessBag(*bagFdPtr, vi.first));
+		}
+	}
+
+	setTopic(0);
 }
 
 void BagViewer::setTopic(int n) {
@@ -214,17 +223,25 @@ void BagViewer::timeOffsetIndicator_clicked() {
 
 void BagViewer::updateTimeOffsetIndicator() {
   string toi;
+  auto td = currentActiveTopic->timeAt(currentPosition);
 
   if (timeOffsetIndicatorMode == OFFSET_INTEGER) {
-    auto td = currentActiveTopic->timeAt(currentPosition) -
-              currentActiveTopic->timeAt(0);
+    auto tx = td - currentActiveTopic->timeAt(0);
     stringstream ss;
-    ss << fixed << setprecision(2) << td.toSec();
+    ss << fixed << setprecision(2) << tx.toSec();
     toi = ss.str();
   }
 
   else if (timeOffsetIndicatorMode == OFFSET_TIME) {
-    toi = std::to_string(currentPosition);
+	toi = "Image: ";
+    toi += std::to_string(currentPosition);
+    if (currentBagHasLidar) {
+    	uint lpos;
+    	try {
+    		lpos = lidarBag->getPositionAtTime(td);
+    	} catch (out_of_range &e) { lpos = 0; }
+    	toi += " Lidar: " + std::to_string(lpos);
+    }
   }
 
   timeOffsetIndicator->setText(QString::fromStdString(toi));

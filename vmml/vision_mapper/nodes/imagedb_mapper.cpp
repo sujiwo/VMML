@@ -5,7 +5,9 @@
  *      Author: sujiwo
  */
 
+#include <sstream>
 #include <iostream>
+#include <pcl/io/pcd_io.h>
 #include "Pose.h"
 #include "ImageBag.h"
 #include "LidarScanBag.h"
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
 	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets", calibPath.string());
 
 	int limit;
-	if (argc>=2)
+	if (argc>2)
 		limit = stoi(argv[2]);
 	else limit = lidarBag.size();
 
@@ -73,6 +75,9 @@ int main(int argc, char *argv[])
 
 	auto track=imageDbMapper.getTrajectory();
 	track.dump("/tmp/imagedb_simple.txt");
+
+	auto pointCloud = imageDbMapper.getMap()->dumpPointCloudFromMapPoints();
+	pcl::io::savePCDFileBinary("/tmp/pcd_vision.pcd", *pointCloud);
 
 	return 0;
 }

@@ -80,6 +80,9 @@ protected:
 
   std::vector<RandomAccessBag::Ptr> imageBagList;
 
+  bool currentBagHasLidar = false;
+  RandomAccessBag::Ptr lidarBag = nullptr;
+
   cv::Mat currentImage;
 
   void setTopic(int n);
