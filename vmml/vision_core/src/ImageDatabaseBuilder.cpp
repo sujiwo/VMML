@@ -49,10 +49,14 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 	auto frmWork = IdbWorkFrame::create(cloudInp, cloudTimestamp, img, imageTimestamp, vMap->getCameraParameter(0));
 
 	if (anchorFrame==nullptr) {
+		lastAnchorLidarPose = Pose::Identity();
 		anchorFrame = frmWork;
 		anchorFrame->setPose(Pose::Identity());
 		addKeyframe(frmWork);
-		rigTrack.push_back(PoseStamped(Pose::Identity(), imageTimestamp));
+
+		// Initialize lidar map
+		*tempLidarCloudmap += *cloudInp;
+
 		return true;
 	}
 
@@ -60,12 +64,17 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 
 	bool hasKeyframe=false;
 	double linearDispl, angularDispl;
-	anchorFrame->pose().displacement(frmWork->pose(), linearDispl, angularDispl);
+	lastAnchorLidarPose.displacement(frmWork->pose(), linearDispl, angularDispl);
 	if (linearDispl>=mParams.min_linear_move or angularDispl>=mParams.min_angular_move) {
+		lastAnchorLidarPose = frmWork->pose();
 		addKeyframe(frmWork);
 		anchorFrame = frmWork;
 		hasKeyframe = true;
-		rigTrack.push_back(PoseStamped(frmWork->pose(), imageTimestamp));
+
+		// update map
+		CloudT transformedScan;
+		pcl::transformPointCloud(*frmWork->lidarScan, transformedScan, lastAnchorLidarPose);
+		*tempLidarCloudmap += transformedScan;
 	}
 
 	return hasKeyframe;
@@ -75,9 +84,11 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 void
 ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 {
+	kfCandidate->setPose(kfCandidate->pose() * lidarToCamera);
 	kfCandidate->computeFeatures(vMap->getFeatureDetector());
 	auto kfNew = KeyFrame::fromBaseFrame(*kfCandidate, vMap, 0, kfCandidate->imageTimestamp);
 	vMap->addKeyFrame(kfNew);
+	rigTrack.push_back(PoseStamped(kfCandidate->pose(), kfCandidate->imageTimestamp));
 }
 
 
@@ -87,7 +98,7 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 TTransform
 ImageDatabaseBuilder::runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2)
 {
-	mNdt.setInputTarget(frame1->lidarScan);
+	mNdt.setInputTarget(tempLidarCloudmap);
 
 	CloudT::Ptr filteredTargetScan(new CloudT);
 	mVoxelGridFilter.setInputCloud(frame2->lidarScan);

@@ -66,15 +66,21 @@ public:
 	const Trajectory& getTrajectory() const
 	{ return rigTrack; }
 
+	void setTranformationFromLidarToCamera (const TTransform &tlc)
+	{ lidarToCamera = tlc; }
+
 protected:
 
 	Param mParams;
+
+	// transformation from lidar to camera
+	TTransform lidarToCamera = TTransform::Identity();
 
 	IdbWorkFrame::Ptr anchorFrame=nullptr;
 	pcl::NormalDistributionsTransform<PointT, PointT> mNdt;
 	pcl::VoxelGrid<PointT> mVoxelGridFilter;
 	TTransform lastDisplacement = TTransform::Identity();
-	Pose previousPose;
+	Pose previousPose, lastAnchorLidarPose;
 
 	TTransform runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
 	void addKeyframe(IdbWorkFrame::Ptr keyframe);

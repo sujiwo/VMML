@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
 
 	ImageDatabaseBuilder::Param idbParams;
 	ImageDatabaseBuilder imageDbMapper(idbParams, camera0, vocabPath.string());
+	imageDbMapper.setTranformationFromLidarToCamera(tLidarToCamera);
 
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
