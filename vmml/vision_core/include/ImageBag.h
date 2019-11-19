@@ -23,11 +23,11 @@ public:
 	ImageBag(const rosbag::Bag &bag, const std::string &imageTopic, float zoom=1.0);
 	virtual ~ImageBag();
 
-	cv::Mat at(unsigned int position);
+	cv::Mat at(unsigned int position, bool raw=false);
 	cv::Mat at(const ptime &t);
 	cv::Mat at(const ros::Time &t);
 
-	bool save(unsigned int position, const std::string &filename);
+	bool save(unsigned int position, const std::string &filename, bool raw=false);
 
 	typedef std::shared_ptr<ImageBag> Ptr;
 

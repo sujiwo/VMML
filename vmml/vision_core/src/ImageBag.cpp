@@ -30,14 +30,22 @@ ImageBag::~ImageBag()
 
 
 cv::Mat
-ImageBag::at(unsigned int position)
+ImageBag::at(unsigned int position, bool raw)
 {
 	auto bImageMsg = RandomAccessBag::at<sensor_msgs::Image>(position);
-	auto imgPtr = cv_bridge::toCvCopy(bImageMsg, sensor_msgs::image_encodings::BGR8);
 
-	cv::Mat imageRes;
-	cv::resize(imgPtr->image, imageRes, cv::Size(), zoomRatio, zoomRatio, cv::INTER_CUBIC);
-	return imageRes;
+	if (raw==true) {
+		auto enc = bImageMsg->encoding;
+		auto imgPtr = cv_bridge::toCvCopy(bImageMsg);
+		return imgPtr->image;
+	}
+
+	else {
+		auto imgPtr = cv_bridge::toCvCopy(bImageMsg, sensor_msgs::image_encodings::BGR8);
+		cv::Mat imageRes;
+		cv::resize(imgPtr->image, imageRes, cv::Size(), zoomRatio, zoomRatio, cv::INTER_CUBIC);
+		return imageRes;
+	}
 }
 
 
@@ -58,7 +66,7 @@ ImageBag::at(const ros::Time &t)
 
 
 bool
-ImageBag::save(unsigned int position, const string &filename)
+ImageBag::save(unsigned int position, const string &filename, bool raw)
 {
 	auto image = at(position);
 	return cv::imwrite(filename, image);
