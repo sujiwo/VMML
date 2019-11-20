@@ -21,11 +21,17 @@ typedef Matrix4d poseMatrix4;
 namespace Vmml {
 
 
+BaseFrame::BaseFrame() :
+	mPose(Pose::Identity())
+{}
+
+
 BaseFrame::BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p) :
 	image(img),
 	mPose(p),
 	cameraParam(cam)
 {}
+
 
 BaseFrame::BaseFrame(const BaseFrame &c) :
 	image(c.image.clone()),
@@ -36,6 +42,7 @@ BaseFrame::BaseFrame(const BaseFrame &c) :
 	fKeypoints(c.fKeypoints),
 	featuresGridIdx(c.featuresGridIdx)
 {}
+
 
 BaseFrame::~BaseFrame() {
 	// TODO Auto-generated destructor stub

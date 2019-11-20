@@ -141,6 +141,8 @@ void serialize (
 		kf.cameraId;
 	ar &
 		kf.frCreationTime;
+
+	Vmml::KeyFrame::nextId = kf.id+1;
 }
 
 
@@ -153,7 +155,10 @@ void serialize (
 	ar &
 		mp.id &
 		mp.position &
-		mp.descriptor;
+		mp.descriptor &
+		mp.hasBa;
+
+	Vmml::MapPoint::nextId = mp.id+1;
 }
 
 

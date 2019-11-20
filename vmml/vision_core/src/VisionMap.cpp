@@ -454,12 +454,18 @@ VisionMap::load (const std::string &path)
 
 	mapStore >> keyValueInfo;
 
+	auto myself = this->shared_from_this();
 	for (int i=0; i<numOfKf; ++i) {
-
+		KeyFrame::Ptr mKf = make_shared<KeyFrame>(myself);
+		mapStore >> *mKf;
+		mKf->cameraParam = cameraList[mKf->cameraId];
+		keyframeInvIdx.insert(make_pair(mKf->id, mKf));
 	}
 
 	for (int i=0; i<numOfMp; ++i) {
-
+		MapPoint::Ptr mPt = make_shared<MapPoint>();
+		mapStore >> *mPt;
+		mappointInvIdx.insert(make_pair(mPt->getId(), mPt));
 	}
 
 	mapStore >> myVoc;

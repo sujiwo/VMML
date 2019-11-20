@@ -37,9 +37,10 @@
 namespace Vmml {
 
 
-class VisionMap
+class VisionMap : std::enable_shared_from_this<VisionMap>
 {
 public:
+
 	VisionMap();
 	virtual ~VisionMap();
 

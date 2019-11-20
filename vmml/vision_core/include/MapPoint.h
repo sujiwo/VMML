@@ -43,7 +43,12 @@ public:
 
 	typedef std::shared_ptr<MapPoint> Ptr;
 
-//	MapPoint();
+	MapPoint() :
+		id(0),
+		position(Eigen::Vector3d::Zero()),
+		descriptor(cv::Mat())
+	{}
+
 	MapPoint(const Eigen::Vector3d &p);
 	virtual ~MapPoint();
 

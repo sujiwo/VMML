@@ -125,7 +125,7 @@ MapBuilder::TmpFrame::toKeyFrame() const
 MapBuilder::MapBuilder(const CameraPinholeParams &mycam, const std::string &mapVocabularyPath) :
 	camera0(mycam)
 {
-	vMap.reset(new VisionMap);
+	vMap = std::make_shared<VisionMap>();
 	vMap->addCameraParameter(camera0);
 	if (mapVocabularyPath.size()!=0)
 		vMap->loadVocabulary(mapVocabularyPath);

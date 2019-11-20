@@ -33,6 +33,11 @@ KeyFrame::toDescriptorVector(const cv::Mat &Descriptors)
 }
 
 
+KeyFrame::KeyFrame(const std::shared_ptr<VisionMap> _parent) :
+	mParent(_parent)
+{}
+
+
 KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const ptime &ts, const Pose &p, bool doComputeFeatures) :
 	BaseFrame(img, _parent->getCameraParameter(cameraNo), p),
 	mParent(_parent),

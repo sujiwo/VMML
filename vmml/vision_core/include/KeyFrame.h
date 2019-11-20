@@ -38,6 +38,8 @@ public:
 
 	typedef std::shared_ptr<KeyFrame> Ptr;
 
+	KeyFrame(const std::shared_ptr<VisionMap> _parent);
+
 	KeyFrame(cv::Mat img,
 		const std::shared_ptr<VisionMap> _parent,
 		int cameraNo=0,
