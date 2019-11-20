@@ -69,9 +69,10 @@ int main(int argc, char *argv[])
 		}
 
 		auto isKey = imageDbMapper.feed(lidarScan, lidarTimestamp, nearImage, imageTimestamp);
-		cout << (isKey ? "*" : "");
-		cout << li  << " / " << limit << endl;
+		cout << (isKey ? "*" : "") << li  << " / " << limit << endl;
 	}
+
+	imageDbMapper.getMap()->save("/tmp/maptest.vmap");
 
 	auto track=imageDbMapper.getTrajectory();
 	track.dump("/tmp/imagedb_simple.txt");

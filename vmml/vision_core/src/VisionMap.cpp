@@ -14,6 +14,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
@@ -391,8 +392,11 @@ VisionMap::save (const std::string &path) const
 		throw runtime_error("Unable to create map file");
 	boost::archive::binary_oarchive mapStore(mapFileFd);
 
-	mapStore << keyframeInvIdx.size();
-	mapStore << mappointInvIdx.size();
+	uint32_t
+		numKf = keyframeInvIdx.size(),
+		numMp = mappointInvIdx.size();
+	mapStore << numKf;
+	mapStore << numMp;
 
 	mapStore << pointAppearances;
 	mapStore << framePoints;
@@ -438,7 +442,7 @@ VisionMap::load (const std::string &path)
 
 	boost::archive::binary_iarchive mapStore (mapFileFd);
 
-	uint numOfKf, numOfMp;
+	uint32_t numOfKf, numOfMp;
 	mapStore >> numOfKf;
 	mapStore >> numOfMp;
 

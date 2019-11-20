@@ -93,13 +93,15 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 	kfCandidate->keyframeRel = kfNew->getId();
 
 	// Add new map points
-	Matcher::PairList frameMatchesAtoC;
-	int Ns1 = Matcher::matchBruteForce(*anchorFrame, *kfCandidate, frameMatchesAtoC);
-	map<uint, Vector3d> mapPoints;
-	float parallax;
-	TriangulateCV(*anchorFrame, *kfCandidate, frameMatchesAtoC, mapPoints, &parallax);
-	for (auto &mpPair: mapPoints) {
-		vMap->addMapPoint(MapPoint::create(mpPair.second));
+	if (kfCandidate!=anchorFrame) {
+		Matcher::PairList frameMatchesAtoC;
+		int Ns1 = Matcher::matchBruteForce(*anchorFrame, *kfCandidate, frameMatchesAtoC);
+		map<uint, Vector3d> mapPoints;
+		float parallax;
+		TriangulateCV(*anchorFrame, *kfCandidate, frameMatchesAtoC, mapPoints, &parallax);
+		for (auto &mpPair: mapPoints) {
+			vMap->addMapPoint(MapPoint::create(mpPair.second));
+		}
 	}
 
 	rigTrack.push_back(PoseStamped(kfCandidate->pose(), kfCandidate->imageTimestamp));

@@ -133,6 +133,18 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 )
 
+add_executable(
+	mapload_test
+		test/mapload_test.cpp
+)
+
+target_link_libraries(
+	mapload_test
+		vmml
+		${REQUIRED_LIBS}
+)
+
+
 # Generic Vocabulary handling
 add_custom_target (orb_vocabulary 
 	ALL 
