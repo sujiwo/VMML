@@ -10,8 +10,8 @@
 
 int main(int argc, char *argv[])
 {
-	Vmml::VisionMap vMap;
-	vMap.load("/tmp/maptest.vmap");
+	Vmml::VisionMap::Ptr vMap = Vmml::VisionMap::create();
+	vMap->load("/tmp/maptest.vmap");
 
 	return 0;
 }

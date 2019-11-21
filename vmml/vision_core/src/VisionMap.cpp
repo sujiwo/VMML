@@ -458,7 +458,7 @@ VisionMap::load (const std::string &path)
 
 	mapStore >> keyValueInfo;
 
-	auto myself = this->shared_from_this();
+	auto myself = shared_from_this();
 	for (int i=0; i<numOfKf; ++i) {
 		KeyFrame::Ptr mKf = make_shared<KeyFrame>(myself);
 		mapStore >> *mKf;

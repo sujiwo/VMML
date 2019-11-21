@@ -37,7 +37,7 @@
 namespace Vmml {
 
 
-class VisionMap : std::enable_shared_from_this<VisionMap>
+class VisionMap : public std::enable_shared_from_this<VisionMap>
 {
 public:
 
@@ -177,6 +177,9 @@ public:
 	void updateMapPointDescriptor(const mpid mp);
 
 	typedef std::shared_ptr<VisionMap> Ptr;
+
+	static Ptr create()
+	{ return Ptr(new VisionMap); }
 
 protected:
 
