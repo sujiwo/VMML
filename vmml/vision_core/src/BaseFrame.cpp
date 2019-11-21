@@ -10,6 +10,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 
 #include "BaseFrame.h"
+#include "KeyFrame.h"
 
 using namespace std;
 using namespace Eigen;
@@ -557,5 +558,15 @@ BucketFeature::assignFeatures(const int imageWidth, const int imageHeight, const
 	}
 }
 
+
+void
+BaseFrame::computeBoW (DBoW2::BowVector &words, DBoW2::FeatureVector &featureVec, const ORBVocabulary &oVoc) const
+{
+	words.clear();
+	featureVec.clear();
+
+	auto frameDescVectors = KeyFrame::toDescriptorVector(fDescriptors);
+	oVoc.transform(frameDescVectors, words, featureVec, 4);
+}
 
 } /* namespace Vmml */

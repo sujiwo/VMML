@@ -22,6 +22,10 @@
 #include <g2o/types/slam3d/se3quat.h>
 #include <g2o/types/sim3/sim3.h>
 
+#include <DBoW2/BowVector.h>
+#include <DBoW2/FeatureVector.h>
+
+#include "ORBVocabulary.h"
 #include "CameraPinholeParams.h"
 #include "utilities.h"
 #include "Pose.h"
@@ -280,6 +284,8 @@ public:
 		std::map<uint32_t, uint32_t> imageFeaturesToLidar,
 		pcl::PointCloud<pcl::PointXYZ> *associationResult=NULL)
 	const;
+
+	void computeBoW (DBoW2::BowVector &words, DBoW2::FeatureVector &featureVec, const ORBVocabulary &oVoc) const;
 
 protected:
 	cv::Mat image;

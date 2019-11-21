@@ -482,4 +482,126 @@ VisionMap::load (const std::string &path)
 }
 
 
+std::vector<kfid>
+VisionMap::findCandidates (const BaseFrame &frame) const
+{
+	map<kfid, uint> kfCandidates;
+	kfCandidates.clear();
+
+	DBoW2::BowVector frameWords;
+	DBoW2::FeatureVector frameFeatureVec;
+	frame.computeBoW(frameWords, frameFeatureVec, myVoc);
+	int maxCommonWords = 0;
+	for (auto &bWrdPtr : frameWords) {
+		auto wordId = bWrdPtr.first;
+		const set<kfid> &relatedKf = invertedKeywordDb.at(wordId);
+
+		/*
+		 * XXX: Mysteriously, the following loop changes kfCandidates when reading
+		 */
+		for (const kfid &k: relatedKf) {
+			try {
+				const uint count = kfCandidates.at(k);
+				kfCandidates.at(k) = count+1;
+
+			} catch (out_of_range&) {
+				kfCandidates[k] = 1;
+			}
+
+			if (maxCommonWords < kfCandidates.at(k))
+				maxCommonWords = kfCandidates.at(k);
+		}
+	}
+
+	int minCommonWords = maxCommonWords * 0.8f;
+
+	// Convert to scoring
+	map<kfid,double> tKfCandidateScores(kfCandidates.begin(), kfCandidates.end());
+	for (auto &ptr: kfCandidates) {
+		const kfid &k = ptr.first;
+		if (ptr.second < minCommonWords)
+			tKfCandidateScores[k] = 0;
+		else
+			tKfCandidateScores[k] = myVoc.score(frameWords, BoWList.at(k));
+	}
+
+	// Accumulate score by covisibility
+	double bestAccScore = 0;
+	map<kfid,double> tKfAccumScores;
+	for (auto kfp: tKfCandidateScores) {
+
+		double bestScore = kfp.second;
+		double accScore = bestScore;
+		kfid bestKf = kfp.first;
+
+		vector<kfid> kfNeighs = getOrderedRelatedKeyFramesFrom(kfp.first, 10);
+		for (auto &k2: kfNeighs) {
+			try {
+				double k2score = tKfCandidateScores.at(k2);
+				accScore += k2score;
+				if (bestScore < k2score) {
+					bestKf = k2;
+					bestScore = k2score;
+				}
+			} catch (exception &e) {
+				continue;
+			}
+		}
+
+		tKfAccumScores[kfp.first] = accScore;
+		if (accScore > bestAccScore)
+			bestAccScore = accScore;
+	}
+
+	// return all keyframes with accumulated scores higher than 0.75*bestAccumScore
+	double minScoreToRetain = 0.75 * bestAccScore;
+	vector<kfid> relocCandidates;
+	for (auto &p: tKfAccumScores) {
+		if (p.second > minScoreToRetain)
+			relocCandidates.push_back(p.first);
+	}
+	// Sort
+	sort(relocCandidates.begin(), relocCandidates.end(),
+		[&](const kfid &k1, const kfid &k2)
+		{
+			double v1 = tKfAccumScores[k1],
+				v2 = tKfAccumScores[k2];
+			return v1>v2;
+		}
+	);
+
+	return relocCandidates;
+}
+
+
+vector<kfid>
+VisionMap::getOrderedRelatedKeyFramesFrom (const kfid kx, int howMany) const
+{
+	vector<pair<KeyFrameGraph::vertex_descriptor,int>> covisk;
+
+	auto vtx = kfVtxMap.at(kx);
+	auto kfl = boost::out_edges(vtx, covisibility);
+	for (auto p=kfl.first; p!=kfl.second; ++p) {
+		auto k = boost::target(*p, covisibility);
+		int w = boost::get(boost::edge_weight_t(), covisibility, *p);
+		covisk.push_back(make_pair(k,w));
+	}
+
+	sort(covisk.begin(), covisk.end(),
+		[](const pair<kfid,int> &u1, const pair<kfid,int> &u2) -> bool
+		{ return u1.second > u2.second;}
+	);
+
+	vector<kfid> sortedKfs(covisk.size());
+	for (int i=0; i<covisk.size(); i++) {
+		sortedKfs[i] = kfVtxInvMap.at(covisk.at(i).first);
+	}
+
+	if (howMany<0 or sortedKfs.size()<howMany)
+		return sortedKfs;
+	else
+		return vector<kfid> (sortedKfs.begin(), sortedKfs.begin()+howMany);
+}
+
+
 } /* namespace Vmml */
