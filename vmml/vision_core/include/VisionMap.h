@@ -170,7 +170,7 @@ public:
 	 * The candidates are sorted according to number of similar words
 	 */
 	std::vector<kfid>
-	findCandidates (const BaseFrame &f) const;
+	findCandidates (BaseFrame &f) const;
 
 	void updateCovisibilityGraph(const kfid k);
 

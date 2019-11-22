@@ -67,6 +67,7 @@ public slots:
   void on_saveButton_clicked(bool checked);
   void on_nextFrameBtn_clicked(bool checked);
   void on_prevFrameBtn_clicked(bool checked);
+  void on_copyImageBtn_clicked(bool checked);
   void timeOffsetIndicator_clicked();
 
 private:

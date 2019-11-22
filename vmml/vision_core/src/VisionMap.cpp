@@ -483,18 +483,23 @@ VisionMap::load (const std::string &path)
 
 
 std::vector<kfid>
-VisionMap::findCandidates (const BaseFrame &frame) const
+VisionMap::findCandidates (BaseFrame &frame) const
 {
 	map<kfid, uint> kfCandidates;
 	kfCandidates.clear();
 
 	DBoW2::BowVector frameWords;
 	DBoW2::FeatureVector frameFeatureVec;
+	frame.computeFeatures(featureDetector);
 	frame.computeBoW(frameWords, frameFeatureVec, myVoc);
+
 	int maxCommonWords = 0;
 	for (auto &bWrdPtr : frameWords) {
 		auto wordId = bWrdPtr.first;
-		const set<kfid> &relatedKf = invertedKeywordDb.at(wordId);
+		set<kfid> relatedKf;
+		try {
+			relatedKf = invertedKeywordDb.at(wordId);
+		} catch (out_of_range &e) { continue; }
 
 		/*
 		 * XXX: Mysteriously, the following loop changes kfCandidates when reading
@@ -512,6 +517,9 @@ VisionMap::findCandidates (const BaseFrame &frame) const
 				maxCommonWords = kfCandidates.at(k);
 		}
 	}
+
+	if (kfCandidates.size()==0)
+		return vector<kfid>();
 
 	int minCommonWords = maxCommonWords * 0.8f;
 

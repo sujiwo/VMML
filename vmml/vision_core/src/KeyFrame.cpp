@@ -45,8 +45,10 @@ KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int ca
 	frCreationTime(ts)
 {
 	id = KeyFrame::nextId;
-	if (doComputeFeatures==true)
+	if (doComputeFeatures==true) {
 		computeFeatures(mParent->getFeatureDetector());
+		computeBoW();
+	}
 	nextId++;
 }
 

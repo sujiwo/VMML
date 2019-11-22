@@ -31,6 +31,8 @@ const TTransform tLidarToCamera = TTransform::from_XYZ_RPY(
 	Eigen::Vector3d(0.9, 0.3, -0.6),
 	-1.520777, -0.015, -1.5488);
 
+const string mapResultName = "maptest.vmap";
+
 
 int main(int argc, char *argv[])
 {
@@ -72,13 +74,7 @@ int main(int argc, char *argv[])
 		cout << (isKey ? "*" : "") << li  << " / " << limit << endl;
 	}
 
-	imageDbMapper.getMap()->save("/tmp/maptest.vmap");
-
-	auto track=imageDbMapper.getTrajectory();
-	track.dump("/tmp/imagedb_simple.txt");
-
-	auto pointCloud = imageDbMapper.getMap()->dumpPointCloudFromMapPoints();
-	pcl::io::savePCDFileBinary("/tmp/pcd_vision.pcd", *pointCloud);
+	imageDbMapper.getMap()->save(mapResultName);
 
 	return 0;
 }

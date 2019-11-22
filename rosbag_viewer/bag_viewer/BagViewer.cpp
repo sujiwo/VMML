@@ -34,6 +34,7 @@
 
 #include <QFileDialog>
 #include <QString>
+#include <QClipboard>
 
 #include "BagViewer.h"
 #include "ui_BagViewer.h"
@@ -175,6 +176,14 @@ void BagViewer::on_saveButton_clicked(bool checked) {
   cv::cvtColor(currentImage, rgb, CV_RGB2BGR);
 
   cv::imwrite(fname.toStdString(), rgb);
+}
+
+void BagViewer::on_copyImageBtn_clicked(bool checked)
+{
+	QClipboard *clipboard = QGuiApplication::clipboard();
+	const QImage curImage(currentImage.data, currentImage.cols, currentImage.rows,
+		currentImage.step[0], QImage::Format_RGB888);
+	clipboard->setImage(curImage);
 }
 
 void BagViewer::updateImage(int n) {
