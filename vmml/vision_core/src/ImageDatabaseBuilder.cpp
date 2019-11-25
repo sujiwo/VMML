@@ -94,14 +94,23 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 
 	// Add new map points
 	if (kfCandidate!=anchorFrame) {
+
 		Matcher::PairList frameMatchesAtoC;
 		int Ns1 = Matcher::matchBruteForce(*anchorFrame, *kfCandidate, frameMatchesAtoC);
+
 		map<uint, Vector3d> mapPoints;
 		float parallax;
 		TriangulateCV(*anchorFrame, *kfCandidate, frameMatchesAtoC, mapPoints, &parallax);
 		for (auto &mpPair: mapPoints) {
-			vMap->addMapPoint(MapPoint::create(mpPair.second));
+			auto nMp = MapPoint::create(mpPair.second);
+			vMap->addMapPoint(nMp);
+			vMap->addMapPointVisibility(nMp->getId(), anchorFrame->keyframeRel, frameMatchesAtoC[mpPair.first].first);
+			vMap->addMapPointVisibility(nMp->getId(), kfCandidate->keyframeRel, frameMatchesAtoC[mpPair.first].second);
 		}
+
+		vMap->updateCovisibilityGraph(anchorFrame->keyframeRel);
+
+		// Backtrack (find all map points in anchor frame (and related keyframes) that may be visible
 	}
 
 	rigTrack.push_back(PoseStamped(kfCandidate->pose(), kfCandidate->imageTimestamp));

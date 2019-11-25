@@ -27,6 +27,8 @@ public:
 	cv::Mat at(const ptime &t);
 	cv::Mat at(const ros::Time &t);
 
+	cv::Mat getGrayscale(unsigned int position);
+
 	bool save(unsigned int position, const std::string &filename, bool raw=false);
 
 	typedef std::shared_ptr<ImageBag> Ptr;

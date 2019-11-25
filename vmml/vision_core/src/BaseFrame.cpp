@@ -162,8 +162,8 @@ BaseFrame::assignKeyPointsToGrid()
 	for (kpid i=0; i<fKeypoints.size(); ++i) {
 		auto keypoint = fKeypoints[i];
 
-		int gX = round(keypoint.pt.x / (cameraParam.width/float(BaseFrame::numberOfGridIn1D))),
-		gY = round(keypoint.pt.y / (cameraParam.height/float(BaseFrame::numberOfGridIn1D)));
+		int gX = floor(keypoint.pt.x / (cameraParam.width/float(BaseFrame::numberOfGridIn1D))),
+		gY = floor(keypoint.pt.y / (cameraParam.height/float(BaseFrame::numberOfGridIn1D)));
 
 		featuresGridIdx[gX][gY].push_back(i);
 	}
@@ -503,7 +503,8 @@ BaseFrame::toSE3Quat() const
 void BaseFrame::associateToLidarScans
 	(const pcl::PointCloud<pcl::PointXYZ> &lidarScan,
 	const TTransform &lidarToCameraTransform,
-	std::map<uint32_t, uint32_t> imageFeaturesToLidar,
+	// ID of image -> ID of lidar
+	std::map<uint32_t, uint32_t> &imageFeaturesToLidar,
 	pcl::PointCloud<pcl::PointXYZ> *associationResult)
 const
 {

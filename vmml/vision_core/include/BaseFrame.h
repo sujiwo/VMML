@@ -279,7 +279,7 @@ public:
 	void associateToLidarScans
 		(const pcl::PointCloud<pcl::PointXYZ> &lidarScan,
 		const TTransform &lidarToCameraTransform,
-		std::map<uint32_t, uint32_t> imageFeaturesToLidar,
+		std::map<uint32_t, uint32_t> &imageFeaturesToLidar,
 		pcl::PointCloud<pcl::PointXYZ> *associationResult=NULL)
 	const;
 

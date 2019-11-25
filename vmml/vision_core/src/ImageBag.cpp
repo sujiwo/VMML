@@ -50,6 +50,17 @@ ImageBag::at(unsigned int position, bool raw)
 
 
 cv::Mat
+ImageBag::getGrayscale(unsigned int position)
+{
+	auto bImageMsg = RandomAccessBag::at<sensor_msgs::Image>(position);
+	auto imgPtr = cv_bridge::toCvCopy(bImageMsg, sensor_msgs::image_encodings::MONO8);
+	cv::Mat imageRes;
+	cv::resize(imgPtr->image, imageRes, cv::Size(), zoomRatio, zoomRatio, cv::INTER_CUBIC);
+	return imageRes;
+}
+
+
+cv::Mat
 ImageBag::at(const ptime &t)
 {
 	return at(ros::Time::fromBoost(t));
