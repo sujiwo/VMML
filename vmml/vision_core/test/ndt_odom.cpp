@@ -147,6 +147,10 @@ public:
 			});
 		}
 
+		for (auto &t: childs) {
+			t.join();
+		}
+
 		// Assemble the result
 		TTransform lastRigidT = TTransform::Identity();
 		bagTrack.clear();
