@@ -144,6 +144,16 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 )
 
+add_executable(
+	ndt_odom
+		test/ndt_odom.cpp
+)
+
+target_link_libraries(
+	ndt_odom
+		vmml
+		${REQUIRED_LIBS}
+)
 
 # Generic Vocabulary handling
 add_custom_target (orb_vocabulary 
