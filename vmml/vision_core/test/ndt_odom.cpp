@@ -139,12 +139,24 @@ public:
 					TTransform currentTrans = mNdt.getFinalTransformation().cast<double>();
 					lastPose = lastPose * currentTrans;
 					mywork.matchResult.push_back(PoseStamped(lastPose, timestamp));
+					mywork.scanDurations.push_back(t2-t1);
 
 					auto newAnchor = this->readLidarScanWithLock(i, false);
 					anchor = newAnchor;
 				}
-
 			});
+		}
+
+		// Assemble the result
+		TTransform lastRigidT = TTransform::Identity();
+		bagTrack.clear();
+		for (int c=0; c<numOfCpus; c++) {
+			for (int p=0; p<childResults[c].matchResult.size(); p++) {
+				auto pv = childResults[c].matchResult[p];
+				pv = pv * lastRigidT;
+				bagTrack.push_back(pv);
+			}
+			lastRigidT = bagTrack.back();
 		}
 	}
 
@@ -167,11 +179,6 @@ protected:
 	LidarScanBag pcdScans;
 	Trajectory bagTrack;
 	mutex bagLock;
-
-	void assembleResults()
-	{
-
-	}
 };
 
 
@@ -185,7 +192,7 @@ int main(int argc, char *argv[])
 //	createIntervals(pcdScans, cpuDivs);
 
 	NdtOdometry odom(inputBag, "/velodyne_packets", calibPath.string());
-	odom.runSingle();
+	odom.runMulti();
 
 	odom.getTrajectory().dump("test.csv");
 	return 0;
