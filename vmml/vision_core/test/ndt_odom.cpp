@@ -146,9 +146,11 @@ public:
 
 					{
 						lock_guard<mutex> screenLock(ioMtx);
-						cout << c << ": " << i << " / " << myjob.to-myjob.from << "; " << toSeconds(mywork.scanDurations.back()) << endl;
+						cout << c << ": " << p << " / " << myjob.to-myjob.from << "; " << toSeconds(mywork.scanDurations.back()) << endl;
 					}
 				}
+
+				mywork.matchResult.dump("test-mt"+to_string(c)+".csv");
 			});
 		}
 
@@ -161,8 +163,14 @@ public:
 		bagTrack.clear();
 		for (int c=0; c<numOfCpus; c++) {
 			for (int p=0; p<childResults[c].matchResult.size(); p++) {
-				auto pv = childResults[c].matchResult[p];
-				pv = pv * lastRigidT;
+				PoseStamped pv;
+				if (p==0) {
+					pv = childResults[c].matchResult[0] * lastRigidT;
+				}
+				else {
+					TTransform tv = childResults[c].matchResult[p-1].inverse() * childResults[c].matchResult[p];
+					pv = PoseStamped(bagTrack.back() * tv, childResults[c].matchResult[p].timestamp);
+				}
 				bagTrack.push_back(pv);
 			}
 			lastRigidT = bagTrack.back();
