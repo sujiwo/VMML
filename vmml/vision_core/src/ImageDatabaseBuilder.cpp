@@ -15,8 +15,7 @@ namespace Vmml {
 
 ImageDatabaseBuilder::ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath):
 	MapBuilder(camera0, mapVocabularyPath),
-	mParams(_p),
-	tempLidarCloudmap(new CloudT)
+	mParams(_p)
 {
 	// Parameter set
 	mNdt.setResolution(mParams.ndt_res);
@@ -39,7 +38,9 @@ ImageDatabaseBuilder::IdbWorkFrame::IdbWorkFrame(CloudT::ConstPtr &cl, const pti
 	lidarScan(cl),
 	lidarTimestamp(lstamp),
 	imageTimestamp(istamp)
-{}
+{
+	setPose(Pose::Identity());
+}
 
 
 /*
@@ -51,34 +52,26 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 	auto frmWork = IdbWorkFrame::create(cloudInp, cloudTimestamp, img, imageTimestamp, vMap->getCameraParameter(0));
 
 	if (anchorFrame==nullptr) {
-		lastAnchorLidarPose = Pose::Identity();
 		anchorFrame = frmWork;
-		anchorFrame->setPose(Pose::Identity());
+		lastFrame = frmWork;
 		addKeyframe(frmWork);
-
-		// Initialize lidar map
-		*tempLidarCloudmap += *cloudInp;
-
+		rigTrack.push_back(PoseStamped(Pose::Identity(), cloudTimestamp));
 		return true;
 	}
 
-	TTransform displacement = runNdtMatch(anchorFrame, frmWork);
+	TTransform displacement = runNdtMatch(lastFrame, frmWork);
 
 	bool hasKeyframe=false;
 	double linearDispl, angularDispl;
-	lastAnchorLidarPose.displacement(frmWork->pose(), linearDispl, angularDispl);
+	anchorFrame->pose().displacement(frmWork->pose(), linearDispl, angularDispl);
 	if (linearDispl>=mParams.min_linear_move or angularDispl>=mParams.min_angular_move) {
-		lastAnchorLidarPose = frmWork->pose();
 		addKeyframe(frmWork);
 		anchorFrame = frmWork;
 		hasKeyframe = true;
-
-		// update map
-		CloudT transformedScan;
-		pcl::transformPointCloud(*frmWork->lidarScan, transformedScan, lastAnchorLidarPose);
-		*tempLidarCloudmap += transformedScan;
 	}
+	lastFrame = frmWork;
 
+	rigTrack.push_back(PoseStamped(frmWork->pose(), cloudTimestamp));
 	return hasKeyframe;
 }
 
@@ -86,9 +79,11 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 void
 ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 {
-	kfCandidate->setPose(kfCandidate->pose() * lidarToCamera);
+	// kfCandidate has lidar pose. transform to camera pose for keyframe
+	Pose ldPos = kfCandidate->pose();
 	kfCandidate->computeFeatures(vMap->getFeatureDetector());
 	auto kfNew = KeyFrame::fromBaseFrame(*kfCandidate, vMap, 0, kfCandidate->imageTimestamp);
+	kfNew->setPose(ldPos * lidarToCamera);
 	vMap->addKeyFrame(kfNew);
 	kfCandidate->keyframeRel = kfNew->getId();
 
@@ -112,8 +107,6 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 
 		// Backtrack (find all map points in anchor frame (and related keyframes) that may be visible
 	}
-
-	rigTrack.push_back(PoseStamped(kfCandidate->pose(), kfCandidate->imageTimestamp));
 }
 
 
@@ -123,34 +116,22 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 TTransform
 ImageDatabaseBuilder::runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2)
 {
-	mNdt.setInputTarget(tempLidarCloudmap);
+	mNdt.setInputTarget(frame1->lidarScan);
 
 	CloudT::Ptr filteredTargetScan(new CloudT);
 	mVoxelGridFilter.setInputCloud(frame2->lidarScan);
 	mVoxelGridFilter.filter(*filteredTargetScan);
-
 	mNdt.setInputSource(filteredTargetScan);
-	// Guess Pose
-	Vector3d rot = quaternionToRPY(lastDisplacement.orientation());
-	TTransform guessDisplacement = TTransform::from_XYZ_RPY(lastDisplacement.translation(), 0, 0, rot.z());
-	Pose guessPose = previousPose * guessDisplacement;
 
-	CloudT::Ptr output_cloud(new CloudT);
+	CloudT output_cloud;
 	ptime trun1 = getCurrentTime();
-	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
+	mNdt.align(output_cloud);
 	ptime trun2 = getCurrentTime();
-	Pose currentPose = mNdt.getFinalTransformation().cast<double>();
+	TTransform movementByLidar = mNdt.getFinalTransformation().cast<double>();
 
-	// Information of lidar matching
-	cout << "Converged: " << (mNdt.hasConverged() ? "Y" : "N") << endl;
-	cout << "Iteration: " << mNdt.getFinalNumIteration() << endl;
-	cout << "Time (s): " << toSeconds(trun2-trun1) << endl;
-
-	lastDisplacement = previousPose.inverse() * currentPose;
-	previousPose = currentPose;
-	frame2->setPose(currentPose);
-	frame2->accumDistance = frame1->accumDistance + lastDisplacement.translation().norm();
-	return lastDisplacement;
+	frame2->setPose(frame1->pose() * movementByLidar);
+	frame2->accumDistance = frame1->accumDistance + movementByLidar.translation().norm();
+	return movementByLidar;
 }
 
 } /* namespace Vmml */

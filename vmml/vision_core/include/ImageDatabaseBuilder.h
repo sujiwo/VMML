@@ -77,17 +77,18 @@ protected:
 	// transformation from lidar to camera
 	TTransform lidarToCamera = TTransform::Identity();
 
-	IdbWorkFrame::Ptr anchorFrame=nullptr;
+	IdbWorkFrame::Ptr
+		anchorFrame=nullptr,
+		lastFrame = nullptr;
+
 	pcl::NormalDistributionsTransform<PointT, PointT> mNdt;
 	pcl::VoxelGrid<PointT> mVoxelGridFilter;
-	TTransform lastDisplacement = TTransform::Identity();
-	Pose previousPose, lastAnchorLidarPose;
 
 	TTransform runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
 	void addKeyframe(IdbWorkFrame::Ptr keyframe);
 	void buildVisionMap(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2);
 
-	CloudT::Ptr tempLidarCloudmap;
+	// Lidar trajectory
 	Trajectory rigTrack;
 };
 

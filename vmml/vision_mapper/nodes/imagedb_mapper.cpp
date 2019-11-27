@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 	}
 
 	imageDbMapper.getMap()->save(mapResultName);
+	imageDbMapper.getTrajectory().dump("/tmp/track.csv");
 
 	return 0;
 }
