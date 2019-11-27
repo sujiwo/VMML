@@ -106,6 +106,11 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 		vMap->updateCovisibilityGraph(anchorFrame->keyframeRel);
 
 		// Backtrack (find all map points in anchor frame (and related keyframes) that may be visible
+		// Build connections to previous keyframes
+		vector<kfid> kfInsToAnchor = vMap->getKeyFramesComeInto(anchorFrame->keyframeRel);
+		for (auto kf1: kfInsToAnchor) {
+			trackMapPoints(kf1, kfCandidate->keyframeRel);
+		}
 	}
 }
 
