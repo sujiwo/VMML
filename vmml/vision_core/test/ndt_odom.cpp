@@ -26,10 +26,9 @@ struct MessageDivision {
 };
 
 
-void createIntervals(const RandomAccessBag &bg, vector<MessageDivision> &percpu)
+void createIntervals(const uint numOfMsg, vector<MessageDivision> &percpu)
 {
 	const uint numOfCpus = thread::hardware_concurrency(),
-		numOfMsg = bg.size(),
 		len = numOfMsg / numOfCpus;
 	percpu.clear();
 
@@ -100,14 +99,15 @@ public:
 	void runMulti()
 	{
 		vector<MessageDivision> cpuDivs;
-		createIntervals(pcdScans, cpuDivs);
+		createIntervals(pcdScans.size(), cpuDivs);
 
 		const uint numOfCpus = std::thread::hardware_concurrency();
 		vector<NdtResultPerChild> childResults(numOfCpus);
 		std::vector<std::thread> childs(numOfCpus);
+		mutex ioMtx;
 
 		for (int c=0; c<numOfCpus; c++) {
-			childs[c] = std::thread([c, &childResults, &cpuDivs, this] {
+			childs[c] = std::thread([c, &childResults, &cpuDivs, &ioMtx, this] {
 
 				Cloud3::ConstPtr anchor = nullptr;
 				Pose lastPose = Pose::Identity();
@@ -143,6 +143,11 @@ public:
 
 					auto newAnchor = this->readLidarScanWithLock(i, false);
 					anchor = newAnchor;
+
+					{
+						lock_guard<mutex> screenLock(ioMtx);
+						cout << c << ": " << i << " / " << myjob.to-myjob.from << "; " << toSeconds(mywork.scanDurations.back()) << endl;
+					}
 				}
 			});
 		}
