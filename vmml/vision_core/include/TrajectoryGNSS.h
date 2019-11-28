@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <string>
 #include "Trajectory.h"
 #include "rosbag/bag.h"
 
@@ -17,13 +18,8 @@ namespace Vmml {
 class TrajectoryGNSS : public Trajectory
 {
 public:
-	TrajectoryGNSS();
-	virtual ~TrajectoryGNSS();
-
 	static TrajectoryGNSS
-	fromRosBag(rosbag::Bag &bag);
-
-
+	fromRosBag(rosbag::Bag &bag, const std::string &topicName, TTransform worldToMap, int plane_number=7);
 
 protected:
 };

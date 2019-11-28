@@ -22,6 +22,10 @@ find_package(catkin REQUIRED COMPONENTS
 	rosbag_viewer
 
 	velodyne_pointcloud
+	
+	# GNSS Localization (change to geodesy in the future)
+	nmea_msgs
+	gnss
 )
 
 find_package (Boost REQUIRED COMPONENTS serialization python graph filesystem)
@@ -109,6 +113,7 @@ add_library(
 		src/MapBuilderLidar.cpp
 		src/LocalLidarMapper.cpp
 		src/ImageDatabaseBuilder.cpp
+		src/TrajectoryGNSS.cpp
 )
 
 target_link_libraries(
