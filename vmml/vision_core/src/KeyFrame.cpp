@@ -108,6 +108,13 @@ KeyFrame::computeBoW()
 }
 
 
+int
+KeyFrame::numberOfMappoints() const
+{
+	return mParent->framePoints.at(id).size();
+}
+
+
 double
 KeyFrame::computeSceneMedianDepth() const
 {
@@ -131,6 +138,24 @@ KeyFrame::computeSceneMedianDepth() const
 	}
 
 	return median(depths);
+}
+
+
+std::vector<mpid>
+KeyFrame::getMapPointsInArea (const float x, const float y, const float windowSize, const int minLevel, const int maxLevel)
+const
+{
+	vector<mpid> mapPts;
+
+	auto keyPoints = getKeyPointsInArea(x, y, windowSize, minLevel, maxLevel);
+	for (auto &kp: keyPoints) {
+		try {
+			mpid mp = mParent->getMapPointByKeypoint(id, kp);
+			mapPts.push_back(mp);
+		} catch (...) { continue; }
+	}
+
+	return mapPts;
 }
 
 

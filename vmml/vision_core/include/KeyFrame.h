@@ -75,6 +75,11 @@ public:
 
 	double computeSceneMedianDepth() const;
 
+	std::vector<mpid>
+	getMapPointsInArea (const float x, const float y, const float windowSize, const int minLevel=-1, const int maxLevel=-1) const;
+
+	int numberOfMappoints() const;
+
 protected:
 
 	template <class Archive>

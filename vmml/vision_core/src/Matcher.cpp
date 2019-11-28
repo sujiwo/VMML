@@ -191,7 +191,6 @@ Matcher::matchBruteForce(
 		rotationHistogram[i].reserve(500);
 	const float factor = 1.0/Matcher::HISTOGRAM_LENGTH;
 
-	// XXX: Unfinished
 	for (kpid idx1=0; idx1<F1.numOfKeyPoints(); ++idx1) {
 		auto keypoint1 = F1.keypoint(idx1);
 		int level = keypoint1.octave;
@@ -399,52 +398,38 @@ Matcher::matchMapPoints(
 {
 	featurePairs.clear();
 
-	auto matcher = cv::BFMatcher::create();
-
-	// Establish initial correspondences, with mask
-	vector<cv::DMatch> initialMatches;
-	cv::Mat mmask = cv::Mat::zeros(KFsrc.numOfKeyPoints(), Ft.numOfKeyPoints(), CV_8UC1);
-	auto mMapPt = KFsrc.parent()->allMapPointsAtKeyFrame(KFsrc.getId());
-	for (auto p: mMapPt) {
-		for (int _=0; _<mmask.cols; ++_)
-			mmask.at<uchar>(p.second, _) = 0xff;
+	Matcher::PairList initialPairs, checkedMpPairs;
+	int N = Matcher::matchBruteForce(KFsrc, Ft, initialPairs);
+	for (auto &pair: initialPairs) {
+		try {
+			mpid mp = KFsrc.parent()->getMapPointByKeypoint(KFsrc.getId(), pair.first);
+			checkedMpPairs.push_back(pair);
+		} catch (...) { continue; }
 	}
 
-	matcher->match(KFsrc.fDescriptors, Ft.fDescriptors, initialMatches, mmask);
-
-	// Sort by `distance'
-	sort(initialMatches.begin(), initialMatches.end());
-	vector<int> inliersMatch;
-
-	const int MaxBestMatch = 500;
-	int howmany = std::min(MaxBestMatch, static_cast<int>(initialMatches.size()));
-
-	// Select N best matches
-	vector<cv::Point2f> pointsIn1(MaxBestMatch), pointsIn2(MaxBestMatch);
-	for (int i=0; i<howmany; ++i) {
-		auto &m = initialMatches[i];
-		pointsIn1[i] = KFsrc.fKeypoints[m.queryIdx].pt;
-		pointsIn2[i] = Ft.fKeypoints[m.trainIdx].pt;
+	N = checkedMpPairs.size();
+	if (N<10) return;
+	vector<cv::Point2f> pointsIn1(N), pointsIn2(N);
+	for (int i=0; i<checkedMpPairs.size(); i++) {
+		auto &pr = checkedMpPairs[i];
+		pointsIn1[i] = KFsrc.fKeypoints[pr.first].pt;
+		pointsIn2[i] = Ft.fKeypoints[pr.second].pt;
 	}
+
 	cv::Mat Fcv = cv::findFundamentalMat(pointsIn1, pointsIn2, cv::FM_RANSAC, 3.84*Matcher::circleOfConfusionDiameter);
-	// Need Eigen Matrix of F
-
+	if (Fcv.empty()) return;
 	Matrix3d F12;
 	cv2eigen(Fcv, F12);
 
-	/*
-	 * Guided Match using new F
-	 */
-	// Prepare constraints
-	cv::Mat gdMask = cv::Mat::zeros(KFsrc.numOfKeyPoints(), Ft.numOfKeyPoints(), CV_8UC1);
+	// Check matching against epipolar constraints
 	float maxDistance = -1;
-	for (int i=0; i<initialMatches.size(); ++i) {
-		auto &m = initialMatches[i];
-		const Vector2d keypoint1v = KFsrc.keypointv(m.queryIdx);
-		const Line2 epl2 = createEpipolarLine(F12, KFsrc.fKeypoints[m.queryIdx]);
-		const Line2 epl1 = createEpipolarLine(F12.transpose(), Ft.fKeypoints[m.trainIdx]);
-		if (isKeypointInEpipolarLine(epl2, Ft.keypointv(m.trainIdx))==true and isKeypointInEpipolarLine(epl1, KFsrc.keypointv(m.queryIdx))==true) {
-			featurePairs.push_back(make_pair(m.queryIdx, m.trainIdx));
+	for (int i=0; i<N; ++i) {
+		auto &pr = checkedMpPairs[i];
+		const Vector2d keypoint1v = KFsrc.keypointv(pr.first);
+		const Line2 epl2 = createEpipolarLine(F12, KFsrc.fKeypoints[pr.first]);
+		const Line2 epl1 = createEpipolarLine(F12.transpose(), Ft.fKeypoints[pr.second]);
+		if (isKeypointInEpipolarLine(epl2, Ft.keypointv(pr.second))==true and isKeypointInEpipolarLine(epl1, KFsrc.keypointv(pr.first))==true) {
+			featurePairs.push_back(pr);
 		}
 	}
 }

@@ -90,12 +90,13 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 	// Add new map points
 	if (kfCandidate!=anchorFrame) {
 
+		auto anchorKey = vMap->keyframe(anchorFrame->keyframeRel);
 		Matcher::PairList frameMatchesAtoC;
-		int Ns1 = Matcher::matchBruteForce(*anchorFrame, *kfCandidate, frameMatchesAtoC);
+		int Ns1 = Matcher::matchBruteForce(*anchorKey, *kfNew, frameMatchesAtoC);
 
 		map<uint, Vector3d> mapPoints;
 		float parallax;
-		TriangulateCV(*anchorFrame, *kfCandidate, frameMatchesAtoC, mapPoints, &parallax);
+		TriangulateCV(*anchorKey, *kfNew, frameMatchesAtoC, mapPoints, &parallax);
 		for (auto &mpPair: mapPoints) {
 			auto nMp = MapPoint::create(mpPair.second);
 			vMap->addMapPoint(nMp);

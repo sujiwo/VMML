@@ -326,6 +326,8 @@ MapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
 	vector<Matcher::KpPair> pairList12;
 	TTransform T12;
 	Matcher::matchMapPoints(*KF1, *KF2, pairList12);
+	if (pairList12.size()==0)
+		return;
 
 	map<kpid, mpid> kf1kp2mp = vMap->getAllMapPointProjectionsAt(ki1);
 	// Check the matching with projection
@@ -335,7 +337,9 @@ MapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
 		const mpid ptId = kf1kp2mp[p.first];
 
 		// Try projection
-		Vector2d kpf = KF2->project(vMap->mappoint(ptId)->getPosition());
+		Vector3d pt3 = vMap->mappoint(ptId)->getPosition();
+		Vector2d kpx1 = KF1->project(pt3);
+		Vector2d kpf = KF2->project(pt3);
 		double d = ( kpf-KF2->keypointv(p.second) ).norm();
 		if (d >= 4.0)
 			continue;

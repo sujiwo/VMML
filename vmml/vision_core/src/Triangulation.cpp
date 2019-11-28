@@ -135,6 +135,9 @@ bool TriangulateDLT(const Matrix3x4d& projMat1,
 }
 
 
+/*
+ * Poses of F1 & F2 must have been established
+ */
 bool TriangulateCV(
 	const BaseFrame &F1, const BaseFrame &F2,
 	const std::vector<Matcher::KpPair> &featurePairs,
