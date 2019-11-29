@@ -363,5 +363,22 @@ Trajectory::transform(const TTransform &tx)
 	}
 }
 
+
+Trajectory
+Trajectory::setToOrigin() const
+{
+	Trajectory mOrig;
+
+	mOrig.push_back(PoseStamped(Pose::Identity(), at(0).timestamp));
+	for (int i=1; i<size(); ++i) {
+		ptime t = at(i).timestamp;
+		TTransform tx = at(i-1).inverse() * at(i);
+		PoseStamped pIx(mOrig.back() * tx, t);
+		mOrig.push_back(pIx);
+	}
+
+	return mOrig;
+}
+
 }		// namespace Vmml
 

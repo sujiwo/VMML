@@ -179,6 +179,9 @@ public:
 
 	void transform(const TTransform &tx);
 
+	// Create new trajectory like this, but the first position is origin
+	Trajectory setToOrigin() const;
+
 private:
 	typedef std::vector<PoseStamped> Parent;
 

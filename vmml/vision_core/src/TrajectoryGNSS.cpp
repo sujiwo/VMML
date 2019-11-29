@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <geodesy/utm.h>
 #include <nmea_msgs/Sentence.h>
 #include <gnss/geo_pos_conv.hpp>
 #include "RandomAccessBag.h"
@@ -210,5 +211,145 @@ TrajectoryGNSS::fromRosBag(rosbag::Bag &bag, const std::string &topicName, TTran
 
 	return vehicleTrack;
 }
+
+
+struct GnssLocalizerState2
+{
+	double roll_=0, pitch_=0, yaw_=0;
+	double orientation_time_=0, position_time_=0;
+	double latitude=positionInvalid, longitude=positionInvalid, height=positionInvalid;
+	ros::Time current_time_=ros::Time(0), orientation_stamp_=ros::Time(0);
+
+	geographic_msgs::GeoPoint toGeoPoint() const
+	{
+		geographic_msgs::GeoPoint gp;
+		gp.altitude = height;
+		gp.latitude = latitude;
+		gp.longitude = longitude;
+		return gp;
+	}
+
+	Pose createPose() const
+	{
+		if (latitude==positionInvalid or longitude==positionInvalid)
+			throw invalid_gnss_position();
+
+		TQuaternion q(roll_, pitch_, yaw_);
+		Vector3d p(geo.northing, geo.easting, geo.altitude);
+
+		return Pose::from_Pos_Quat(p, q);
+	}
+
+	geodesy::UTMPoint geo, last_geo;
+};
+
+
+TrajectoryGNSS
+TrajectoryGNSS::fromRosBag2(rosbag::Bag &bag, const std::string &topicName)
+{
+	TrajectoryGNSS vehicleTrack;
+
+	RandomAccessBag nmeaBag(bag, topicName);
+	if (nmeaBag.messageType() != "nmea_msgs/Sentence")
+		throw runtime_error("Not GNSS bag");
+
+	GnssLocalizerState2 state;
+	const double orientationTimeout = 10.0;
+
+	for (int i=0; i<nmeaBag.size(); i++) {
+		auto currentMessage = nmeaBag.at<nmea_msgs::Sentence>(i);
+		ros::Time current_time = currentMessage->header.stamp;
+
+		vector<string> nmea = splitSentence(currentMessage->sentence);
+
+		try {
+
+			if (nmea.at(0).compare(0, 2, "QQ") == 0)
+			{
+				state.orientation_time_ = stod(nmea.at(3));
+				state.roll_ = stod(nmea.at(4)) * M_PI / 180.;
+				state.pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
+				state.yaw_ = -1 * stod(nmea.at(6)) * M_PI / 180. + M_PI / 2;
+				state.orientation_stamp_ = currentMessage->header.stamp;
+			}
+
+			else if (nmea.at(0) == "$PASHR")
+			{
+				state.orientation_time_ = stod(nmea.at(1));
+				state.roll_ = stod(nmea.at(4)) * M_PI / 180.;
+				state.pitch_ = -1 * stod(nmea.at(5)) * M_PI / 180.;
+				state.yaw_ = -1 * stod(nmea.at(2)) * M_PI / 180. + M_PI / 2;
+			}
+
+			else if(nmea.at(0).compare(3, 3, "GGA") == 0)
+			{
+				try {
+					state.position_time_ = stod(nmea.at(1));
+					state.latitude = stod(nmea.at(2));
+					state.longitude = stod(nmea.at(4));
+					state.height = stod(nmea.at(9));
+					state.geo = geodesy::UTMPoint(state.toGeoPoint());
+				} catch (std::invalid_argument &e) {
+					throw wrong_nmea_sentence();
+				}
+			}
+
+			else if(nmea.at(0) == "$GPRMC")
+			{
+				state.position_time_ = stoi(nmea.at(1));
+				state.latitude = stod(nmea.at(3));
+				state.longitude = stod(nmea.at(5));
+				state.height = 0.0;
+				state.geo = geodesy::UTMPoint(state.toGeoPoint());
+			}
+
+			else
+				throw wrong_nmea_sentence();
+
+		} catch (wrong_nmea_sentence &e) { continue; }
+
+		if (fabs(state.orientation_stamp_.toSec() - currentMessage->header.stamp.toSec()) > orientationTimeout) {
+			double dt = sqrt(pow(state.geo.easting - state.last_geo.easting, 2) + pow(state.geo.northing - state.last_geo.northing, 2));
+			const double threshold = 0.2;
+			if (dt > threshold) {
+				// create fake orientation
+				state.yaw_ = atan2(state.geo.northing - state.last_geo.northing, state.geo.easting - state.last_geo.easting);
+				state.roll_ = 0;
+				state.pitch_ = 0;
+
+				PoseStamped px;
+				try {
+					px = state.createPose();
+				} catch (invalid_gnss_position &e) {
+					continue;
+				}
+
+				px.timestamp = current_time.toBoost();
+				vehicleTrack.push_back(px);
+				state.last_geo = state.geo;
+				continue;
+			}
+		}
+
+		double e = 1e-2;
+		if (fabs(state.orientation_time_ - state.position_time_) < e) {
+
+			PoseStamped px;
+			try {
+				px = state.createPose();
+			} catch (invalid_gnss_position &e) {
+				continue;
+			}
+
+			px.timestamp = current_time.toBoost();
+			vehicleTrack.push_back(px);
+			continue;
+		}
+
+	}
+
+	return vehicleTrack;
+}
+
 
 } /* namespace Vmml */

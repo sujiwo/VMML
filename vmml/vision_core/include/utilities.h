@@ -183,8 +183,9 @@ void debugMsg(const std::string &s, double is_error=false);
 	debugMsg(string(funcDef) + " (seconds): " + to_string(double(_td_.total_microseconds()) / 1e6)); \
 
 
-inline boost::filesystem::path getMyPath()
-{ return boost::filesystem::path(ros::package::getPath("vision_core")); }
+typedef boost::filesystem::path Path;
+inline Path getMyPath()
+{ return Path(ros::package::getPath("vision_core")); }
 
 
 /*

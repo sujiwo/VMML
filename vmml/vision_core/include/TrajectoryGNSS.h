@@ -15,11 +15,21 @@
 
 namespace Vmml {
 
+class PoseGnss : public PoseStamped
+{
+public:
+	int utmZone=0;
+};
+
+
 class TrajectoryGNSS : public Trajectory
 {
 public:
 	static TrajectoryGNSS
-	fromRosBag(rosbag::Bag &bag, const std::string &topicName, TTransform worldToMap, int plane_number=7);
+	fromRosBag(rosbag::Bag &bag, const std::string &topicName, TTransform worldToMap=TTransform::Identity(), int plane_number=7);
+
+	static TrajectoryGNSS
+	fromRosBag2(rosbag::Bag &bag, const std::string &topicName);
 
 protected:
 };

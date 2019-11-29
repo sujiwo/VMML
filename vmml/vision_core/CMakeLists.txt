@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 	velodyne_pointcloud
 	
 	# GNSS Localization (change to geodesy in the future)
+	geodesy
 	nmea_msgs
 	gnss
 )
@@ -45,7 +46,7 @@ endif()
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES vmml
-	CATKIN_DEPENDS roscpp rosbag_viewer
+	CATKIN_DEPENDS roscpp rosbag_viewer geodesy
 )
 
 include_directories(
@@ -156,6 +157,17 @@ add_executable(
 
 target_link_libraries(
 	ndt_odom
+		vmml
+		${REQUIRED_LIBS}
+)
+
+add_executable(
+	testbag
+		test/testbag.cpp
+)
+
+target_link_libraries(
+	testbag
 		vmml
 		${REQUIRED_LIBS}
 )
