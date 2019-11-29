@@ -177,6 +177,8 @@ public:
 
 	bool isInside(const ptime &t) const;
 
+	void transform(const TTransform &tx);
+
 private:
 	typedef std::vector<PoseStamped> Parent;
 

@@ -353,5 +353,15 @@ PoseStamped Twist::extrapolate(const tduration &td) const
 	// XXX: Unfinished
 }
 
+
+void
+Trajectory::transform(const TTransform &tx)
+{
+	for (int i=0; i<size(); ++i) {
+		auto &p = Parent::at(i);
+		p = p * tx;
+	}
+}
+
 }		// namespace Vmml
 

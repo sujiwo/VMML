@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
+#include <boost/filesystem/convenience.hpp>
 #include "Pose.h"
 #include "ImageBag.h"
 #include "LidarScanBag.h"
@@ -31,8 +32,6 @@ const TTransform tLidarToCamera = TTransform::from_XYZ_RPY(
 	Eigen::Vector3d(0.9, 0.3, -0.6),
 	-1.520777, -0.015, -1.5488);
 
-const string mapResultName = "maptest.vmap";
-
 
 int main(int argc, char *argv[])
 {
@@ -47,6 +46,7 @@ int main(int argc, char *argv[])
 	ImageDatabaseBuilder imageDbMapper(idbParams, camera0, vocabPath.string());
 	imageDbMapper.setTranformationFromLidarToCamera(tLidarToCamera);
 
+	boost::filesystem::path bagPath(argv[1]);
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets", calibPath.string());
@@ -74,8 +74,10 @@ int main(int argc, char *argv[])
 		cout << (isKey ? "*" : "") << li  << " / " << limit << endl;
 	}
 
-	imageDbMapper.getMap()->save(mapResultName);
-	imageDbMapper.getTrajectory().dump("/tmp/track.csv");
+	auto mapFilenameBasename = boost::filesystem::basename(bagPath);
+	imageDbMapper.getMap()->save(mapFilenameBasename+".vmap");
+	imageDbMapper.getTrajectory().dump(mapFilenameBasename+"-lidar.csv");
+	imageDbMapper.getMap()->dumpCameraTrajectory().dump(mapFilenameBasename+"-camera.csv");
 
 	return 0;
 }
