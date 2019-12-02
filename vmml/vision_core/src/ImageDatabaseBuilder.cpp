@@ -117,7 +117,7 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 
 
 /*
- * Returns transformation from previous pose. The frame will be set with current pose
+ * Returns transformation from previous pose. The frame will be set with current lidar pose
  */
 TTransform
 ImageDatabaseBuilder::runNdtMatch(IdbWorkFrame::Ptr frame1, IdbWorkFrame::Ptr frame2)

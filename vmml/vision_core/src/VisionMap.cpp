@@ -501,9 +501,6 @@ VisionMap::findCandidates (BaseFrame &frame) const
 			relatedKf = invertedKeywordDb.at(wordId);
 		} catch (out_of_range &e) { continue; }
 
-		/*
-		 * XXX: Mysteriously, the following loop changes kfCandidates when reading
-		 */
 		for (const kfid &k: relatedKf) {
 			try {
 				const uint count = kfCandidates.at(k);
@@ -586,14 +583,17 @@ vector<kfid>
 VisionMap::getOrderedRelatedKeyFramesFrom (const kfid kx, int howMany) const
 {
 	vector<pair<KeyFrameGraph::vertex_descriptor,int>> covisk;
+	map<KeyFrameGraph::vertex_descriptor,int> coviskWithWeight;
 
 	auto vtx = kfVtxMap.at(kx);
 	auto kfl = boost::out_edges(vtx, covisibility);
 	for (auto p=kfl.first; p!=kfl.second; ++p) {
 		auto k = boost::target(*p, covisibility);
 		int w = boost::get(boost::edge_weight_t(), covisibility, *p);
-		covisk.push_back(make_pair(k,w));
+		coviskWithWeight[k]=w;
 	}
+	for (auto &pr: coviskWithWeight)
+		covisk.push_back(make_pair(pr.first, pr.second));
 
 	sort(covisk.begin(), covisk.end(),
 		[](const pair<kfid,int> &u1, const pair<kfid,int> &u2) -> bool

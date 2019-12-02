@@ -349,11 +349,10 @@ MapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
 		vMap->addMapPointVisibility(ptId, ki2, p.second);
 	}
 
-	if (pointMatchCounter > matchCountThreshold) {
-		vMap->updateCovisibilityGraph(ki1);
-		cerr << "Backtrace: Found " << pointMatchCounter << "pts\n";
-	}
+	vMap->updateCovisibilityGraph(ki1);
+	cerr << "Backtrace: Found " << pointMatchCounter << "pts from " << ki1 << endl;
 
+//	abort();
 }
 
 
