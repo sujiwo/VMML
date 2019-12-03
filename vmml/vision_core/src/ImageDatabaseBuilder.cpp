@@ -112,6 +112,8 @@ ImageDatabaseBuilder::addKeyframe(IdbWorkFrame::Ptr kfCandidate)
 		for (auto kf1: kfInsToAnchor) {
 			trackMapPoints(kf1, kfCandidate->keyframeRel);
 		}
+
+		kfCandidate->featureMatchesFromLastAnchor = frameMatchesAtoC;
 	}
 }
 

@@ -15,6 +15,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
+#include <pcl_ros/publisher.h>
 #include "BaseFrame.h"
 #include "VisionMap.h"
 #include "MapBuilder.h"
@@ -30,7 +31,8 @@ public:
 	RVizConnector(int argc, char *argv[], const std::string &nodeName);
 	virtual ~RVizConnector();
 
-	void setMap(const VisionMap::Ptr &vmap);
+	inline void setMap(const VisionMap::Ptr &vmap)
+	{ mMap = vmap; }
 
 	void publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame);
 
@@ -42,9 +44,11 @@ protected:
 	std::shared_ptr<ros::NodeHandle> hdl;
 	VisionMap::Ptr mMap;
 
+	// Publishers
 	std::shared_ptr<image_transport::ImageTransport> imagePubTr;
 	image_transport::Publisher imagePub;
 	std::shared_ptr<tf::TransformBroadcaster> posePubTf;
+	ros::Publisher lidarScanPub, mapPointsPub;
 
 	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
 
@@ -53,6 +57,8 @@ protected:
 	static cv::Mat drawFrameWithPairList (const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
 
 	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
+
+	void publishPointCloudMap();
 
 	bool rosDisabled;
 };

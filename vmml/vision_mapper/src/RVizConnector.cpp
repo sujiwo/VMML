@@ -10,6 +10,8 @@
 #include <opencv2/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <ros/master.h>
 #include "RVizConnector.h"
 
 using namespace std;
@@ -17,6 +19,9 @@ using namespace Eigen;
 
 
 const string originFrame = "world";
+const string imageTopicName = "imageframe";
+const string lidarScanTopicName = "lidarframe";
+const string visionMapPcTopicName = "visionpcl";
 
 
 namespace Vmml {
@@ -40,24 +45,27 @@ RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName
 	/*
 	 * Disable ROS connector when debugging (set __NOROS environment variable to 1)
 	 */
+	ros::init(argc, argv, nodeName);
+	ros::Time::init();
 	auto checkDebug=getenv("__NOROS");
-	if (checkDebug!=NULL) {
+	auto roschk = ros::master::check();
+	if (checkDebug!=NULL or roschk==false) {
 		rosDisabled = true;
 		return;
 	}
 	else rosDisabled = false;
 
-	ros::init(argc, argv, nodeName);
 	hdl.reset(new ros::NodeHandle);
 	imagePubTr.reset(new image_transport::ImageTransport(*hdl));
 	posePubTf.reset(new tf::TransformBroadcaster);
-	imagePub = imagePubTr->advertise("imageframe", 1);
+	imagePub = imagePubTr->advertise(imageTopicName, 1);
+	lidarScanPub = hdl->advertise<sensor_msgs::PointCloud2> ("lidar", 1);
+	mapPointsPub = hdl->advertise<sensor_msgs::PointCloud2> ("map_points", 1);
 }
 
 
-RVizConnector::~RVizConnector() {
-	// TODO Auto-generated destructor stub
-}
+RVizConnector::~RVizConnector()
+{}
 
 
 void
@@ -118,10 +126,10 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 	if (rosDisabled==true)
 		return;
 
-	publishBaseFrame(workFrame);
+	publishBaseFrame(workFrame, workFrame.featureMatchesFromLastAnchor);
 
 	if (mMap) {
-		auto triangulationPoints = mMap->dumpPointCloudFromMapPoints();
+		publishPointCloudMap();
 	}
 }
 
@@ -143,6 +151,20 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::Pai
 	cvImg.header.stamp = timestamp;
 	imagePub.publish(cvImg.toImageMsg());
 
+}
+
+
+void
+RVizConnector::publishPointCloudMap()
+{
+	auto triangulationPoints = mMap->dumpPointCloudFromMapPoints();
+
+	sensor_msgs::PointCloud2 mapCloud;
+	pcl::toROSMsg(*triangulationPoints, mapCloud);
+	mapCloud.header.stamp = ros::Time::now();
+	mapCloud.header.frame_id = originFrame;
+
+	mapPointsPub.publish(mapCloud);
 }
 
 

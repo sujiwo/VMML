@@ -8,11 +8,13 @@
 #include <sstream>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
+#include <pcl_ros/point_cloud.h>
 #include <boost/filesystem/convenience.hpp>
 #include "Pose.h"
 #include "ImageBag.h"
 #include "LidarScanBag.h"
 #include "ImageDatabaseBuilder.h"
+#include "RVizConnector.h"
 
 
 using namespace std;
@@ -51,6 +53,9 @@ int main(int argc, char *argv[])
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets", calibPath.string());
 
+	Mapper::RVizConnector rosConn(argc, argv, "mapper");
+	rosConn.setMap(imageDbMapper.getMap());
+
 	int limit;
 	if (argc>2)
 		limit = stoi(argv[2]);
@@ -72,6 +77,10 @@ int main(int argc, char *argv[])
 
 		auto isKey = imageDbMapper.feed(lidarScan, lidarTimestamp, nearImage, imageTimestamp);
 		cout << (isKey ? "*" : "") << li  << " / " << limit << endl;
+
+		if (isKey) {
+			rosConn.publishFrameWithLidar(*(imageDbMapper.getLastFrame()));
+		}
 	}
 
 	auto mapFilenameBasename = boost::filesystem::basename(bagPath);

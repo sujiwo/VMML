@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	cv_bridge
 	image_transport
+	pcl_conversions
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,6 +109,7 @@ install(
 add_executable(
 	imagedb_mapper
 		nodes/imagedb_mapper.cpp
+		src/RVizConnector.cpp
 )
 
 target_link_libraries(

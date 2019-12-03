@@ -14,6 +14,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include "MapBuilder.h"
 #include "Trajectory.h"
+#include "Matcher.h"
 
 
 namespace Vmml {
@@ -57,6 +58,8 @@ public:
 		kfid keyframeRel=0;
 
 		double accumDistance=0.0;
+
+		Matcher::PairList featureMatchesFromLastAnchor;
 	};
 
 	ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath);
@@ -69,6 +72,9 @@ public:
 
 	void setTranformationFromLidarToCamera (const TTransform &tlc)
 	{ lidarToCamera = tlc; }
+
+	const IdbWorkFrame::Ptr& getLastFrame() const
+	{ return lastFrame; }
 
 protected:
 
