@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag("/Data/MapServer/Logs/log_2016-12-26-13-21-10.bag");
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", 0.3333333);
 
-	auto mtFrame = BaseFrame::create(imageBag.at(54499), vMap->getCameraParameter(0));
+	auto mtFrame = BaseFrame::create(imageBag.at(19043), vMap->getCameraParameter(0));
 	auto candidates = vMap->findCandidates(*mtFrame);
 	cout << "Found " << candidates.size() << endl;
 	for (auto kf: candidates) {

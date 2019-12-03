@@ -50,6 +50,7 @@ RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName
 	auto checkDebug=getenv("__NOROS");
 	auto roschk = ros::master::check();
 	if (checkDebug!=NULL or roschk==false) {
+		cout << "ROS connector is disabled\n";
 		rosDisabled = true;
 		return;
 	}
