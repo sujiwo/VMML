@@ -18,6 +18,7 @@
 #include "BaseFrame.h"
 #include "VisionMap.h"
 #include "MapBuilder.h"
+#include "ImageDatabaseBuilder.h"
 
 
 namespace Vmml {
@@ -33,6 +34,8 @@ public:
 
 	void publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame);
 
+	void publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFrame &workFrame);
+
 	void publishPointcloud();
 
 protected:
@@ -46,6 +49,12 @@ protected:
 	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
 
 	static cv::Mat drawFrame(const MapBuilder::TmpFrame &workFrame);
+
+	static cv::Mat drawFrameWithPairList (const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
+
+	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
+
+	bool rosDisabled;
 };
 
 } /* namespace Mapper */

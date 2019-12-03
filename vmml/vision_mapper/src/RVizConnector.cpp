@@ -37,6 +37,16 @@ tf::Transform createPose(const BaseFrame &f)
 
 RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName)
 {
+	/*
+	 * Disable ROS connector when debugging (set __NOROS environment variable to 1)
+	 */
+	auto checkDebug=getenv("__NOROS");
+	if (checkDebug!=NULL) {
+		rosDisabled = true;
+		return;
+	}
+	else rosDisabled = false;
+
 	ros::init(argc, argv, nodeName);
 	hdl.reset(new ros::NodeHandle);
 	imagePubTr.reset(new image_transport::ImageTransport(*hdl));
@@ -53,7 +63,9 @@ RVizConnector::~RVizConnector() {
 void
 RVizConnector::publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame)
 {
-//	posePubTf.
+	if (rosDisabled==true)
+		return;
+
 	auto timestamp = ros::Time::now();
 
 	// Pose
@@ -83,22 +95,54 @@ RVizConnector::createImageMsgFromFrame(const BaseFrame &fr) const
 cv::Mat
 RVizConnector::drawFrame(const MapBuilder::TmpFrame &workFrame)
 {
-	cv::Mat buffer = workFrame.getImage().clone();
-	for (auto &keypointId: workFrame.prevMapPointPairs) {
-		auto keypoint = workFrame.keypoint(keypointId.second);
+	return drawFrameWithPairList(workFrame, workFrame.prevMapPointPairs);
+}
+
+
+cv::Mat
+RVizConnector::drawFrameWithPairList (const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs)
+{
+	cv::Mat buffer = frame.getImage().clone();
+	for (auto &keypointId: featurePairs) {
+		auto keypoint = frame.keypoint(keypointId.second);
 		cv::circle(buffer, keypoint.pt, 2.0, cv::Scalar(0,255,0));
 	}
-/*
-	auto visibleMps = k.parent()->getVisibleMapPoints(k.getId());
-
-	for (auto &mp: visibleMps) {
-		auto mapPoint = k.parent()->mappoint(mp);
-		Vector2d proj = k.project(mapPoint->getPosition());
-		cv::circle(buffer, cv::Point2f(proj.x(), proj.y()), 2.0, cv::Scalar(0,255,0));
-	}
-*/
 
 	return buffer;
+}
+
+
+void
+RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFrame &workFrame)
+{
+	if (rosDisabled==true)
+		return;
+
+	publishBaseFrame(workFrame);
+
+	if (mMap) {
+		auto triangulationPoints = mMap->dumpPointCloudFromMapPoints();
+	}
+}
+
+
+void
+RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs)
+{
+	auto timestamp = ros::Time::now();
+
+	// Pose
+	const tf::Transform kfPose = createPose(frame);
+	tf::StampedTransform kfStampedPose(kfPose, timestamp, originFrame, "camera");
+	posePubTf->sendTransform(kfStampedPose);
+
+	// Image
+	cv_bridge::CvImage cvImg;
+	cvImg.image = drawFrameWithPairList(frame, featurePairs);
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+	cvImg.header.stamp = timestamp;
+	imagePub.publish(cvImg.toImageMsg());
+
 }
 
 
