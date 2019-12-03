@@ -60,6 +60,8 @@ protected:
 
 	void publishPointCloudMap();
 
+	void publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos);
+
 	bool rosDisabled;
 };
 

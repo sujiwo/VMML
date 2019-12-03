@@ -126,7 +126,9 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 	if (rosDisabled==true)
 		return;
 
-	publishBaseFrame(workFrame, workFrame.featureMatchesFromLastAnchor);
+	auto currentKeyFrame = mMap->keyframe(workFrame.keyframeRel);
+	publishBaseFrame(*currentKeyFrame, workFrame.featureMatchesFromLastAnchor);
+	publishPointCloudLidar(*workFrame.lidarScan, workFrame.pose());
 
 	if (mMap) {
 		publishPointCloudMap();
@@ -165,6 +167,22 @@ RVizConnector::publishPointCloudMap()
 	mapCloud.header.frame_id = originFrame;
 
 	mapPointsPub.publish(mapCloud);
+}
+
+
+void
+RVizConnector::publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos)
+{
+	Vmml::ImageDatabaseBuilder::CloudT transformedCl;
+	pcl::transformPointCloud(cl, transformedCl, lidarPos.matrix().cast<float>());
+
+	sensor_msgs::PointCloud2 lidarCloud;
+	pcl::toROSMsg(transformedCl, lidarCloud);
+	lidarCloud.header.stamp = ros::Time::now();
+	lidarCloud.header.frame_id = originFrame;
+
+	lidarScanPub.publish(lidarCloud);
+
 }
 
 
