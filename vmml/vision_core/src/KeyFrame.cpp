@@ -159,4 +159,9 @@ const
 }
 
 
+const DBoW2::BowVector&
+KeyFrame::getBoW() const
+{ return mParent->BoWList.at(this->id); }
+
+
 } /* namespace Vmml */

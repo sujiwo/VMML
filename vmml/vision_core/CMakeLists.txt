@@ -115,6 +115,7 @@ add_library(
 		src/LocalLidarMapper.cpp
 		src/ImageDatabaseBuilder.cpp
 		src/TrajectoryGNSS.cpp
+		src/ImagePreprocessor.cpp
 )
 
 target_link_libraries(
@@ -184,5 +185,7 @@ install(
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/car_mask_meter.png
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 

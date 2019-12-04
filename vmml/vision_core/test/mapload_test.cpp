@@ -21,10 +21,6 @@ int main(int argc, char *argv[])
 	Vmml::VisionMap::Ptr vMap = Vmml::VisionMap::create();
 	vMap->load("/home/sujiwo/VmmlWorkspace/Release/motoyama.vmap");
 
-	auto cloud = vMap->dumpPointCloudFromMapPoints();
-	pcl::io::savePCDFileBinary("/tmp/xmap.pcd", *cloud);
-	vMap->dumpCameraTrajectory().dump("camera.csv");
-
 	rosbag::Bag mybag("/Data/MapServer/Logs/log_2016-12-26-13-21-10.bag");
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", 0.3333333);
 
@@ -34,5 +30,6 @@ int main(int argc, char *argv[])
 	for (auto kf: candidates) {
 		cout << kf << ' ';
 	}
+
 	return 0;
 }

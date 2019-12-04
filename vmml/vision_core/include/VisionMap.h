@@ -181,6 +181,9 @@ public:
 	static Ptr create()
 	{ return Ptr(new VisionMap); }
 
+	const ORBVocabulary& getVocabulary() const
+	{ return myVoc; }
+
 protected:
 
 	friend class KeyFrame;

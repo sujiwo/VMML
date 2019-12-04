@@ -11,6 +11,7 @@
 #include <string>
 #include <opencv2/core.hpp>
 #include "RandomAccessBag.h"
+#include "ImagePreprocessor.h"
 #include "utilities.h"
 
 
@@ -31,10 +32,20 @@ public:
 
 	bool save(unsigned int position, const std::string &filename, bool raw=false);
 
+	void setGammaMeteringMask(const cv::Mat &meteringMask);
+	void setGammaMeteringMask(const std::string &path=std::string());
+
 	typedef std::shared_ptr<ImageBag> Ptr;
+
+	const ImagePreprocessor& getPreprocessor() const
+	{ return imgPreps; }
 
 protected:
 	float zoomRatio;
+
+	cv::Mat equalizeGamma(const cv::Mat &src) const;
+
+	ImagePreprocessor imgPreps;
 };
 
 } /* namespace Vmml */

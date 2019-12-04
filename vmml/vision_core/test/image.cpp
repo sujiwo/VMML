@@ -35,7 +35,7 @@ VisionMap testMap;
 int main(int argc, char *argv[])
 {
 	/*
-	 * please run `setup devel/setup.bash' prior to run this program
+	 * please run `setup install/setup.bash' prior to run this program
 	 */
 	auto maskPath = getMyPath() / "samples/meidai_mask.png";
 	auto calibPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai-64e-S2.yaml";
@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
 
 	rosbag::Bag inputBag(argv[1]);
 	ImageBag images(inputBag, "/camera1/image_raw", enlarge);
+	images.setGammaMeteringMask();
 	LidarScanBag pcdScans(inputBag, "/velodyne_packets", calibPath.string());
 
 	int i1 = stoi(argv[2]);

@@ -12,6 +12,7 @@
 #include <limits>
 #include <memory>
 
+#include "DBoW2/BowVector.h"
 #include "utilities.h"
 #include "BaseFrame.h"
 
@@ -79,6 +80,8 @@ public:
 	getMapPointsInArea (const float x, const float y, const float windowSize, const int minLevel=-1, const int maxLevel=-1) const;
 
 	int numberOfMappoints() const;
+
+	const DBoW2::BowVector& getBoW() const;
 
 protected:
 

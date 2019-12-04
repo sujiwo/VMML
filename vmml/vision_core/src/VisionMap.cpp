@@ -435,6 +435,7 @@ VisionMap::save (const std::string &path) const
 bool
 VisionMap::load (const std::string &path)
 {
+	cout << "Loading map `" << path << "`... ";
 	fstream mapFileFd;
 	mapFileFd.open(path.c_str(), fstream::in);
 	if (!mapFileFd.is_open())
@@ -478,6 +479,7 @@ VisionMap::load (const std::string &path)
 	mapStore >> FeatVecList;
 
 	mapFileFd.close();
+	cout << "Done\n";
 	return true;
 }
 
