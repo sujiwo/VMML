@@ -52,6 +52,7 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 	auto frmWork = IdbWorkFrame::create(cloudInp, cloudTimestamp, img, imageTimestamp, vMap->getCameraParameter(0));
 
 	if (anchorFrame==nullptr) {
+		frmWork->isKeyFrame = true;
 		anchorFrame = frmWork;
 		lastFrame = frmWork;
 		addKeyframe(frmWork);
@@ -65,10 +66,16 @@ ImageDatabaseBuilder::feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestam
 	double linearDispl, angularDispl;
 	anchorFrame->pose().displacement(frmWork->pose(), linearDispl, angularDispl);
 	if (linearDispl>=mParams.min_linear_move or angularDispl>=mParams.min_angular_move) {
+		frmWork->isKeyFrame = true;
 		addKeyframe(frmWork);
 		anchorFrame = frmWork;
 		hasKeyframe = true;
 	}
+
+	else {
+		frmWork->keyframeRel = anchorFrame->keyframeRel;
+	}
+
 	lastFrame = frmWork;
 
 	rigTrack.push_back(PoseStamped(frmWork->pose(), cloudTimestamp));

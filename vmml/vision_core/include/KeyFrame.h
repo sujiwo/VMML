@@ -15,6 +15,7 @@
 #include "DBoW2/BowVector.h"
 #include "utilities.h"
 #include "BaseFrame.h"
+#include "MapPoint.h"
 
 
 namespace Vmml { class KeyFrame; }
@@ -82,6 +83,8 @@ public:
 	int numberOfMappoints() const;
 
 	const DBoW2::BowVector& getBoW() const;
+
+	std::vector<MapPoint::Ptr> getVisibleMapPoints() const;
 
 protected:
 

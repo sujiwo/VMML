@@ -28,7 +28,7 @@ namespace Mapper {
 
 class RVizConnector {
 public:
-	RVizConnector(int argc, char *argv[], const std::string &nodeName);
+	RVizConnector(int argc, char *argv[], const std::string &nodeName, const TTransform& _lidarToCam=TTransform::Identity());
 	virtual ~RVizConnector();
 
 	inline void setMap(const VisionMap::Ptr &vmap)
@@ -48,7 +48,7 @@ protected:
 	std::shared_ptr<image_transport::ImageTransport> imagePubTr;
 	image_transport::Publisher imagePub;
 	std::shared_ptr<tf::TransformBroadcaster> posePubTf;
-	ros::Publisher lidarScanPub, mapPointsPub;
+	ros::Publisher lidarScanPub, mapPointsPub, keyframePosePub;
 
 	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
 
@@ -58,11 +58,18 @@ protected:
 
 	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
 
+	void publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFrame& relatedKeyFrame);
+
 	void publishPointCloudMap();
 
 	void publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos);
 
 	bool rosDisabled;
+
+	// Transforms
+	TTransform lidarToCamera;
+
+	ptime currentTime;
 };
 
 } /* namespace Mapper */

@@ -164,4 +164,17 @@ KeyFrame::getBoW() const
 { return mParent->BoWList.at(this->id); }
 
 
+std::vector<MapPoint::Ptr>
+KeyFrame::getVisibleMapPoints() const
+{
+	vector<MapPoint::Ptr> mpList;
+
+	for (auto &mp: mParent->framePoints.at(id)) {
+		auto mpId = mp.first;
+		mpList.push_back(mParent->mappoint(mpId));
+	}
+
+	return mpList;
+}
+
 } /* namespace Vmml */

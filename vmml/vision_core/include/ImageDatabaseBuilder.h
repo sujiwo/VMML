@@ -43,6 +43,9 @@ public:
 			max_submap_size=30.0;
 	};
 
+	/*
+	 * Pose of this frame is lidar pose
+	 */
 	struct IdbWorkFrame: public BaseFrame
 	{
 		typedef std::shared_ptr<IdbWorkFrame> Ptr;
@@ -56,6 +59,7 @@ public:
 		ptime lidarTimestamp;
 		ptime imageTimestamp;
 		kfid keyframeRel=0;
+		bool isKeyFrame = false;
 
 		double accumDistance=0.0;
 
@@ -75,6 +79,9 @@ public:
 
 	const IdbWorkFrame::Ptr& getLastFrame() const
 	{ return lastFrame; }
+
+	inline const TTransform& getLidarToCameraTransform() const
+	{ return lidarToCamera; }
 
 protected:
 

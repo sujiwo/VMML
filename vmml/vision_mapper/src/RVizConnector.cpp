@@ -9,6 +9,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/image_encodings.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <ros/master.h>
@@ -40,7 +41,22 @@ tf::Transform createPose(const BaseFrame &f)
 }
 
 
-RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName)
+geometry_msgs::Pose createGeomPose(const BaseFrame &f)
+{
+	geometry_msgs::Pose px;
+	px.position.x = f.pose().x();
+	px.position.y = f.pose().y();
+	px.position.z = f.pose().z();
+	px.orientation.w = f.pose().qw();
+	px.orientation.x = f.pose().qx();
+	px.orientation.y = f.pose().qy();
+	px.orientation.z = f.pose().qz();
+	return px;
+}
+
+
+RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName, const TTransform& _lidarToCam):
+	lidarToCamera(_lidarToCam)
 {
 	/*
 	 * Disable ROS connector when debugging (set __NOROS environment variable to 1)
@@ -62,6 +78,7 @@ RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName
 	imagePub = imagePubTr->advertise(imageTopicName, 1);
 	lidarScanPub = hdl->advertise<sensor_msgs::PointCloud2> ("lidar", 1);
 	mapPointsPub = hdl->advertise<sensor_msgs::PointCloud2> ("map_points", 1);
+	keyframePosePub = hdl->advertise<geometry_msgs::PoseStamped> ("keyframe_pose", 1);
 }
 
 
@@ -127,13 +144,48 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 	if (rosDisabled==true)
 		return;
 
+	currentTime = Vmml::getCurrentTime();
+
+	BaseFrame virtFrame = workFrame;
+	virtFrame.setPose(virtFrame.pose() * lidarToCamera);
+
 	auto currentKeyFrame = mMap->keyframe(workFrame.keyframeRel);
-	publishBaseFrame(*currentKeyFrame, workFrame.featureMatchesFromLastAnchor);
+	publishBaseFrame(virtFrame, *currentKeyFrame);
 	publishPointCloudLidar(*workFrame.lidarScan, workFrame.pose());
 
-	if (mMap) {
+	if (workFrame.isKeyFrame==true) {
+		geometry_msgs::PoseStamped keyFramePose;
+		keyFramePose.header.stamp = ros::Time::fromBoost(currentTime);
+		keyFramePose.header.frame_id = "camera";
+		keyFramePose.pose = createGeomPose(*currentKeyFrame);
+		keyframePosePub.publish(keyFramePose);
 		publishPointCloudMap();
 	}
+
+	else {
+		// TF Pose
+		const tf::Transform kfPose = createPose(virtFrame);
+		tf::StampedTransform kfStampedPose(kfPose, ros::Time::fromBoost(currentTime), originFrame, "camera");
+		posePubTf->sendTransform(kfStampedPose);
+	}
+}
+
+
+void
+RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFrame& relatedKeyFrame)
+{
+	cv_bridge::CvImage cvImg;
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+
+	cvImg.image = frame.getImage().clone();
+	auto pointList = relatedKeyFrame.getVisibleMapPoints();
+	for (auto &pt: pointList) {
+		auto v = frame.project(pt->getPosition());
+		cv::circle(cvImg.image, cv::Point2f(v.x(), v.y()), 2.0, cv::Scalar(0,255,0));
+	}
+
+	cvImg.header.stamp = ros::Time::fromBoost(currentTime);
+	imagePub.publish(cvImg.toImageMsg());
 }
 
 
@@ -153,7 +205,6 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::Pai
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
 	cvImg.header.stamp = timestamp;
 	imagePub.publish(cvImg.toImageMsg());
-
 }
 
 

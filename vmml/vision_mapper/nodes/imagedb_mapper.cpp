@@ -78,9 +78,7 @@ int main(int argc, char *argv[])
 		auto isKey = imageDbMapper.feed(lidarScan, lidarTimestamp, nearImage, imageTimestamp);
 		cout << (isKey ? "*" : "") << li  << " / " << limit << endl;
 
-		if (isKey) {
-			rosConn.publishFrameWithLidar(*(imageDbMapper.getLastFrame()));
-		}
+		rosConn.publishFrameWithLidar(*(imageDbMapper.getLastFrame()));
 	}
 
 	auto mapFilenameBasename = boost::filesystem::basename(bagPath);
