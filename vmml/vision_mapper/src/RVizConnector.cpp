@@ -10,6 +10,7 @@
 #include <opencv2/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <sensor_msgs/image_encodings.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <ros/master.h>
@@ -41,17 +42,23 @@ tf::Transform createPose(const BaseFrame &f)
 }
 
 
-geometry_msgs::Pose createGeomPose(const BaseFrame &f)
+geometry_msgs::Pose createGeomPose(const Pose &p)
 {
 	geometry_msgs::Pose px;
-	px.position.x = f.pose().x();
-	px.position.y = f.pose().y();
-	px.position.z = f.pose().z();
-	px.orientation.w = f.pose().qw();
-	px.orientation.x = f.pose().qx();
-	px.orientation.y = f.pose().qy();
-	px.orientation.z = f.pose().qz();
+	px.position.x = p.x();
+	px.position.y = p.y();
+	px.position.z = p.z();
+	px.orientation.w = p.qw();
+	px.orientation.x = p.qx();
+	px.orientation.y = p.qy();
+	px.orientation.z = p.qz();
 	return px;
+}
+
+
+geometry_msgs::Pose createGeomPose(const BaseFrame &f)
+{
+	return createGeomPose(f.pose());
 }
 
 
@@ -78,7 +85,7 @@ RVizConnector::RVizConnector(int argc, char *argv[], const std::string &nodeName
 	imagePub = imagePubTr->advertise(imageTopicName, 1);
 	lidarScanPub = hdl->advertise<sensor_msgs::PointCloud2> ("lidar", 1);
 	mapPointsPub = hdl->advertise<sensor_msgs::PointCloud2> ("map_points", 1);
-	keyframePosePub = hdl->advertise<geometry_msgs::PoseStamped> ("keyframe_pose", 1);
+	keyframePosePub = hdl->advertise<geometry_msgs::PoseArray> ("keyframe_pose", 1);
 }
 
 
@@ -147,18 +154,21 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 	currentTime = Vmml::getCurrentTime();
 
 	BaseFrame virtFrame = workFrame;
-	virtFrame.setPose(virtFrame.pose() * lidarToCamera);
+	virtFrame.setPose(workFrame.pose() * lidarToCamera);
 
 	auto currentKeyFrame = mMap->keyframe(workFrame.keyframeRel);
 	publishBaseFrame(virtFrame, *currentKeyFrame);
 	publishPointCloudLidar(*workFrame.lidarScan, workFrame.pose());
 
 	if (workFrame.isKeyFrame==true) {
+/*
 		geometry_msgs::PoseStamped keyFramePose;
 		keyFramePose.header.stamp = ros::Time::fromBoost(currentTime);
-		keyFramePose.header.frame_id = "camera";
+		keyFramePose.header.frame_id = originFrame;
 		keyFramePose.pose = createGeomPose(*currentKeyFrame);
 		keyframePosePub.publish(keyFramePose);
+*/
+		publishAllCurrentKeyFrames();
 		publishPointCloudMap();
 	}
 
@@ -215,7 +225,7 @@ RVizConnector::publishPointCloudMap()
 
 	sensor_msgs::PointCloud2 mapCloud;
 	pcl::toROSMsg(*triangulationPoints, mapCloud);
-	mapCloud.header.stamp = ros::Time::now();
+	mapCloud.header.stamp = ros::Time::fromBoost(currentTime);
 	mapCloud.header.frame_id = originFrame;
 
 	mapPointsPub.publish(mapCloud);
@@ -230,10 +240,27 @@ RVizConnector::publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &
 
 	sensor_msgs::PointCloud2 lidarCloud;
 	pcl::toROSMsg(transformedCl, lidarCloud);
-	lidarCloud.header.stamp = ros::Time::now();
+	lidarCloud.header.stamp = ros::Time::fromBoost(currentTime);
 	lidarCloud.header.frame_id = originFrame;
 
 	lidarScanPub.publish(lidarCloud);
+}
+
+
+void
+RVizConnector::publishAllCurrentKeyFrames()
+{
+	geometry_msgs::PoseArray allKeyframes;
+	allKeyframes.header.stamp = ros::Time::fromBoost(currentTime);
+	allKeyframes.header.frame_id = originFrame;
+
+	auto kfList = mMap->dumpCameraTrajectory();
+	for (auto &kf: kfList) {
+		auto kfp = createGeomPose(kf);
+		allKeyframes.poses.push_back(kfp);
+	}
+
+	keyframePosePub.publish(allKeyframes);
 
 }
 

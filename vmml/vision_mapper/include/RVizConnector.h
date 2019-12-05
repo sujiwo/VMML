@@ -64,6 +64,8 @@ protected:
 
 	void publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos);
 
+	void publishAllCurrentKeyFrames();
+
 	bool rosDisabled;
 
 	// Transforms
