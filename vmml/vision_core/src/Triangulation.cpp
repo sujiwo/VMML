@@ -207,8 +207,8 @@ bool TriangulateCV(
 
 		// 2: Must have enough parallax (ie. remove faraway points)
 		double cosParallax = (-v1).dot(-v2) / (v1.norm() * v2.norm());
-//		if (cosParallax >= 0.999990481)
-		if (cosParallax >= 0.9993908264969952)
+		if (cosParallax >= 0.999990481)
+//		if (cosParallax >= 0.9993908264969952)
 			continue;
 		if (cosParallax > cosParallaxRet)
 			cosParallaxRet = cosParallax;

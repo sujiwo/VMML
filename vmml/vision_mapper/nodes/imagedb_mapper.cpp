@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets", calibPath.string());
 
-	Mapper::RVizConnector rosConn(argc, argv, "mapper");
+	Mapper::RVizConnector rosConn(argc, argv, "mapper", tLidarToCamera);
 	rosConn.setMap(imageDbMapper.getMap());
 
 	int limit;
