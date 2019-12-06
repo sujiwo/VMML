@@ -106,6 +106,25 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+
+add_executable(
+	vocabulary_creator
+		nodes/vocabulary_creator.cpp
+)
+
+target_link_libraries(
+	vocabulary_creator
+		${catkin_LIBRARIES}
+		${vision_core_LIBRARIES}
+		${OpenCV_LIBS}
+)
+
+install(
+	TARGETS vocabulary_creator
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
 add_executable(
 	imagedb_mapper
 		nodes/imagedb_mapper.cpp

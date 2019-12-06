@@ -12,6 +12,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <ros/master.h>
 #include "RVizConnector.h"
@@ -59,6 +60,21 @@ geometry_msgs::Pose createGeomPose(const Pose &p)
 geometry_msgs::Pose createGeomPose(const BaseFrame &f)
 {
 	return createGeomPose(f.pose());
+}
+
+
+sensor_msgs::CameraInfo createCameraInfo(const CameraPinholeParams &cam)
+{
+	sensor_msgs::CameraInfo cmInfo;
+	cmInfo.width = cam.width;
+	cmInfo.height = cam.height;
+	cmInfo.K[0] = cam.fx;
+	cmInfo.K[2] = cam.cx;
+	cmInfo.K[4] = cam.fy;
+	cmInfo.K[5] = cam.cy;
+	cmInfo.K[8] = 1.0;
+	cmInfo.P[0] = cam.fx;
+	return cmInfo;
 }
 
 

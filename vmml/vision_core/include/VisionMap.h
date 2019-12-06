@@ -181,7 +181,10 @@ public:
 	static Ptr create()
 	{ return Ptr(new VisionMap); }
 
-	const ORBVocabulary& getVocabulary() const
+	inline const ORBVocabulary& getVocabulary() const
+	{ return myVoc; }
+
+	inline ORBVocabulary& getVocabulary()
 	{ return myVoc; }
 
 protected:
