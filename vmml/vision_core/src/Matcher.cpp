@@ -273,10 +273,10 @@ Matcher::matchBruteForce(
  * epipolar geometry
  */
 void
-Matcher::matchAny(
+Matcher::matchEpipolar(
 	const BaseFrame &Fr1,
 	const BaseFrame &Fr2,
-	std::vector<KpPair> &featurePairs,
+	Matcher::PairList &featurePairs,
 	cv::Ptr<cv::DescriptorMatcher> matcher)
 {
 	featurePairs.clear();
@@ -284,6 +284,10 @@ Matcher::matchAny(
 	// Establish initial correspondences
 	vector<cv::DMatch> initialMatches;
 	matcher->match(Fr1.fDescriptors, Fr2.fDescriptors, initialMatches);
+	if (initialMatches.size() < 8) {
+		featurePairs = Matcher::PairList();
+		return;
+	}
 
 	// Sort by `distance'
 	sort(initialMatches.begin(), initialMatches.end());

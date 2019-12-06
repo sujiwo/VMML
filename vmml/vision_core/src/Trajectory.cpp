@@ -380,5 +380,24 @@ Trajectory::setToOrigin() const
 	return mOrig;
 }
 
+
+double
+Trajectory::getElapsedDistance (const uint frontPos, const uint backPos) const
+{
+	if (frontPos<backPos)
+		throw range_error("Invalid frontPos; must be >=backPos");
+
+	double elDist = 0.0;
+	PoseStamped pf=at(frontPos), pb;
+	for (uint i=frontPos-1; i>=backPos; i--) {
+		pb = at(i);
+		double d = (pf.position()-pb.position()).norm();
+		elDist+=d;
+	}
+
+	return elDist;
+}
+
+
 }		// namespace Vmml
 

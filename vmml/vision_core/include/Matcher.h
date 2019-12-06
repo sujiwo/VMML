@@ -46,7 +46,7 @@ public:
 
 	// Match with epipolar constraints
 	static void
-	matchAny(
+	matchEpipolar(
 		const BaseFrame &F1,
 		const BaseFrame &F2,
 		PairList &featurePairs,

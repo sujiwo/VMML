@@ -182,6 +182,8 @@ public:
 	// Create new trajectory like this, but the first position is origin
 	Trajectory setToOrigin() const;
 
+	double getElapsedDistance (const uint frontPos, const uint backPos=0) const;
+
 private:
 	typedef std::vector<PoseStamped> Parent;
 
