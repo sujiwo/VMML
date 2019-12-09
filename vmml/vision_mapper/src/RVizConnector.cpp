@@ -200,6 +200,9 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 void
 RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFrame& relatedKeyFrame)
 {
+	if (rosDisabled)
+		return;
+
 	cv_bridge::CvImage cvImg;
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
 
@@ -218,6 +221,9 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFra
 void
 RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs)
 {
+	if (rosDisabled)
+		return;
+
 	auto timestamp = ros::Time::now();
 
 	// Pose
