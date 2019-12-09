@@ -40,6 +40,10 @@ public:
 	const ImagePreprocessor& getPreprocessor() const
 	{ return imgPreps; }
 
+	void getImageDimensions(uint &width, uint &height);
+
+	void getOriginalImageDimensions(uint &width, uint &height);
+
 protected:
 	float zoomRatio;
 

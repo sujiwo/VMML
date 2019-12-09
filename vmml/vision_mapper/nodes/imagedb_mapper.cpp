@@ -86,5 +86,8 @@ int main(int argc, char *argv[])
 	imageDbMapper.getTrajectory().dump(mapFilenameBasename+"-lidar.csv");
 	imageDbMapper.getMap()->dumpCameraTrajectory().dump(mapFilenameBasename+"-camera.csv");
 
+	auto mapCloud = imageDbMapper.getMap()->dumpPointCloudFromMapPoints();
+	pcl::io::savePCDFileBinary(mapFilenameBasename+"-vmap.pcd", *mapCloud);
+
 	return 0;
 }

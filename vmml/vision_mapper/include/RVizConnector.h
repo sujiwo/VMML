@@ -38,7 +38,12 @@ public:
 
 	void publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFrame &workFrame);
 
+	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
+
 	void publishPointcloud();
+
+	inline bool isRosUsed() const
+	{ return !rosDisabled; }
 
 protected:
 	std::shared_ptr<ros::NodeHandle> hdl;
@@ -55,8 +60,6 @@ protected:
 	static cv::Mat drawFrame(const MapBuilder::TmpFrame &workFrame);
 
 	static cv::Mat drawFrameWithPairList (const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
-
-	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
 
 	void publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFrame& relatedKeyFrame);
 

@@ -121,6 +121,25 @@ ImageBag::setGammaMeteringMask(const std::string &p)
 }
 
 
+void
+ImageBag::getImageDimensions(uint &width, uint &height)
+{
+	uint origW, origH;
+	getOriginalImageDimensions(origW, origH);
+	width = origW * zoomRatio;
+	height = origH * zoomRatio;
+}
+
+
+void
+ImageBag::getOriginalImageDimensions(uint &width, uint &height)
+{
+	auto image = at(0, true);
+	width = image.cols;
+	height = image.rows;
+}
+
+
 cv::Mat
 ImageBag::equalizeGamma(const cv::Mat &src) const
 {

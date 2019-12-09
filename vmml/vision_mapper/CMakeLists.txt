@@ -109,6 +109,7 @@ install(
 
 add_executable(
 	vocabulary_creator
+		src/RVizConnector.cpp
 		nodes/vocabulary_creator.cpp
 )
 
