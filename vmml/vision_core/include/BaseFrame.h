@@ -147,6 +147,8 @@ public:
 
 	void computeFeatures (cv::Ptr<cv::FeatureDetector> fd, std::vector<cv::KeyPoint> &kpList, cv::Mat &descriptors, const cv::Mat &mask) const;
 
+	static std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
+
 	/*
 	 * Extract keypoints (and their descriptors) according to mask.
 	 * A keypoint is included when the color in the mask is not zero
@@ -178,8 +180,11 @@ public:
 
 	std::vector<kpid> getKeyPointsInArea (const float x, const float y, const float windowSize, const int minLevel=-1, const int maxLevel=-1) const;
 
-	cv::Mat allDescriptors() const
+	inline cv::Mat allDescriptors() const
 	{ return fDescriptors; }
+
+	inline std::vector<cv::Mat> getDescriptorVector() const
+	{ return toDescriptorVector(fDescriptors); }
 
 	const std::vector<cv::KeyPoint>& allKeypoints() const
 	{ return fKeypoints; }

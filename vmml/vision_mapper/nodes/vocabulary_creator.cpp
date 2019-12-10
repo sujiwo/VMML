@@ -14,6 +14,7 @@
 #include "Trajectory.h"
 #include "TrajectoryGNSS.h"
 #include "Matcher.h"
+#include "ORBVocabulary.h"
 #include "utilities.h"
 #include "RVizConnector.h"
 
@@ -29,10 +30,13 @@ linearDistThreshold = 100.0,
 linearIdleThreshold = 10.0,
 imageSameThrScore = 0.15;
 
+const uint
+numberOfFeatures = 4000;
+
 
 cv::Ptr<cv::DescriptorMatcher> bMatcher = cv::BFMatcher::create();
 cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
-		6000,
+		numberOfFeatures,
 		1.2,
 		8,
 		32,
@@ -68,6 +72,9 @@ int main(int argc, char *argv[])
 	Mapper::RVizConnector rosConn(argc, argv, "vocabulary_creator");
 
 	Trajectory trackImage;
+	// Image database
+	ORBVocabulary myVocab;
+	vector<vector<DBoW2::FORB::TDescriptor> > keymapFeatures;
 
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
@@ -76,6 +83,13 @@ int main(int argc, char *argv[])
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
 		curImage->computeFeatures(bFeats);
+
+		if (curImage->numOfKeyPoints()<=10) {
+			cout << "XXX!\n";
+			string si=to_string(i)+".png";
+			cv::imwrite(si, curImage->getImage());
+			continue;
+		}
 
 		float comparisonScore = compareAndScore(*imageAnchor, *curImage);
 		bool isKeyFrame=false;
@@ -86,55 +100,20 @@ int main(int argc, char *argv[])
 			PoseStamped imagePose = trackGnss.at(imageTimestamp);
 			trackImage.push_back(imagePose);
 			isKeyFrame = true;
+
+			vector<cv::Mat> kfDescriptor = curImage->getDescriptorVector();
+			keymapFeatures.push_back(kfDescriptor);
 		}
 
 		cout << i << " / " << images.size() << (isKeyFrame==true?"*":"") << "; Score: " << comparisonScore << endl;
 	}
 
-/*
-	Trajectory vIdle;
-
-	// Choose timestamps when the vehicle is idle or has elapsed distance greater than threshold
-	bool isIdle = false;
-	PoseStamped lastPose, lastIdlePos;
-	double elapsedDistance = 0.0;
-
-	for (int i=0; i<track1.size(); ++i) {
-		auto poseI = track1[i];
-		auto tw = track1.getVelocityAt(i);
-		double dist = (lastPose.position()-poseI.position()).norm();
-		double distIdle = (poseI.position()-lastIdlePos.position()).norm();
-
-		if (tw.linear.norm()<=linearVelocityThreshold and isIdle==false and distIdle>=linearIdleThreshold) {
-			lastIdlePos = poseI;
-			vIdle.push_back(poseI);
-			isIdle=true;
-			elapsedDistance = 0.0;
-		}
-
-		else {
-			elapsedDistance += dist;
-			isIdle=false;
-			if (elapsedDistance>=linearDistThreshold) {
-				vIdle.push_back(poseI);
-				elapsedDistance = 0.0;
-			}
-		}
-
-		lastPose = poseI;
-	}
-
-	for (uint i=0; i<vIdle.size(); ++i) {
-		PoseStamped imagePose = vIdle.at(i);
-		int imageIdx = images.getPositionAtTime(ros::Time::fromBoost(imagePose.timestamp));
-		auto image = images.at(imageIdx);
-		cv::imwrite(to_string(imageIdx)+".png", image);
-	}
-
-	vIdle.dump("frames_for_vocabulary.txt");
-*/
-
 	trackGnss.dump("gnss.csv");
 	trackImage.dump("images.csv");
+
+	cout << "Creating vocabulary... ";
+	myVocab.create(keymapFeatures);
+	cout << "Done\n";
+
 	return 0;
 }

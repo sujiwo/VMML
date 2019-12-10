@@ -73,8 +73,6 @@ public:
 
 	void computeBoW();
 
-	static std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
-
 	double computeSceneMedianDepth() const;
 
 	std::vector<mpid>

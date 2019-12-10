@@ -156,6 +156,18 @@ BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, std::vector<cv::Key
 }
 
 
+std::vector<cv::Mat>
+BaseFrame::toDescriptorVector(const cv::Mat &Descriptors)
+{
+    std::vector<cv::Mat> vDesc;
+    vDesc.reserve(Descriptors.rows);
+    for (int j=0;j<Descriptors.rows;j++)
+        vDesc.push_back(Descriptors.row(j));
+
+    return vDesc;
+}
+
+
 void
 BaseFrame::assignKeyPointsToGrid()
 {
