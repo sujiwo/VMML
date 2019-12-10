@@ -79,7 +79,8 @@ int main(int argc, char *argv[])
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
 
-	for (int i=1; i<images.size(); ++i) {
+	const int maxLim = 4000;
+	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
 		curImage->computeFeatures(bFeats);
@@ -102,17 +103,20 @@ int main(int argc, char *argv[])
 			isKeyFrame = true;
 
 			vector<cv::Mat> kfDescriptor = curImage->getDescriptorVector();
-			keymapFeatures.push_back(kfDescriptor);
+			if (kfDescriptor.size()!=0) {
+				keymapFeatures.push_back(kfDescriptor);
+			}
 		}
 
-		cout << i << " / " << images.size() << (isKeyFrame==true?"*":"") << "; Score: " << comparisonScore << endl;
+		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << "; Score: " << comparisonScore << endl;
 	}
 
 	trackGnss.dump("gnss.csv");
 	trackImage.dump("images.csv");
 
-	cout << "Creating vocabulary... ";
+	cout << "Creating vocabulary for " << keymapFeatures.size() << " keyframes... " << flush;
 	myVocab.create(keymapFeatures);
+	myVocab.saveToTextFile("vocabulary.txt");
 	cout << "Done\n";
 
 	return 0;
