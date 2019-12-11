@@ -173,6 +173,16 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 )
 
+#add_executable(
+#	cv_optflow
+#		test/cv_optflow.cpp
+#)
+#
+#target_link_libraries(
+#	cv_optflow
+#		${REQUIRED_LIBS}
+#)
+
 # Generic Vocabulary handling
 add_custom_target (orb_vocabulary 
 	ALL 

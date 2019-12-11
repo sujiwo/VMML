@@ -704,14 +704,14 @@ void TemplatedVocabulary<TDescriptor,F>::HKmeansStep(NodeId parent_id,
             }
           }
           */
-          
+
           vector<unsigned int>::const_iterator vit;
           for(vit = groups[c].begin(); vit != groups[c].end(); ++vit)
           {
             cluster_descriptors.push_back(descriptors[*vit]);
           }
-          
-          
+
+
           F::meanValue(cluster_descriptors, clusters[c]);
         }
         

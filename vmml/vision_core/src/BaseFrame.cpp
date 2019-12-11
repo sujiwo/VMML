@@ -162,7 +162,7 @@ BaseFrame::toDescriptorVector(const cv::Mat &Descriptors)
     std::vector<cv::Mat> vDesc;
     vDesc.reserve(Descriptors.rows);
     for (int j=0;j<Descriptors.rows;j++) {
-    	auto vd = Descriptors.row(j);
+    	auto vd = Descriptors.row(j).clone();
     	if (vd.empty()==false)
     		vDesc.push_back(vd);
     }

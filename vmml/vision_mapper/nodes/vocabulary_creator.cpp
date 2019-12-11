@@ -31,7 +31,7 @@ linearIdleThreshold = 10.0,
 imageSameThrScore = 0.15;
 
 const uint
-numberOfFeatures = 4000;
+numberOfFeatures = 3000;
 
 
 cv::Ptr<cv::DescriptorMatcher> bMatcher = cv::BFMatcher::create();
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
 
-	const int maxLim = 4000;
+	const int maxLim = images.size();
 	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
