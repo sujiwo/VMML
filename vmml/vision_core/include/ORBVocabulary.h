@@ -100,6 +100,20 @@ public:
 		return DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor, DBoW2::FORB>::loadFromTextFile(filename);
 	}
 
+
+	// Call these function to build vocabulary
+	void prepareTrain();
+	void train(const std::vector<DBoW2::FORB::TDescriptor> &frameDescriptor);
+	void build();
+
+protected:
+	// XXX: put a lock for multi-threaded vocabulary building
+	std::vector<DBoW2::FORB::TDescriptor> kpTrains;
+
+	void HKmeansStep(
+		DBoW2::NodeId parent_id,
+		const vector<pDescriptor> &descriptors,
+		int current_level);
 };
 
 
