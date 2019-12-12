@@ -79,7 +79,8 @@ int main(int argc, char *argv[])
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
 
-	const int maxLim = images.size();
+	const int maxLim = 5000;
+//	const int maxLim = images.size();
 	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
