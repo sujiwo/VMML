@@ -27,6 +27,8 @@ find_package(catkin REQUIRED COMPONENTS
 	geodesy
 	nmea_msgs
 	gnss
+	
+	obindex2
 )
 
 find_package (Boost REQUIRED COMPONENTS serialization python graph filesystem)

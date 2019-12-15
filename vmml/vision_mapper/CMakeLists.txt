@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 	cv_bridge
 	image_transport
 	pcl_conversions
+	obindex2
 )
 
 ## System dependencies are found with CMake's conventions
@@ -122,6 +123,24 @@ target_link_libraries(
 
 install(
 	TARGETS vocabulary_creator
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+add_executable(
+	index_creator
+		nodes/index_creator.cpp
+)
+
+target_link_libraries(
+	index_creator
+		${catkin_LIBRARIES}
+		${vision_core_LIBRARIES}
+		${OpenCV_LIBS}
+)
+
+install(
+	TARGETS index_creator
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
