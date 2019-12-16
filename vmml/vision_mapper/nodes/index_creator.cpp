@@ -14,7 +14,7 @@
 #include "Trajectory.h"
 #include "TrajectoryGNSS.h"
 #include "Matcher.h"
-#include <obindex2/binary_index.h>
+#include "ImageDatabase.h"
 #include "utilities.h"
 
 
@@ -59,9 +59,13 @@ int main(int argc, char *argv[])
 	Path mybagPath(argv[1]);
 	rosbag::Bag mybag(mybagPath.string());
 
-	ImageBag images(mybag, "/camera1/image_raw", 0.5);
+	ImageBag images(mybag, "/camera1/image_raw", 0.416666666667);
 	uint width, height;
 	images.getImageDimensions(width, height);
+
+	cv::Mat queryImg = cv::imread("query-image.png", cv::IMREAD_GRAYSCALE);
+	if (queryImg.empty())
+		cerr << "Unable to open query image\n";
 
 	CameraPinholeParams camera0(0, 0, 0, 0, width, height);
 
@@ -70,13 +74,12 @@ int main(int argc, char *argv[])
 
 	Trajectory trackImage;
 
-	obindex2::ImageIndex imageDb;
+	ImageDatabase imageDb;
 
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
 
-	const int maxLim = 5000;
-//	const int maxLim = images.size();
+	const int maxLim = images.size();
 	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
@@ -106,7 +109,9 @@ int main(int argc, char *argv[])
 	trackGnss.dump("gnss.csv");
 	trackImage.dump("images.csv");
 
-	cout << "Done\n";
+	cout << "Done mapping\n";
+
+	// Image search
 
 	return 0;
 }
