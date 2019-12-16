@@ -27,8 +27,6 @@ find_package(catkin REQUIRED COMPONENTS
 	geodesy
 	nmea_msgs
 	gnss
-	
-	obindex2
 )
 
 find_package (Boost REQUIRED COMPONENTS serialization python graph filesystem)
@@ -118,6 +116,7 @@ add_library(
 		src/ImageDatabaseBuilder.cpp
 		src/TrajectoryGNSS.cpp
 		src/ImagePreprocessor.cpp
+		src/ImageDatabase.cpp
 )
 
 target_link_libraries(
