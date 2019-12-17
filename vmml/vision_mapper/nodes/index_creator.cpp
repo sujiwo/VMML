@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	kfid curKf = 0;
 	map<kfid, int> kfToFrameNum;
 
-	ImageDatabase imageDb(16, 150, 4, ImageDatabase::MergePolicy::MERGE_POLICY_NONE, false);
+	ImageDatabase imageDb;
 
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
