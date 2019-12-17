@@ -482,6 +482,22 @@ void ImageDatabase::addImage(
 }
 
 
+void ImageDatabase::addImage2(const unsigned image_id,
+		   const std::vector<cv::KeyPoint>& kps,
+		   const cv::Mat& descs)
+{
+	vector<vector<cv::DMatch>> matches_feats;
+	vector<cv::DMatch> realMatches;
+	searchDescriptors(descs, matches_feats, 2, 64);
+	for (uint m=0; m<matches_feats.size(); ++m) {
+		if (matches_feats[m][0].distance < matches_feats[m][1].distance * 0.8)
+			realMatches.push_back(matches_feats[m][0]);
+	}
+	addImage(image_id, kps, descs, realMatches);
+}
+
+
+
 void ImageDatabase::addImage(
 	const kfid image_id,
 	const std::vector<cv::KeyPoint>& kps,

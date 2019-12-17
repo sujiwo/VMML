@@ -425,7 +425,12 @@ public:
 		const bool purge_descriptors = true,
 		const uint min_feat_apps = 3);
 
+	// For initial image
 	void addImage(const unsigned image_id,
+			   const std::vector<cv::KeyPoint>& kps,
+			   const cv::Mat& descs);
+
+	void addImage2(const unsigned image_id,
 			   const std::vector<cv::KeyPoint>& kps,
 			   const cv::Mat& descs);
 

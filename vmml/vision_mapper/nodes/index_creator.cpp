@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
+		imageDb.addImage2(i, curImage->allKeypoints(), curImage->allDescriptors());
+
 		float comparisonScore = compareAndScore(*imageAnchor, *curImage);
 		bool isKeyFrame=false;
 
@@ -105,7 +107,7 @@ int main(int argc, char *argv[])
 			trackImage.push_back(imagePose);
 			isKeyFrame = true;
 
-			imageDb.addImage(curKf, curImage->allKeypoints(), curImage->allDescriptors());
+//			imageDb.addImage(curKf, curImage->allKeypoints(), curImage->allDescriptors());
 			kfToFrameNum[curKf] = i;
 		}
 
