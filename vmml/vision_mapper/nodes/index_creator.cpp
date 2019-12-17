@@ -79,7 +79,8 @@ int main(int argc, char *argv[])
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
 
-	const int maxLim = images.size();
+//	const int maxLim = images.size();
+	const int maxLim = 2000;
 	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
@@ -112,6 +113,28 @@ int main(int argc, char *argv[])
 	cout << "Done mapping\n";
 
 	// Image search
+	auto queryFrame = BaseFrame::create(queryImg, camera0);
+	queryFrame->computeFeatures(bFeats);
+	vector<vector<cv::DMatch>> featureMatchesFromIdx;
+
+	// Searching the query descriptors against the features
+	imageDb.searchDescriptors(queryFrame->allDescriptors(), featureMatchesFromIdx, 2, 64);
+
+	// Filtering matches according to the ratio test
+	vector<cv::DMatch> matches;
+	for (unsigned m = 0; m < featureMatchesFromIdx.size(); m++) {
+		if (featureMatchesFromIdx[m][0].distance < featureMatchesFromIdx[m][1].distance * 0.8) {
+			matches.push_back(featureMatchesFromIdx[m][0]);
+		}
+	}
+
+    map<imid,double> image_matches;
+    // We look for similar images according to the good matches found
+    imageDb.searchImages(queryFrame->allDescriptors(), matches, image_matches);
+
+    for (auto &imgMatch: image_matches) {
+    	cout << imgMatch.first << ": " << imgMatch.second << endl;
+    }
 
 	return 0;
 }

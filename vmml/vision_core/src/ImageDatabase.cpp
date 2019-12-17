@@ -550,15 +550,9 @@ void ImageDatabase::addImage(
 void ImageDatabase::searchImages(
 	const cv::Mat& descs,
 	const std::vector<cv::DMatch>& gmatches,
-	std::vector<ImageMatch>* img_matches,
-	bool sort)
+	std::map<imid, double> &img_matches)
+const
 {
-	// Initializing the resulting structure
-	img_matches->resize(nimages_);
-	for (unsigned i = 0; i < nimages_; i++) {
-		img_matches->at(i).image_id = i;
-	}
-
 	// Counting the number of each word in the current document
 	std::unordered_map<int, int> nwi_map;
 	for (unsigned match_index = 0; match_index < gmatches.size(); match_index++) {
@@ -574,29 +568,29 @@ void ImageDatabase::searchImages(
 	// We process all the matchings again to increase the scores
 	for (unsigned match_index = 0; match_index < gmatches.size(); match_index++) {
 		int train_idx = gmatches[match_index].trainIdx;
-		BinaryDescriptor::Ptr desc = id_to_desc_[train_idx];
+		auto desc = id_to_desc_.at(train_idx);
 
 		// Computing the TF term
 		double tf = static_cast<double>(nwi_map[train_idx]) / descs.rows;
 
 		// Computing the IDF term
 		std::unordered_set<unsigned> nw;
-		for (unsigned i = 0; i < inv_index_[desc].size(); i++) {
-			nw.insert(inv_index_[desc][i].image_id);
+		for (uint i=0; i<inv_index_.at(desc).size(); ++i) {
+			nw.insert(inv_index_.at(desc).at(i).image_id);
 		}
 		double idf = log(static_cast<double>(nimages_) / nw.size());
 
 		// Computing the final TF-IDF weighting term
 		double tfidf = tf * idf;
 
-		for (unsigned i = 0; i < inv_index_[desc].size(); i++) {
-			int im = inv_index_[desc][i].image_id;
-			img_matches->at(im).score += tfidf;
+		for (uint i=0; i<inv_index_.at(desc).size(); ++i) {
+			int im = inv_index_.at(desc).at(i).image_id;
+			try {
+				img_matches.at(im) += tfidf;
+			} catch (out_of_range &e) {
+				img_matches[im] = tfidf;
+			}
 		}
-	}
-
-	if (sort) {
-		std::sort(img_matches->begin(), img_matches->end());
 	}
 }
 

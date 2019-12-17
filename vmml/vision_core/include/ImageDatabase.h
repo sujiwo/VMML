@@ -9,6 +9,7 @@
 #define VMML_CORE_IMAGEDATABASE_H_
 
 #include <memory>
+#include <map>
 #include <unordered_set>
 #include <unordered_map>
 #include <queue>
@@ -16,6 +17,9 @@
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/core/hal/hal.hpp>
+
+#include "cvobj_serialization.h"
+#include <boost/serialization/serialization.hpp>
 
 
 namespace Vmml {
@@ -140,25 +144,21 @@ class BinaryTreeNode {
 	return is_leaf_;
 	}
 
-	inline void setLeaf(const bool leaf) {
-	is_leaf_ = leaf;
-	}
+	inline void setLeaf(const bool leaf)
+	{ is_leaf_ = leaf; }
 
-	inline bool isBad() {
-	return is_bad_;
-	}
+	inline bool isBad() const
+	{ return is_bad_; }
 
 	inline void setBad(const bool bad) {
 	is_bad_ = bad;
 	}
 
-	inline BinaryDescriptor::Ptr getDescriptor() {
-	return desc_;
-	}
+	inline BinaryDescriptor::Ptr getDescriptor()
+	{ return desc_; }
 
-	inline void setDescriptor(BinaryDescriptor::Ptr desc) {
-	desc_ = desc;
-	}
+	inline void setDescriptor(BinaryDescriptor::Ptr desc)
+	{ desc_ = desc; }
 
 	inline BinaryTreeNode::Ptr getRoot() {
 	return root_;
@@ -379,23 +379,23 @@ private:
 
 struct InvIndexItem
 {
-InvIndexItem() :
-  image_id(0),
-  pt(0.0f, 0.0f),
-  dist(DBL_MAX),
-  kp_ind(-1) {}
+	InvIndexItem() :
+	  image_id(0),
+	  pt(0.0f, 0.0f),
+	  dist(DBL_MAX),
+	  kp_ind(-1) {}
 
-InvIndexItem(const int id, const cv::Point2f &kp, const double d, const int kp_i = -1) :
-	image_id(id),
-	pt(kp),
-	dist(d),
-	kp_ind(kp_i)
-{}
+	InvIndexItem(const int id, const cv::Point2f &kp, const double d, const int kp_i = -1) :
+		image_id(id),
+		pt(kp),
+		dist(d),
+		kp_ind(kp_i)
+	{}
 
-unsigned image_id;
-cv::Point2f pt;
-double dist;
-int kp_ind;
+	unsigned image_id;
+	cv::Point2f pt;
+	double dist;
+	int kp_ind;
 };
 
 
@@ -453,8 +453,8 @@ public:
 
 	void searchImages(const cv::Mat& descs,
 				   const std::vector<cv::DMatch>& gmatches,
-				   std::vector<ImageMatch>* img_matches,
-				   bool sort = true);
+				   std::map<imid, double> &img_matches)
+	const;
 
 	std::vector<imid> searchImages(const cv::Mat &image) const;
 
