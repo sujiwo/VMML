@@ -17,15 +17,14 @@
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/core/hal/hal.hpp>
-
-#include "cvobj_serialization.h"
 #include <boost/serialization/serialization.hpp>
+#include "cvobj_serialization.h"
+#include "utilities.h"
+
 
 
 namespace Vmml {
 
-
-typedef uint64_t imid;
 
 
 class BinaryDescriptor
@@ -131,7 +130,7 @@ public:
 
 
 class BinaryTreeNode {
- public:
+public:
 
 	typedef std::shared_ptr<BinaryTreeNode> Ptr;
 
@@ -141,7 +140,7 @@ class BinaryTreeNode {
 
 	// Methods
 	inline bool isLeaf() {
-	return is_leaf_;
+		return is_leaf_;
 	}
 
 	inline void setLeaf(const bool leaf)
@@ -150,9 +149,8 @@ class BinaryTreeNode {
 	inline bool isBad() const
 	{ return is_bad_; }
 
-	inline void setBad(const bool bad) {
-	is_bad_ = bad;
-	}
+	inline void setBad(const bool bad)
+	{ is_bad_ = bad; }
 
 	inline BinaryDescriptor::Ptr getDescriptor()
 	{ return desc_; }
@@ -160,56 +158,41 @@ class BinaryTreeNode {
 	inline void setDescriptor(BinaryDescriptor::Ptr desc)
 	{ desc_ = desc; }
 
-	inline BinaryTreeNode::Ptr getRoot() {
-	return root_;
-	}
+	inline BinaryTreeNode::Ptr getRoot()
+	{ return root_; }
 
 	inline void setRoot(BinaryTreeNode::Ptr root)
-	{
-	root_ = root;
-	}
+	{ root_ = root;	}
 
 	inline double distance(BinaryDescriptor::Ptr desc)
-	{
-	return BinaryDescriptor::distHamming(*desc_, *desc);
-	}
+	{ return BinaryDescriptor::distHamming(*desc_, *desc); }
 
-	inline void addChildNode(BinaryTreeNode::Ptr child) {
-	ch_nodes_.insert(child);
-	}
+	inline void addChildNode(BinaryTreeNode::Ptr child)
+	{ ch_nodes_.insert(child); }
 
-	inline void deleteChildNode(BinaryTreeNode::Ptr child) {
-	ch_nodes_.erase(child);
-	}
+	inline void deleteChildNode(BinaryTreeNode::Ptr child)
+	{ ch_nodes_.erase(child); }
 
-	inline std::unordered_set<BinaryTreeNode::Ptr>* getChildrenNodes() {
-	return &ch_nodes_;
-	}
+	inline std::unordered_set<BinaryTreeNode::Ptr>* getChildrenNodes()
+	{ return &ch_nodes_; }
 
-	inline unsigned childNodeSize() {
-	return ch_nodes_.size();
-	}
+	inline unsigned childNodeSize() const
+	{ return ch_nodes_.size(); }
 
-	inline void addChildDescriptor(BinaryDescriptor::Ptr child) {
-	ch_descs_.insert(child);
-	}
+	inline void addChildDescriptor(BinaryDescriptor::Ptr child)
+	{ ch_descs_.insert(child); }
 
-	inline void deleteChildDescriptor(BinaryDescriptor::Ptr child) {
-	ch_descs_.erase(child);
-	}
+	inline void deleteChildDescriptor(BinaryDescriptor::Ptr child)
+	{ ch_descs_.erase(child); }
 
 	inline std::unordered_set<BinaryDescriptor::Ptr>* getChildrenDescriptors()
-	{
-	return &ch_descs_;
-	}
+	{ return &ch_descs_; }
 
-	inline unsigned childDescriptorSize() {
-	return ch_descs_.size();
-	}
+	inline unsigned childDescriptorSize() const
+	{ return ch_descs_.size(); }
 
-	inline void selectNewCenter() {
-	desc_ = *std::next(ch_descs_.begin(), rand() % ch_descs_.size());
-	}
+	inline void selectNewCenter()
+	{ desc_ = *std::next(ch_descs_.begin(), rand() % ch_descs_.size()); }
 
 	typedef std::unordered_set<BinaryTreeNode::Ptr> Set;
 
@@ -392,7 +375,7 @@ struct InvIndexItem
 		kp_ind(kp_i)
 	{}
 
-	unsigned image_id;
+	kfid image_id;
 	cv::Point2f pt;
 	double dist;
 	int kp_ind;
@@ -446,17 +429,17 @@ public:
 			   const std::vector<cv::KeyPoint>& kps,
 			   const cv::Mat& descs);
 
-	void addImage(const unsigned image_id,
+	void addImage(const kfid image_id,
 			   const std::vector<cv::KeyPoint>& kps,
 			   const cv::Mat& descs,
 			   const std::vector<cv::DMatch>& matches);
 
 	void searchImages(const cv::Mat& descs,
 				   const std::vector<cv::DMatch>& gmatches,
-				   std::map<imid, double> &img_matches)
-	const;
+				   vector<ImageMatch> &img_matches)
+		const;
 
-	std::vector<imid> searchImages(const cv::Mat &image) const;
+	std::vector<kfid> searchImages(const cv::Mat &image) const;
 
 	void searchDescriptors(
 		const cv::Mat& descs,
@@ -495,6 +478,8 @@ private:
 	unsigned ndesc_;
 	MergePolicy merge_policy_;
 	bool purge_descriptors_;
+
+	// Minimum times a feature has shown up in multiple times before being discarded
 	unsigned min_feat_apps_;
 
 	std::vector<BinaryTree::Ptr> trees_;

@@ -73,11 +73,15 @@ int main(int argc, char *argv[])
 	trackGnss.dump("gnss.csv");
 
 	Trajectory trackImage;
+	kfid curKf = 0;
+	map<kfid, int> kfToFrameNum;
 
-	ImageDatabase imageDb;
+	ImageDatabase imageDb(16, 150, 4, ImageDatabase::MergePolicy::MERGE_POLICY_NONE, false);
 
 	auto imageAnchor = BaseFrame::create(images.at(0), camera0);
 	imageAnchor->computeFeatures(bFeats);
+	imageDb.addImage(curKf, imageAnchor->allKeypoints(), imageAnchor->allDescriptors());
+	kfToFrameNum[curKf] = 0;
 
 //	const int maxLim = images.size();
 	const int maxLim = 2000;
@@ -95,16 +99,17 @@ int main(int argc, char *argv[])
 		bool isKeyFrame=false;
 
 		if (comparisonScore<=imageSameThrScore) {
+			curKf += 1;
 			imageAnchor = curImage;
 			PoseStamped imagePose = trackGnss.at(imageTimestamp);
 			trackImage.push_back(imagePose);
 			isKeyFrame = true;
 
-			auto kfDescriptors = curImage->allDescriptors();
-			imageDb.addImage(i, curImage->allKeypoints(), kfDescriptors);
+			imageDb.addImage(curKf, curImage->allKeypoints(), curImage->allDescriptors());
+			kfToFrameNum[curKf] = i;
 		}
 
-		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << "; Score: " << comparisonScore << endl;
+		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << endl;
 	}
 
 	trackGnss.dump("gnss.csv");
@@ -128,13 +133,18 @@ int main(int argc, char *argv[])
 		}
 	}
 
-    map<imid,double> image_matches;
+    vector<ImageMatch> image_matches;
     // We look for similar images according to the good matches found
     imageDb.searchImages(queryFrame->allDescriptors(), matches, image_matches);
 
-    for (auto &imgMatch: image_matches) {
-    	cout << imgMatch.first << ": " << imgMatch.second << endl;
+    for (int i=0; i<min(5, (int)image_matches.size()); ++i) {
+    	cout << image_matches[i].image_id << " : " << image_matches[i].score << endl;
     }
+//    for (auto &imgMatch: image_matches) {
+//    	cout << imgMatch.first << ": " << imgMatch.second << endl;
+//    }
+    cout << "# of images: " << imageDb.numImages() << endl;
+    cout << "# of descriptors: " << imageDb.numDescriptors() << endl;
 
 	return 0;
 }

@@ -108,21 +108,22 @@ BinaryTree::~BinaryTree()
 { deleteTree(); }
 
 
-void BinaryTree::buildTree() {
-  // Deleting the previous tree, if exists any
-  deleteTree();
+void BinaryTree::buildTree()
+{
+	// Deleting the previous tree, if exists any
+	deleteTree();
 
-  degraded_nodes_ = 0;
-  nvisited_nodes_ = 0;
+	degraded_nodes_ = 0;
+	nvisited_nodes_ = 0;
 
-  // Creating the root node
-  root_ = std::make_shared<BinaryTreeNode>();
-  nset_.insert(root_);
+	// Creating the root node
+	root_ = std::make_shared<BinaryTreeNode>();
+	nset_.insert(root_);
 
-  // Generating a new set with the descriptor's ids
-  BinaryDescriptor::Set descs = *dset_;
+	// Generating a new set with the descriptor's ids
+	BinaryDescriptor::Set descs = *dset_;
 
-  buildNode(descs, root_);
+	buildNode(descs, root_);
 }
 
 
@@ -197,13 +198,13 @@ BinaryTree::buildNode(BinaryDescriptor::Set dset, BinaryTreeNode::Ptr root)
 
 void BinaryTree::deleteTree()
 {
-  if (nset_.size() > 0) {
-    nset_.clear();
-    desc_to_node_.clear();
+	if (nset_.size() > 0) {
+		nset_.clear();
+		desc_to_node_.clear();
 
-    // Invalidating last reference to root
-    root_ = nullptr;
-  }
+		// Invalidating last reference to root
+		root_ = nullptr;
+	}
 }
 
 unsigned BinaryTree::traverseFromRoot(BinaryDescriptor::Ptr q,
@@ -220,58 +221,59 @@ void BinaryTree::traverseFromNode(BinaryDescriptor::Ptr q,
                                   NodeQueue::Ptr pq,
                                   DescriptorQueue::Ptr r)
 {
-  nvisited_nodes_++;
-  // If its a leaf node, the search ends
-  if (n->isLeaf()) {
-    // Adding points to R
-    std::unordered_set<BinaryDescriptor::Ptr>* descs =
-                                                  n->getChildrenDescriptors();
-    for (auto it = (*descs).begin(); it != (*descs).end(); it++) {
-      BinaryDescriptor::Ptr d = *it;
-      double dist = BinaryDescriptor::distHamming(*q, *d);
-      DescriptorQueueItem item(dist, d);
-      r->push(item);
-    }
-  } else {
-    // Search continues
-    std::unordered_set<BinaryTreeNode::Ptr>* nodes = n->getChildrenNodes();
-    int best_node = -1;
-    double min_dist = DBL_MAX;
+	nvisited_nodes_++;
+	// If its a leaf node, the search ends
+	if (n->isLeaf()) {
+		// Adding points to R
+		std::unordered_set<BinaryDescriptor::Ptr>* descs =
+				n->getChildrenDescriptors();
+		for (auto it = (*descs).begin(); it != (*descs).end(); it++) {
+			BinaryDescriptor::Ptr d = *it;
+			double dist = BinaryDescriptor::distHamming(*q, *d);
+			DescriptorQueueItem item(dist, d);
+			r->push(item);
+		}
+	} else {
+		// Search continues
+		std::unordered_set<BinaryTreeNode::Ptr>* nodes = n->getChildrenNodes();
+		int best_node = -1;
+		double min_dist = DBL_MAX;
 
-    // Computing distances to nodes
-    std::vector<NodeQueueItem> items;
-    unsigned node_id = 0;
-    // Computing distances to nodes
-    for (auto it = (*nodes).begin(); it != (*nodes).end(); it++) {
-      BinaryTreeNode::Ptr bn = *it;
-      double dist = bn->distance(q);
-      NodeQueueItem item(dist, tree_id_, bn);
-      items.push_back(item);
+		// Computing distances to nodes
+		std::vector<NodeQueueItem> items;
+		unsigned node_id = 0;
+		// Computing distances to nodes
+		for (auto it = (*nodes).begin(); it != (*nodes).end(); it++) {
+			BinaryTreeNode::Ptr bn = *it;
+			double dist = bn->distance(q);
+			NodeQueueItem item(dist, tree_id_, bn);
+			items.push_back(item);
 
-      if (dist < min_dist) {
-        min_dist = dist;
-        best_node = node_id;
-      }
+			if (dist < min_dist) {
+				min_dist = dist;
+				best_node = node_id;
+			}
 
-      node_id++;
-    }
+			node_id++;
+		}
 
-    assert(best_node != -1);
+		assert(best_node != -1);
 
-    // Adding remaining nodes to pq
-    for (unsigned i = 0; i < items.size(); i++) {
-      // Is it the best node?
-      if (i == static_cast<unsigned>(best_node)) {
-        continue;
-      }
+		// Adding remaining nodes to pq
+		for (unsigned i = 0; i < items.size(); i++) {
+			// Is it the best node?
+			if (i == static_cast<unsigned>(best_node)) {
+				continue;
+			}
 
-      pq->push(items[i]);
-    }
+			pq->push(items[i]);
+		}
 
-    // Traversing the best node
-    traverseFromNode(q, items[best_node].node, pq, r);
-  }
+		// Traversing the best node
+		traverseFromNode(q, items[best_node].node, pq, r);
+	}
 }
+
 
 BinaryTreeNode::Ptr
 BinaryTree::searchFromRoot(BinaryDescriptor::Ptr q)
@@ -280,135 +282,142 @@ const
 	return searchFromNode(q, root_);
 }
 
+
 BinaryTreeNode::Ptr
 BinaryTree::searchFromNode(BinaryDescriptor::Ptr q, BinaryTreeNode::Ptr n)
 const
 {
-  // If it's a leaf node, the search ends
-  if (n->isLeaf()) {
-    // This is the node where this descriptor should be included
-    return n;
-  } else {
-    // Search continues
-    unordered_set<BinaryTreeNode::Ptr>* nodes = n->getChildrenNodes();
-    int best_node = -1;
-    double min_dist = DBL_MAX;
+	// If it's a leaf node, the search ends
+	if (n->isLeaf()) {
+		// This is the node where this descriptor should be included
+		return n;
+	} else {
+		// Search continues
+		unordered_set<BinaryTreeNode::Ptr>* nodes = n->getChildrenNodes();
+		int best_node = -1;
+		double min_dist = DBL_MAX;
 
-    // Computing distances to nodes
-    std::vector<BinaryTreeNode::Ptr> items;
-    // Computing distances to nodes
-    for (auto it = (*nodes).begin(); it != (*nodes).end(); it++) {
-      BinaryTreeNode::Ptr bn = *it;
-      items.push_back(bn);
-      double dist = bn->distance(q);
+		// Computing distances to nodes
+		std::vector<BinaryTreeNode::Ptr> items;
+		// Computing distances to nodes
+		for (auto it = (*nodes).begin(); it != (*nodes).end(); it++) {
+			BinaryTreeNode::Ptr bn = *it;
+			items.push_back(bn);
+			double dist = bn->distance(q);
 
-      if (dist < min_dist) {
-        min_dist = dist;
-        best_node = static_cast<int>(items.size()) - 1;
-      }
-    }
+			if (dist < min_dist) {
+				min_dist = dist;
+				best_node = static_cast<int>(items.size()) - 1;
+			}
+		}
 
-    assert(best_node != -1);
+		assert(best_node != -1);
 
-    // Searching in the best node
-    return searchFromNode(q, items[best_node]);
-  }
+		// Searching in the best node
+		return searchFromNode(q, items[best_node]);
+	}
 }
+
 
 void BinaryTree::addDescriptor(BinaryDescriptor::Ptr q)
 {
-  BinaryTreeNode::Ptr n = searchFromRoot(q);
-  assert(n->isLeaf());
-  if (n->childDescriptorSize() + 1 < s_) {
-    // There is enough space at this node for this descriptor, so we add it
-    n->addChildDescriptor(q);
-    // Storing the reference of the node where the descriptor hangs
-    desc_to_node_[q] = n;
-  } else {
-    // This node should be split
-    n->setLeaf(false);
+	BinaryTreeNode::Ptr n = searchFromRoot(q);
+	assert(n->isLeaf());
+	if (n->childDescriptorSize() + 1 < s_) {
+		// There is enough space at this node for this descriptor, so we add it
+		n->addChildDescriptor(q);
+		// Storing the reference of the node where the descriptor hangs
+		desc_to_node_[q] = n;
+	} else {
+		// This node should be split
+		n->setLeaf(false);
 
-    // Gathering the current descriptors
-    std::unordered_set<BinaryDescriptor::Ptr>* descs =
-                                                  n->getChildrenDescriptors();
-    BinaryDescriptor::Set set;
-    for (auto it = (*descs).begin(); it != (*descs).end(); it++) {
-      BinaryDescriptor::Ptr d = *it;
-      set.insert(d);
-    }
-    set.insert(q);  // Adding the new descritor to the set
+		// Gathering the current descriptors
+		std::unordered_set<BinaryDescriptor::Ptr>* descs =
+				n->getChildrenDescriptors();
+		BinaryDescriptor::Set set;
+		for (auto it = (*descs).begin(); it != (*descs).end(); it++) {
+			BinaryDescriptor::Ptr d = *it;
+			set.insert(d);
+		}
+		set.insert(q);  // Adding the new descritor to the set
 
-    // Rebuilding this node
-    buildNode(set, n);
-  }
+		// Rebuilding this node
+		buildNode(set, n);
+	}
 }
 
 
 void BinaryTree::deleteDescriptor(BinaryDescriptor::Ptr q)
 {
-  // We get the node where the descriptor is stored
-  BinaryTreeNode::Ptr node = desc_to_node_[q];
-  assert(node->isLeaf());
+	// We get the node where the descriptor is stored
+	BinaryTreeNode::Ptr node = desc_to_node_[q];
+	assert(node->isLeaf());
 
-  // We remove q from the node
-  node->deleteChildDescriptor(q);
+	// We remove q from the node
+	node->deleteChildDescriptor(q);
 
-  if (node->childDescriptorSize() > 0) {
-    // We select a new center, if required
-    if (node->getDescriptor() == q) {
-      // Selecting a new center
-      node->selectNewCenter();
-    }
-  } else {
-    // Otherwise, we need to remove the node
-    BinaryTreeNode::Ptr parent = node->getRoot();
-    parent->deleteChildNode(node);
-    nset_.erase(node);
+	if (node->childDescriptorSize() > 0) {
+		// We select a new center, if required
+		if (node->getDescriptor() == q) {
+			// Selecting a new center
+			node->selectNewCenter();
+		}
+	} else {
+		// Otherwise, we need to remove the node
+		BinaryTreeNode::Ptr parent = node->getRoot();
+		parent->deleteChildNode(node);
+		nset_.erase(node);
 
-    deleteNodeRecursive(parent);
-  }
+		deleteNodeRecursive(parent);
+	}
 
-  desc_to_node_.erase(q);
+	desc_to_node_.erase(q);
 }
+
 
 void BinaryTree::deleteNodeRecursive(BinaryTreeNode::Ptr n)
 {
-  assert(!n->isLeaf());
-  // Validating if this node is degraded
-  if (n->childNodeSize() < k_2_ && !n->isBad()) {
-    degraded_nodes_++;
-    n->setBad(true);
-  }
+	assert(!n->isLeaf());
+	// Validating if this node is degraded
+	if (n->childNodeSize() < k_2_ && !n->isBad()) {
+		degraded_nodes_++;
+		n->setBad(true);
+	}
 
-  if (n->childNodeSize() == 0 && n != root_) {
-    // We remove this node
-    BinaryTreeNode::Ptr parent = n->getRoot();
-    parent->deleteChildNode(n);
-    nset_.erase(n);
+	if (n->childNodeSize() == 0 && n != root_) {
+		// We remove this node
+		BinaryTreeNode::Ptr parent = n->getRoot();
+		parent->deleteChildNode(n);
+		nset_.erase(n);
 
-    deleteNodeRecursive(parent);
-  }
+		deleteNodeRecursive(parent);
+	}
 }
 
-void BinaryTree::printTree() {
-  printNode(root_);
+
+void BinaryTree::printTree()
+{
+	printNode(root_);
 }
 
-void BinaryTree::printNode(BinaryTreeNode::Ptr n) {
-  std::cout << "---" << std::endl;
-  std::cout << "Node: " << n << std::endl;
-  std::cout << (n->isLeaf() ? "Leaf" : "Node") << std::endl;
-  std::cout << "Descriptor: " << n->getDescriptor() << std::endl;
-  if (n->isLeaf()) {
-    std::cout << "Children descriptors: " <<
-                           n->childDescriptorSize() << std::endl;
-  } else {
-    std::cout << "Children nodes: " << n->childNodeSize() << std::endl;
-    std::unordered_set<BinaryTreeNode::Ptr>* nodes = n->getChildrenNodes();
-    for (auto it = (*nodes).begin(); it != (*nodes).end(); it++) {
-      printNode(*it);
-    }
-  }
+
+void BinaryTree::printNode(BinaryTreeNode::Ptr n)
+{
+	std::cout << "---" << std::endl;
+	std::cout << "Node: " << n << std::endl;
+	std::cout << (n->isLeaf() ? "Leaf" : "Node") << std::endl;
+	std::cout << "Descriptor: " << n->getDescriptor() << std::endl;
+	if (n->isLeaf()) {
+		std::cout << "Children descriptors: " <<
+			n->childDescriptorSize() << std::endl;
+	} else {
+		std::cout << "Children nodes: " << n->childNodeSize() << std::endl;
+		std::unordered_set<BinaryTreeNode::Ptr>* nodes = n->getChildrenNodes();
+		for (auto it = (*nodes).begin(); it != (*nodes).end(); it++) {
+			printNode(*it);
+		}
+	}
 }
 
 
@@ -474,7 +483,7 @@ void ImageDatabase::addImage(
 
 
 void ImageDatabase::addImage(
-	const unsigned image_id,
+	const kfid image_id,
 	const std::vector<cv::KeyPoint>& kps,
 	const cv::Mat& descs,
 	const std::vector<cv::DMatch>& matches)
@@ -540,7 +549,7 @@ void ImageDatabase::addImage(
 
 	// Deleting unstable features
 	if (purge_descriptors_) {
-	purgeDescriptors(image_id);
+		purgeDescriptors(image_id);
 	}
 
 	nimages_++;
@@ -550,9 +559,11 @@ void ImageDatabase::addImage(
 void ImageDatabase::searchImages(
 	const cv::Mat& descs,
 	const std::vector<cv::DMatch>& gmatches,
-	std::map<imid, double> &img_matches)
+	vector<ImageMatch> &img_matches)
 const
 {
+	std::map<kfid, double> imgMatchesMap;
+
 	// Counting the number of each word in the current document
 	std::unordered_map<int, int> nwi_map;
 	for (unsigned match_index = 0; match_index < gmatches.size(); match_index++) {
@@ -586,12 +597,19 @@ const
 		for (uint i=0; i<inv_index_.at(desc).size(); ++i) {
 			int im = inv_index_.at(desc).at(i).image_id;
 			try {
-				img_matches.at(im) += tfidf;
+				imgMatchesMap.at(im) += tfidf;
 			} catch (out_of_range &e) {
-				img_matches[im] = tfidf;
+				imgMatchesMap[im] = tfidf;
 			}
 		}
 	}
+
+	img_matches.clear();
+	for (auto &mt: imgMatchesMap) {
+		ImageMatch candidate(mt.first, mt.second);
+		img_matches.push_back(candidate);
+	}
+	std::sort(img_matches.begin(), img_matches.end());
 }
 
 
@@ -829,10 +847,10 @@ void ImageDatabase::purgeDescriptors(const uint curr_img)
 }
 
 
-std::vector<imid>
+std::vector<kfid>
 ImageDatabase::searchImages(const cv::Mat &image) const
 {
-	vector<imid> candidates;
+	vector<kfid> candidates;
 	return candidates;
 }
 
