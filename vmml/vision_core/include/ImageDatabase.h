@@ -212,6 +212,13 @@ private:
 	BinaryTreeNode::Ptr root_;
 	std::unordered_set<BinaryTreeNode::Ptr> ch_nodes_;
 	std::unordered_set<BinaryDescriptor::Ptr> ch_descs_;
+
+	struct BinaryTreeNodeData_ {
+		bool is_leaf_;
+		bool is_bad_;
+		uint64 descriptorId;
+		uint64 root_;
+	};
 };
 
 

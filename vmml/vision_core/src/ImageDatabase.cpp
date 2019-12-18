@@ -464,22 +464,29 @@ void
 BinaryTree::encode (const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId)
 const
 {
-	vector<uint64> nodesEnc(2*nset_.size());
-
-	set<uint64> dsetEnc;									// output this
+	set<uint64> dsetEnc;														// output this
 	for (auto &desc: *dset_) {
 		auto i_d = descriptorPtrToId.at(desc);
 		dsetEnc.insert(i_d);
 	}
 
-	map<BinaryTreeNode::Ptr, uint64> nodeToId;				// output this
-	uint64 nId=1;
+	map<BinaryTreeNode::Ptr, uint64> nodeToId;									// output this
+	vector<BinaryTreeNode::BinaryTreeNodeData_> nodeData(nset_.size());			// output this
+	uint64 nId=0;
 	for (auto &node: nset_) {
 		nodeToId[node] = nId;
 		nId++;
 	}
+	for (auto &pr: nodeToId) {
+		nodeData[pr.second] = BinaryTreeNode::BinaryTreeNodeData_({
+			pr.first->is_leaf_,
+			pr.first->is_bad_,
+			descriptorPtrToId.at(pr.first->desc_),
+			nodeToId.at(pr.first->root_)
+		});
+	}
 
-	map<uint64, uint64> desc_to_node_enc;					// output this
+	map<uint64, uint64> desc_to_node_enc;										// output this
 	for (auto &p: desc_to_node_) {
 		uint64 descId = descriptorPtrToId.at(p.first);
 		uint64 nodeId = nodeToId.at(p.second);
@@ -487,9 +494,9 @@ const
 	}
 
 	// encode the tree
-	uint64 rootId = nodeToId.at(root_);						// output this
-	map<uint64, set<uint64>> nodesChilds;					// output this
-	map<uint64, set<uint64>> nodesChildDescriptions;		// output this
+	uint64 rootId = nodeToId.at(root_);											// output this
+	unordered_map<uint64, set<uint64>> nodesChilds;								// output this
+	unordered_map<uint64, set<uint64>> nodesChildDescriptions;					// output this
 	for (auto &node: nset_) {
 		auto nodeId = nodeToId.at(node);
 		set<uint64> chNodes, chDescs;
