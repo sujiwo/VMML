@@ -487,9 +487,23 @@ const
 	}
 
 	// encode the tree
-	uint64 rootId = nodeToId.at(root_);
-
-	// XXX: Unfinished!
+	uint64 rootId = nodeToId.at(root_);						// output this
+	map<uint64, set<uint64>> nodesChilds;					// output this
+	map<uint64, set<uint64>> nodesChildDescriptions;		// output this
+	for (auto &node: nset_) {
+		auto nodeId = nodeToId.at(node);
+		set<uint64> chNodes, chDescs;
+		for (auto &ch: node->ch_nodes_) {
+			uint64 chNodeId = nodeToId.at(ch);
+			chNodes.insert(chNodeId);
+		}
+		for (auto &chDsc: node->ch_descs_) {
+			uint64 chDscId = descriptorPtrToId.at(chDsc);
+			chDescs.insert(chDscId);
+		}
+		nodesChilds[nodeId] = chNodes;
+		nodesChildDescriptions[nodeId] = chDescs;
+	}
 }
 
 
