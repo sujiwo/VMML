@@ -18,6 +18,7 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/core/hal/hal.hpp>
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/split_member.hpp>
 #include "cvobj_serialization.h"
 #include "utilities.h"
 
@@ -57,7 +58,7 @@ public:
 		bits_[nbyte] &= ~(1 << nb);
 	}
 
-	inline int size()
+	inline int size() const
 	{ return static_cast<int>(size_in_bits_); }
 
 	inline static double distHamming(const BinaryDescriptor& a, const BinaryDescriptor& b)
@@ -379,6 +380,15 @@ struct InvIndexItem
 	cv::Point2f pt;
 	double dist;
 	int kp_ind;
+
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{
+		ar & image_id
+		& pt
+		& dist
+		& kp_ind;
+	}
 };
 
 

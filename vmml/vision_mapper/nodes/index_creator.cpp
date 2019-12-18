@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		imageDb.addImage2(i, curImage->allKeypoints(), curImage->allDescriptors());
+//		imageDb.addImage2(i, curImage->allKeypoints(), curImage->allDescriptors());
 
 		float comparisonScore = compareAndScore(*imageAnchor, *curImage);
 		bool isKeyFrame=false;
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 			trackImage.push_back(imagePose);
 			isKeyFrame = true;
 
-//			imageDb.addImage(curKf, curImage->allKeypoints(), curImage->allDescriptors());
+			imageDb.addImage2(curKf, curImage->allKeypoints(), curImage->allDescriptors());
 			kfToFrameNum[curKf] = i;
 		}
 
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     imageDb.searchImages(queryFrame->allDescriptors(), matches, image_matches);
 
     for (int i=0; i<min(5, (int)image_matches.size()); ++i) {
-    	cout << image_matches[i].image_id << " : " << image_matches[i].score << endl;
+    	cout << image_matches[i].image_id << '-' << kfToFrameNum.at(image_matches[i].image_id) << " : " << image_matches[i].score << endl;
     }
 //    for (auto &imgMatch: image_matches) {
 //    	cout << imgMatch.first << ": " << imgMatch.second << endl;
