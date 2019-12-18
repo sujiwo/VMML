@@ -37,6 +37,24 @@ BinaryDescriptor::BinaryDescriptor(const BinaryDescriptor& bd) :
 	memcpy(bits_, bd.bits_, sizeof(unsigned char) * size_in_bytes_);
 }
 
+
+BinaryDescriptor::ustring
+BinaryDescriptor::serialize() const
+{
+	ustring s(bits_, size_in_bytes_);
+	return s;
+}
+
+
+BinaryDescriptor::Ptr
+BinaryDescriptor::deserialize(const BinaryDescriptor::ustring& s)
+{
+	vector<unsigned char> sv(s.begin(), s.end());
+	cv::Mat dm(sv, true);
+	return Ptr(new BinaryDescriptor(dm));
+}
+
+
 BinaryDescriptor::~BinaryDescriptor()
 {
 	delete [] bits_;
@@ -106,6 +124,27 @@ BinaryTree::BinaryTree(BinaryDescriptor::SetPtr dset,
 
 BinaryTree::~BinaryTree()
 { deleteTree(); }
+
+
+int
+BinaryTree::getDepth() const
+{
+	int depth=0, maxd=0;
+	BinaryTreeNode::Ptr parent=root_, child;
+
+	while(true) {
+		if (parent->ch_nodes_.size()==0) {
+
+		}
+		else {
+
+		}
+		if (parent==root_ and child==root_ and depth==0)
+			break;
+	}
+
+	return depth;
+}
 
 
 void BinaryTree::buildTree()
@@ -340,7 +379,7 @@ void BinaryTree::addDescriptor(BinaryDescriptor::Ptr q)
 			BinaryDescriptor::Ptr d = *it;
 			set.insert(d);
 		}
-		set.insert(q);  // Adding the new descritor to the set
+		set.insert(q);  // Adding the new descriptor to the set
 
 		// Rebuilding this node
 		buildNode(set, n);
@@ -418,6 +457,39 @@ void BinaryTree::printNode(BinaryTreeNode::Ptr n)
 			printNode(*it);
 		}
 	}
+}
+
+
+void
+BinaryTree::encode (const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId)
+const
+{
+	vector<uint64> nodesEnc(2*nset_.size());
+
+	set<uint64> dsetEnc;									// output this
+	for (auto &desc: *dset_) {
+		auto i_d = descriptorPtrToId.at(desc);
+		dsetEnc.insert(i_d);
+	}
+
+	map<BinaryTreeNode::Ptr, uint64> nodeToId;				// output this
+	uint64 nId=1;
+	for (auto &node: nset_) {
+		nodeToId[node] = nId;
+		nId++;
+	}
+
+	map<uint64, uint64> desc_to_node_enc;					// output this
+	for (auto &p: desc_to_node_) {
+		uint64 descId = descriptorPtrToId.at(p.first);
+		uint64 nodeId = nodeToId.at(p.second);
+		desc_to_node_enc[descId] = nodeId;
+	}
+
+	// encode the tree
+	uint64 rootId = nodeToId.at(root_);
+
+	// XXX: Unfinished!
 }
 
 
@@ -868,6 +940,26 @@ ImageDatabase::searchImages(const cv::Mat &image) const
 {
 	vector<kfid> candidates;
 	return candidates;
+}
+
+
+void
+ImageDatabase::buildSerialization() const
+{
+	vector<BinaryDescriptor::ustring> descriptors(dset_.size());
+	map<BinaryDescriptor::ustring, uint64_t> descriptorNumber;
+	map<BinaryDescriptor::Ptr, uint64_t> descriptorPtrId;
+
+	uint64_t i = 0;
+	for (auto &dsc: dset_) {
+		auto dscStr = dsc->serialize();
+		descriptors[i] = dscStr;
+		descriptorNumber[dscStr] = i;
+		descriptorPtrId[dsc] = i;
+		i++;
+	}
+
+	// XXX: call BinaryTree::encode() using these vars
 }
 
 } /* namespace Vmml */

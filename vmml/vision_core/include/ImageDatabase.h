@@ -13,12 +13,14 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <queue>
+#include <string>
 #include <list>
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/core/hal/hal.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/string.hpp>
 #include "cvobj_serialization.h"
 #include "utilities.h"
 
@@ -31,6 +33,10 @@ namespace Vmml {
 class BinaryDescriptor
 {
 public:
+	typedef std::basic_string<unsigned char> ustring;
+	typedef std::shared_ptr<BinaryDescriptor> Ptr;
+	typedef std::unordered_set<BinaryDescriptor::Ptr> Set;
+	typedef std::shared_ptr<BinaryDescriptor::Set> SetPtr;
 
 	explicit BinaryDescriptor(const cv::Mat& desc);
 	explicit BinaryDescriptor(const BinaryDescriptor& bd);
@@ -116,16 +122,15 @@ public:
 		return *this;
 	}
 
+	ustring serialize() const;
+	static BinaryDescriptor::Ptr deserialize(const ustring& s);
+
 	cv::Mat toCvMat() const;
 	std::string toString() const;
 
 	unsigned char* bits_;
 	unsigned size_in_bytes_;
 	unsigned size_in_bits_;
-
-	typedef std::shared_ptr<BinaryDescriptor> Ptr;
-	typedef std::unordered_set<BinaryDescriptor::Ptr> Set;
-	typedef std::shared_ptr<BinaryDescriptor::Set> SetPtr;
 
 };
 
@@ -134,6 +139,9 @@ class BinaryTreeNode {
 public:
 
 	typedef std::shared_ptr<BinaryTreeNode> Ptr;
+
+	friend class ImageDatabase;
+	friend class BinaryTree;
 
 	// Constructors
 	BinaryTreeNode();
@@ -312,6 +320,8 @@ class BinaryTree
 public:
 	typedef std::shared_ptr<BinaryTree> Ptr;
 
+	friend class ImageDatabase;
+
 	// Constructors
 	explicit BinaryTree(BinaryDescriptor::SetPtr dset,
 					  const unsigned tree_id = 0,
@@ -335,11 +345,13 @@ public:
 	void deleteDescriptor(BinaryDescriptor::Ptr q);
 	void printTree();
 
-	inline unsigned numDegradedNodes()
+	inline unsigned numDegradedNodes() const
 	{ return degraded_nodes_; }
 
-	inline unsigned numNodes()
+	inline unsigned numNodes() const
 	{ return nset_.size(); }
+
+	int getDepth() const;
 
 private:
 	BinaryDescriptor::SetPtr dset_;
@@ -358,6 +370,9 @@ private:
 	void buildNode(BinaryDescriptor::Set d, BinaryTreeNode::Ptr root);
 	void printNode(BinaryTreeNode::Ptr n);
 	void deleteNodeRecursive(BinaryTreeNode::Ptr n);
+
+	// XXX: Output is not done yet
+	void encode (const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrId) const;
 };
 
 
@@ -515,6 +530,8 @@ private:
 	void insertDescriptor(BinaryDescriptor::Ptr q);
 	void deleteDescriptor(BinaryDescriptor::Ptr q);
 	void purgeDescriptors(const uint curr_img);
+
+	void buildSerialization() const;
 };
 
 
