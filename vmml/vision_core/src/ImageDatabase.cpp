@@ -461,7 +461,9 @@ void BinaryTree::printNode(BinaryTreeNode::Ptr n)
 
 
 void
-BinaryTree::encode (const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId)
+BinaryTree::encode (
+	const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId			// the input
+)
 const
 {
 	set<uint64> dsetEnc;														// output this
@@ -470,7 +472,7 @@ const
 		dsetEnc.insert(i_d);
 	}
 
-	map<BinaryTreeNode::Ptr, uint64> nodeToId;									// output this
+	map<BinaryTreeNode::Ptr, uint64> nodeToId;
 	vector<BinaryTreeNode::BinaryTreeNodeData_> nodeData(nset_.size());			// output this
 	uint64 nId=0;
 	for (auto &node: nset_) {
@@ -486,6 +488,7 @@ const
 		});
 	}
 
+	// encodes desc_to_node_
 	map<uint64, uint64> desc_to_node_enc;										// output this
 	for (auto &p: desc_to_node_) {
 		uint64 descId = descriptorPtrToId.at(p.first);
@@ -956,26 +959,18 @@ void ImageDatabase::purgeDescriptors(const uint curr_img)
 }
 
 
-std::vector<kfid>
-ImageDatabase::searchImages(const cv::Mat &image) const
-{
-	vector<kfid> candidates;
-	return candidates;
-}
-
-
 void
-ImageDatabase::buildSerialization() const
+ImageDatabase::encode(
+	vector<BinaryDescriptor::ustring> &descriptorSerialized,
+	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
+const
 {
-	vector<BinaryDescriptor::ustring> descriptors(dset_.size());
-	map<BinaryDescriptor::ustring, uint64_t> descriptorNumber;
-	map<BinaryDescriptor::Ptr, uint64_t> descriptorPtrId;
+	descriptorSerialized.reserve(dset_.size());
 
 	uint64_t i = 0;
 	for (auto &dsc: dset_) {
 		auto dscStr = dsc->serialize();
-		descriptors[i] = dscStr;
-		descriptorNumber[dscStr] = i;
+		descriptorSerialized[i] = dscStr;
 		descriptorPtrId[dsc] = i;
 		i++;
 	}

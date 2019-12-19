@@ -476,8 +476,6 @@ public:
 				   vector<ImageMatch> &img_matches)
 		const;
 
-	std::vector<kfid> searchImages(const cv::Mat &image) const;
-
 	void searchDescriptors(
 		const cv::Mat& descs,
 		std::vector<std::vector<cv::DMatch>> &matches,
@@ -504,6 +502,9 @@ public:
 			initTrees();
 		}
 	}
+
+	void saveToDisk(const std::string &f) const;
+	void loadFromDisk(const std::string &f);
 
 private:
 	BinaryDescriptor::Set dset_;
@@ -538,7 +539,10 @@ private:
 	void deleteDescriptor(BinaryDescriptor::Ptr q);
 	void purgeDescriptors(const uint curr_img);
 
-	void buildSerialization() const;
+	void encode(
+		vector<BinaryDescriptor::ustring> &descriptorSerialized,
+		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
+	const;
 };
 
 
