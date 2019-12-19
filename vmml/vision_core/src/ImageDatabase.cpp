@@ -8,6 +8,8 @@
 #include <iostream>
 #include <set>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include "ImageDatabase.h"
 
 using namespace std;
@@ -462,18 +464,23 @@ void BinaryTree::printNode(BinaryTreeNode::Ptr n)
 
 void
 BinaryTree::encode (
-	const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId			// the input
+	const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId,			// the input
+	set<uint64> &dsetEnc,
+	vector<BinaryTreeNode::BinaryTreeNodeData_> &nodeData,
+	map<uint64, uint64> &desc_to_node_enc,
+	uint64 &rootId,
+	unordered_map<uint64, set<uint64>> &nodesChilds,
+	unordered_map<uint64, set<uint64>> &nodesChildDescriptors
 )
 const
 {
-	set<uint64> dsetEnc;														// output this
 	for (auto &desc: *dset_) {
 		auto i_d = descriptorPtrToId.at(desc);
 		dsetEnc.insert(i_d);
 	}
 
 	map<BinaryTreeNode::Ptr, uint64> nodeToId;
-	vector<BinaryTreeNode::BinaryTreeNodeData_> nodeData(nset_.size());			// output this
+	nodeData.reserve(nset_.size());
 	uint64 nId=0;
 	for (auto &node: nset_) {
 		nodeToId[node] = nId;
@@ -489,7 +496,7 @@ const
 	}
 
 	// encodes desc_to_node_
-	map<uint64, uint64> desc_to_node_enc;										// output this
+	desc_to_node_enc.clear();
 	for (auto &p: desc_to_node_) {
 		uint64 descId = descriptorPtrToId.at(p.first);
 		uint64 nodeId = nodeToId.at(p.second);
@@ -497,9 +504,7 @@ const
 	}
 
 	// encode the tree
-	uint64 rootId = nodeToId.at(root_);											// output this
-	unordered_map<uint64, set<uint64>> nodesChilds;								// output this
-	unordered_map<uint64, set<uint64>> nodesChildDescriptions;					// output this
+	rootId = nodeToId.at(root_);
 	for (auto &node: nset_) {
 		auto nodeId = nodeToId.at(node);
 		set<uint64> chNodes, chDescs;
@@ -512,7 +517,7 @@ const
 			chDescs.insert(chDscId);
 		}
 		nodesChilds[nodeId] = chNodes;
-		nodesChildDescriptions[nodeId] = chDescs;
+		nodesChildDescriptors[nodeId] = chDescs;
 	}
 }
 
@@ -960,8 +965,8 @@ void ImageDatabase::purgeDescriptors(const uint curr_img)
 
 
 void
-ImageDatabase::encode(
-	vector<BinaryDescriptor::ustring> &descriptorSerialized,
+ImageDatabase::encodeDescriptors(
+	vector<cv::Mat> &descriptorSerialized,
 	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
 const
 {
@@ -969,7 +974,7 @@ const
 
 	uint64_t i = 0;
 	for (auto &dsc: dset_) {
-		auto dscStr = dsc->serialize();
+		auto dscStr = dsc->toCvMat();
 		descriptorSerialized[i] = dscStr;
 		descriptorPtrId[dsc] = i;
 		i++;
@@ -977,5 +982,54 @@ const
 
 	// XXX: call BinaryTree::encode() using these vars
 }
+
+
+void
+ImageDatabase::decodeDescriptors(
+	const vector<cv::Mat> &descriptorSerialized,
+	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
+{
+	dset_.clear();
+	dset_.reserve(descriptorSerialized.size());
+	descriptorPtrId.clear();
+
+	for (uint i=0; i<descriptorPtrId.size(); ++i) {
+		auto desc = make_shared<BinaryDescriptor>(descriptorSerialized[i]);
+		dset_.insert(desc);
+		descriptorPtrId[desc] = i;
+	}
+}
+
+
+void
+ImageDatabase::saveToDisk(const std::string &f) const
+{
+	fstream indexFileFd;
+	indexFileFd.open(f, fstream::out | fstream::trunc);
+	if (!indexFileFd.is_open())
+		throw runtime_error("Unable to create map file");
+	boost::archive::binary_oarchive indexStore(indexFileFd);
+
+	indexStore << *this;
+
+	indexFileFd.close();
+}
+
+
+void
+ImageDatabase::loadFromDisk(const std::string &f)
+{
+	fstream indexFileFd;
+	indexFileFd.open(f, fstream::in);
+	if (!indexFileFd.is_open())
+		throw runtime_error("Unable to create map file");
+	boost::archive::binary_iarchive indexStore(indexFileFd);
+
+	indexStore >> *this;
+
+	indexFileFd.close();
+
+}
+
 
 } /* namespace Vmml */

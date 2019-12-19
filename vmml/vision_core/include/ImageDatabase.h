@@ -329,6 +329,8 @@ public:
 
 	friend class ImageDatabase;
 
+	BinaryTree() {}
+
 	// Constructors
 	explicit BinaryTree(BinaryDescriptor::SetPtr dset,
 					  const unsigned tree_id = 0,
@@ -360,6 +362,20 @@ public:
 
 	int getDepth() const;
 
+	/*
+	 * Serialization support. Complex members will be handled by ImageDatabase
+	 */
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int v)
+	{
+		ar  & tree_id_
+			& k_
+			& s_
+			& k_2_
+			& degraded_nodes_
+			& nvisited_nodes_;
+	}
+
 private:
 	BinaryDescriptor::SetPtr dset_;
 	unsigned tree_id_;
@@ -378,8 +394,20 @@ private:
 	void printNode(BinaryTreeNode::Ptr n);
 	void deleteNodeRecursive(BinaryTreeNode::Ptr n);
 
-	// XXX: Output is not done yet
-	void encode (const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrId) const;
+	/*
+	 * these two functions are helper method for serialization, called by ImageDatabase
+	 */
+	void encode (
+		const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrId,
+		set<uint64> &dsetEnc,
+		vector<BinaryTreeNode::BinaryTreeNodeData_> &nodeData,
+		map<uint64, uint64> &desc_to_node_enc,
+		uint64 &rootId,
+		std::unordered_map<uint64, set<uint64>> &nodesChilds,
+		std::unordered_map<uint64, set<uint64>> &nodesChildDescriptions
+	) const;
+
+	void decode ();
 };
 
 
@@ -442,6 +470,7 @@ struct PointMatches
 class ImageDatabase
 {
 public:
+	friend class boost::serialization::access;
 
 	enum MergePolicy {
 	  MERGE_POLICY_NONE,
@@ -520,11 +549,11 @@ private:
 	// Minimum times a feature has shown up in multiple times before being discarded
 	unsigned min_feat_apps_;
 
-	std::vector<BinaryTree::Ptr> trees_;
 	std::unordered_map<BinaryDescriptor::Ptr, std::vector<InvIndexItem> > inv_index_;
 	std::unordered_map<BinaryDescriptor::Ptr, uint64_t> desc_to_id_;
 	std::unordered_map<uint64_t, BinaryDescriptor::Ptr> id_to_desc_;
 	std::list<BinaryDescriptor::Ptr> recently_added_;
+	std::vector<BinaryTree::Ptr> trees_;
 
 	void initTrees();
 
@@ -539,11 +568,84 @@ private:
 	void deleteDescriptor(BinaryDescriptor::Ptr q);
 	void purgeDescriptors(const uint curr_img);
 
-	void encode(
-		vector<BinaryDescriptor::ustring> &descriptorSerialized,
+	void encodeDescriptors(
+		vector<cv::Mat> &descriptorSerialized,
 		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
 	const;
+
+	void decodeDescriptors(
+		const vector<cv::Mat> &descriptorSerialized,
+		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId);
+
+	template<class Archive>
+	void save(Archive &ar, const unsigned int v) const;
+
+	template<class Archive>
+	void load(Archive &ar, const unsigned int v);
+
+	BOOST_SERIALIZATION_SPLIT_MEMBER();
 };
+
+
+
+/*
+ * Implementation of serialization for ImageDatabase
+ */
+template<class Archive>
+void ImageDatabase::save(Archive &ar, const unsigned int v) const
+{
+	ar << k_;
+	ar << s_;
+	ar << t_;
+	ar << init_;
+	ar << nimages_;
+	ar << ndesc_;
+	ar << merge_policy_;
+	ar << purge_descriptors_;
+	ar << min_feat_apps_;
+
+	// Descriptors
+	vector<cv::Mat> descriptorSerialized;
+	map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
+	encodeDescriptors(descriptorSerialized, descriptorPtrId);
+	ar << descriptorSerialized;
+
+	// Trees
+	ar << trees_.size();
+	for (int i=0; i<trees_.size(); i++) {
+		ar << *trees_[i];
+
+	}
+}
+
+
+template<class Archive>
+void ImageDatabase::load(Archive &ar, const unsigned int v)
+{
+	ar >> k_;
+	ar >> s_;
+	ar >> t_;
+	ar >> init_;
+	ar >> nimages_;
+	ar >> ndesc_;
+	ar >> merge_policy_;
+	ar >> purge_descriptors_;
+	ar >> min_feat_apps_;
+
+	// Descriptors
+	vector<cv::Mat> descriptorSerialized;
+	map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
+	ar >> descriptorSerialized;
+	decodeDescriptors(descriptorSerialized, descriptorPtrId);
+
+	uint numOfTrees;
+	ar >> numOfTrees;
+	for (int i=0; i<numOfTrees; i++) {
+		auto iTree = std::make_shared<BinaryTree>();
+		ar >> *iTree;
+		trees_.push_back(iTree);
+	}
+}
 
 
 } /* namespace Vmml */
