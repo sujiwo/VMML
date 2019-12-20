@@ -998,6 +998,14 @@ ImageDatabase::decodeDescriptors(
 		dset_.insert(desc);
 		descriptorPtrId[desc] = i;
 	}
+
+	if (descriptorPtrId.size() != desc_to_id_.size() or descriptorPtrId.size() != id_to_desc_.size()) {
+		cerr << "Error: mismatch in number of descriptors: " <<
+			descriptorPtrId.size() << '-' <<
+			desc_to_id_.size() << '-' <<
+			id_to_desc_.size() << endl;
+		abort();
+	}
 }
 
 
