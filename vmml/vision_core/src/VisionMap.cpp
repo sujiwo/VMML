@@ -19,10 +19,10 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 
-#include "KeyFrame.h"
-#include "MapPoint.h"
-#include "VisionMap.h"
-#include "MapObjectSerialization.h"
+#include "vmml/KeyFrame.h"
+#include "vmml/MapPoint.h"
+#include "vmml/VisionMap.h"
+#include "vmml/MapObjectSerialization.h"
 
 #define MAX_ORB_POINTS_IN_FRAME 9000
 

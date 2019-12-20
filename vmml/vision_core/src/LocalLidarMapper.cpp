@@ -7,7 +7,7 @@
 
 #include <utility>
 #include <iostream>
-#include "LocalLidarMapper.h"
+#include "vmml/LocalLidarMapper.h"
 
 using namespace Eigen;
 using namespace std;

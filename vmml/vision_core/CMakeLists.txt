@@ -128,6 +128,7 @@ install(
 	TARGETS vmml
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
+install(DIRECTORY include/vmml DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
 # Testing; do not install
 add_executable(
@@ -191,6 +192,7 @@ add_custom_target (orb_vocabulary
 	DEPENDS samples/ORBvoc.txt.bz2
 	COMMENT "Extracting vocabulary... "
 )
+
 install(
 	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
@@ -200,3 +202,5 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/car_mask_meter.png
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+install(
+)

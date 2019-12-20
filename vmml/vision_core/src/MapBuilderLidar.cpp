@@ -5,9 +5,9 @@
  *      Author: sujiwo
  */
 
-#include "MapBuilderLidar.h"
-#include "Matcher.h"
-#include "Triangulation.h"
+#include "vmml/MapBuilderLidar.h"
+#include "vmml/Matcher.h"
+#include "vmml/Triangulation.h"
 
 
 using namespace std;

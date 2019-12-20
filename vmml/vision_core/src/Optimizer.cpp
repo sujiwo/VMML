@@ -7,7 +7,7 @@
 
 #include <random>
 #include <algorithm>
-#include "Optimizer.h"
+#include "vmml/Optimizer.h"
 
 
 using namespace Eigen;

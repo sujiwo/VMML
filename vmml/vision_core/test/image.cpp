@@ -7,11 +7,11 @@
 
 #include <iostream>
 #include <string>
-#include "VisionMap.h"
-#include "ImageBag.h"
-#include "LidarScanBag.h"
-#include "BaseFrame.h"
-#include "Matcher.h"
+#include "vmml/VisionMap.h"
+#include "vmml/ImageBag.h"
+#include "vmml/LidarScanBag.h"
+#include "vmml/BaseFrame.h"
+#include "vmml/Matcher.h"
 
 
 using namespace std;

@@ -5,10 +5,10 @@
  *      Author: sujiwo
  */
 
-#include "Matcher.h"
-#include "ImageDatabaseBuilder.h"
-#include "utilities.h"
-#include "Triangulation.h"
+#include "vmml/Matcher.h"
+#include "vmml/ImageDatabaseBuilder.h"
+#include "vmml/utilities.h"
+#include "vmml/Triangulation.h"
 
 
 namespace Vmml {

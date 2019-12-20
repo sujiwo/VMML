@@ -6,8 +6,8 @@
  */
 
 #include <rosbag/bag.h>
-#include "TrajectoryGNSS.h"
-#include "utilities.h"
+#include "vmml/TrajectoryGNSS.h"
+#include "vmml/utilities.h"
 
 using namespace std;
 using namespace Vmml;

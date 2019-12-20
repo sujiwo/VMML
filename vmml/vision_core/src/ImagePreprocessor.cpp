@@ -6,7 +6,7 @@
  */
 
 #include <vector>
-#include "ImagePreprocessor.h"
+#include "vmml/ImagePreprocessor.h"
 
 
 using namespace std;

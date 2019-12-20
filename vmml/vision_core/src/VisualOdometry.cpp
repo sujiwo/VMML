@@ -5,9 +5,9 @@
  *      Author: sujiwo
  */
 
-#include "VisualOdometry.h"
-#include "Triangulation.h"
-#include "utilities.h"
+#include "vmml/VisualOdometry.h"
+#include "vmml/Triangulation.h"
+#include "vmml/utilities.h"
 
 
 namespace Vmml {

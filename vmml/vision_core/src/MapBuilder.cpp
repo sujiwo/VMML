@@ -5,11 +5,11 @@
  *      Author: sujiwo
  */
 
-#include "MapBuilder.h"
-#include "BaseFrame.h"
-#include "Matcher.h"
-#include "Triangulation.h"
-#include "Optimizer.h"
+#include "vmml/MapBuilder.h"
+#include "vmml/BaseFrame.h"
+#include "vmml/Matcher.h"
+#include "vmml/Triangulation.h"
+#include "vmml/Optimizer.h"
 
 
 using namespace std;

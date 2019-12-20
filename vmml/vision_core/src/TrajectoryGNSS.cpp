@@ -9,7 +9,7 @@
 #include <nmea_msgs/Sentence.h>
 #include <gnss/geo_pos_conv.hpp>
 #include "RandomAccessBag.h"
-#include "TrajectoryGNSS.h"
+#include "vmml/TrajectoryGNSS.h"
 
 
 using namespace std;

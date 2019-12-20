@@ -7,7 +7,7 @@
 
 #include <limits>
 
-#include "MapPoint.h"
+#include "vmml/MapPoint.h"
 
 
 using namespace std;

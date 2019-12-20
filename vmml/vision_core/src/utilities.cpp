@@ -5,7 +5,7 @@
  *      Author: sujiwo
  */
 
-#include "utilities.h"
+#include "vmml/utilities.h"
 
 #include <Eigen/Eigen>
 #include <iostream>

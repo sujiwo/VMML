@@ -8,9 +8,9 @@
 #include <string>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
-#include "VisionMap.h"
-#include "BaseFrame.h"
-#include "ImageBag.h"
+#include "vmml/VisionMap.h"
+#include "vmml/BaseFrame.h"
+#include "vmml/ImageBag.h"
 
 using namespace Vmml;
 using namespace std;

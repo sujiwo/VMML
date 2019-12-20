@@ -5,7 +5,7 @@
  *      Author: sujiwo
  */
 
-#include <LoopClosure.h>
+#include "vmml/LoopClosure.h"
 
 namespace Vmml {
 

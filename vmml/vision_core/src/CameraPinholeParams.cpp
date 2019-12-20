@@ -6,7 +6,7 @@
  */
 
 #include <opencv2/imgproc.hpp>
-#include "CameraPinholeParams.h"
+#include "vmml/CameraPinholeParams.h"
 
 
 using namespace Eigen;

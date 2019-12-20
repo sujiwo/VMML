@@ -6,7 +6,7 @@
  */
 
 
-#include "utilities.h"
+#include "vmml/utilities.h"
 
 
 using namespace std;

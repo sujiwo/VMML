@@ -5,9 +5,9 @@
  *      Author: sujiwo
  */
 
-#include "utilities.h"
-#include "KeyFrame.h"
-#include "VisionMap.h"
+#include "vmml/utilities.h"
+#include "vmml/KeyFrame.h"
+#include "vmml/VisionMap.h"
 
 using namespace std;
 using namespace Eigen;

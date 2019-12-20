@@ -13,9 +13,9 @@
 #include <mutex>
 #include "pcl/registration/ndt.h"
 #include "pcl/filters/voxel_grid.h"
-#include "LidarScanBag.h"
-#include "Trajectory.h"
-#include "utilities.h"
+#include "vmml/LidarScanBag.h"
+#include "vmml/Trajectory.h"
+#include "vmml/utilities.h"
 
 using namespace std;
 using namespace Vmml;

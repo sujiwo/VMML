@@ -10,7 +10,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "Trajectory.h"
+#include "vmml/Trajectory.h"
 
 
 using namespace std;

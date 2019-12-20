@@ -222,13 +222,22 @@ protected:
 		}
 
 		ScanPtr<PointT> retPoints(new pcl::PointCloud<PointT>);
-
+		doConvertTemporary(tmpPoints, *retPoints);
 
 		if (filtered)
 			return VoxelGridFilter<PointT>(retPoints);
 		else return retPoints;
 	}
 };
+
+
+template<>
+void LidarScanBag::doConvertTemporary<pcl::PointXYZI>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<pcl::PointXYZI> &dst);
+
+template<>
+void LidarScanBag::doConvertTemporary<pcl::PointXYZ>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<pcl::PointXYZ> &dst);
+
+
 
 }		/* namespace Vmml */
 

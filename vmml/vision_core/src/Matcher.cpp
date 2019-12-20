@@ -13,10 +13,10 @@
 #include <opencv2/calib3d.hpp>
 #include <Eigen/Core>
 #include <opencv2/core/eigen.hpp>
-#include "Matcher.h"
-#include "VisionMap.h"
-#include "Triangulation.h"
-#include "MapPoint.h"
+#include "vmml/Matcher.h"
+#include "vmml/VisionMap.h"
+#include "vmml/Triangulation.h"
+#include "vmml/MapPoint.h"
 
 using namespace std;
 using namespace Eigen;

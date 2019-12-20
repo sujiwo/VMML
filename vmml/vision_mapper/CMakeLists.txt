@@ -43,13 +43,13 @@ catkin_package(
 
 include_directories(
 	include
+	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
 	${OpenCV_INCLUDE_DIRS}
 	${PCL_INCLUDE_DIRS}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 	${G2O_INCLUDE_DIR}	
-	${catkin_INCLUDE_DIRS}
 	${vision_core_SOURCE_DIR}
 )
 

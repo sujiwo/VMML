@@ -9,8 +9,8 @@
 #include <pcl/filters/frustum_culling.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
-#include "BaseFrame.h"
-#include "KeyFrame.h"
+#include "vmml/BaseFrame.h"
+#include "vmml/KeyFrame.h"
 
 using namespace std;
 using namespace Eigen;

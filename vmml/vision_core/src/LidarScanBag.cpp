@@ -7,7 +7,7 @@
 
 
 
-#include "LidarScanBag.h"
+#include "vmml/LidarScanBag.h"
 #include <pcl_conversions/pcl_conversions.h>
 #include <ros/package.h>
 
@@ -75,6 +75,37 @@ LidarScanBag::prepare(const string &lidarCalibFile,
 
 	data_->setParameters(_velodyneMinRange, _velodyneMaxRange, velodyneViewDirection, velodyneViewWidth);
 }
+
+
+using pcl::PointXYZI;
+template<>
+void LidarScanBag::doConvertTemporary<PointXYZI>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<PointXYZI> &dst)
+{
+	dst.reserve(src.size());
+	uint i = 0;
+	for (auto &p: src) {
+		PointXYZI pd;
+		pd.x = p.x; pd.y = p.y; pd.z = p.z; pd.intensity = p.intensity;
+		dst[i] = pd;
+		i++;
+	}
+}
+
+
+using pcl::PointXYZ;
+template<>
+void LidarScanBag::doConvertTemporary<pcl::PointXYZ>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<pcl::PointXYZ> &dst)
+{
+	dst.resize(src.size());
+	uint i = 0;
+	for (auto &p: src) {
+		PointXYZ pd;
+		pd.x = p.x; pd.y = p.y; pd.z = p.z;
+		dst[i] = pd;
+		i++;
+	}
+}
+
 
 
 /*

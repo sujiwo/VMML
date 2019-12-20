@@ -5,7 +5,7 @@
  *      Author: sujiwo
  */
 
-#include "ORBVocabulary.h"
+#include "vmml/ORBVocabulary.h"
 
 
 using namespace std;

@@ -10,8 +10,8 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-#include "ImageBag.h"
-#include "utilities.h"
+#include "vmml/ImageBag.h"
+#include "vmml/utilities.h"
 
 
 using namespace std;

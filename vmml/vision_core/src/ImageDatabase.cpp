@@ -10,7 +10,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include "ImageDatabase.h"
+#include "vmml/ImageDatabase.h"
 
 using namespace std;
 

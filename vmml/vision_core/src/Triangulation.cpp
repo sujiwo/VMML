@@ -12,8 +12,9 @@
 
 #include <string>
 #include <exception>
-#include "Triangulation.h"
+#include <Eigen/Core>
 #include <opencv2/core/eigen.hpp>
+#include "vmml/Triangulation.h"
 
 
 using namespace std;

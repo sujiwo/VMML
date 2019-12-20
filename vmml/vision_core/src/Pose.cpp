@@ -5,8 +5,8 @@
  *      Author: sujiwo
  */
 
-#include "Pose.h"
-#include "utilities.h"
+#include "vmml/Pose.h"
+#include "vmml/utilities.h"
 
 using namespace std;
 using namespace Eigen;
