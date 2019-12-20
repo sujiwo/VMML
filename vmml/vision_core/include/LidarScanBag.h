@@ -19,7 +19,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <velodyne_pointcloud/rawdata.h>
-#include <velodyne_pointcloud/pointcloudXYZIR.h>
+//#include <velodyne_pointcloud/pointcloudXYZIR.h>
 
 //#include "utilities.h"
 #include "RandomAccessBag.h"
@@ -43,8 +43,10 @@ const float
 	velodyneViewWidth = 2*M_PI;
 
 
+/*
 template<typename PointT>
-class mPointCloud : public velodyne_rawdata::DataContainerBase
+class mPointCloud :
+	public velodyne_rawdata::DataContainerBase
 {
 public:
 	ScanPtr<PointT> pc;
@@ -72,6 +74,7 @@ template<> void mPointCloud<pcl::PointXYZI>::addPoint(
 	const uint16_t& azimuth,
 	const float& distance,
 	const float& intensity);
+*/
 
 
 /*
@@ -178,6 +181,7 @@ protected:
 		float _velodyneMinRange,
 		float _velodyneMaxRange);
 
+/*
 	template<typename PointT>
 	ScanConstPtr<PointT>
 	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
@@ -198,6 +202,31 @@ protected:
 		}
 		else
 			return outPoints.pc;
+	}
+*/
+	template<typename PointT>
+	void doConvertTemporary(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<PointT> &dst);
+
+	template<typename PointT>
+	ScanConstPtr<PointT>
+	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
+	{
+		velodyne_rawdata::VPointCloud tmpPoints;
+		tmpPoints.header.stamp = pcl_conversions::toPCL(bagmsg->header).stamp;
+		tmpPoints.header.frame_id = bagmsg->header.frame_id;
+		tmpPoints.height = 1;
+
+		for (size_t i = 0; i < bagmsg->packets.size(); ++i)
+		{
+			data_->unpack(bagmsg->packets[i], tmpPoints);
+		}
+
+		ScanPtr<PointT> retPoints(new pcl::PointCloud<PointT>);
+
+
+		if (filtered)
+			return VoxelGridFilter<PointT>(retPoints);
+		else return retPoints;
 	}
 };
 

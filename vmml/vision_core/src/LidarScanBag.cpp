@@ -77,6 +77,7 @@ LidarScanBag::prepare(const string &lidarCalibFile,
 }
 
 
+/*
 template<>
 void mPointCloud<pcl::PointXYZ>::addPoint(const float& x, const float& y, const float& z,
 			const uint16_t& ring,
@@ -115,5 +116,6 @@ mPointCloud<pcl::PointXYZI>::addPoint(
 	pc->points.push_back(point);
 	++pc->width;
 }
+*/
 
 }		/* namespace Vmml */
