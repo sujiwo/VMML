@@ -16,10 +16,10 @@
 #include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
 #include <pcl_ros/publisher.h>
-#include "BaseFrame.h"
-#include "VisionMap.h"
-#include "MapBuilder.h"
-#include "ImageDatabaseBuilder.h"
+#include "vmml/BaseFrame.h"
+#include "vmml/VisionMap.h"
+#include "vmml/MapBuilder.h"
+#include "vmml/ImageDatabaseBuilder.h"
 
 
 namespace Vmml {

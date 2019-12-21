@@ -9,9 +9,9 @@
 #include <string>
 #include <opencv2/highgui.hpp>
 #include <pcl/io/pcd_io.h>
-#include "VisualOdometry.h"
-#include "utilities.h"
-#include "ImageBag.h"
+#include "vmml/VisualOdometry.h"
+#include "vmml/utilities.h"
+#include "vmml/ImageBag.h"
 
 
 using namespace Vmml;

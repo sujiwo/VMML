@@ -9,13 +9,13 @@
 #include <string>
 #include <iostream>
 #include <rosbag/bag.h>
-#include "ImageBag.h"
-#include "VisionMap.h"
-#include "Trajectory.h"
-#include "TrajectoryGNSS.h"
-#include "Matcher.h"
-#include "ImageDatabase.h"
-#include "utilities.h"
+#include "vmml/ImageBag.h"
+#include "vmml/VisionMap.h"
+#include "vmml/Trajectory.h"
+#include "vmml/TrajectoryGNSS.h"
+#include "vmml/Matcher.h"
+#include "vmml/ImageDatabase.h"
+#include "vmml/utilities.h"
 
 
 using namespace std;

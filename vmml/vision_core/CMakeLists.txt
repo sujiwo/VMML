@@ -59,7 +59,8 @@ include_directories(
 	${PCL_INCLUDE_DIRS}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
-	${G2O_INCLUDE_DIR}	
+	${G2O_INCLUDE_DIR}
+	${velodyne_pointcloud_INCLUDE_DIRS}
 )
 
 set(REQUIRED_LIBS

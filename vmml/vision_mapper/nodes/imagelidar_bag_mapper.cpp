@@ -7,7 +7,7 @@
 
 
 #include <rosbag/bag.h>
-#include "MapBuilderLidar.h"
+#include "vmml/MapBuilderLidar.h"
 #include "RVizConnector.h"
 
 

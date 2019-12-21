@@ -9,10 +9,10 @@
 #include <fstream>
 #include <cstdlib>
 #include <opencv2/highgui.hpp>
-#include "MapBuilder.h"
+#include "vmml/MapBuilder.h"
 #include "RVizConnector.h"
-#include "ImageBag.h"
-#include "utilities.h"
+#include "vmml/ImageBag.h"
+#include "vmml/utilities.h"
 
 
 using namespace std;

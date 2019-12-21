@@ -10,10 +10,10 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl_ros/point_cloud.h>
 #include <boost/filesystem/convenience.hpp>
-#include "Pose.h"
-#include "ImageBag.h"
-#include "LidarScanBag.h"
-#include "ImageDatabaseBuilder.h"
+#include "vmml/Pose.h"
+#include "vmml/ImageBag.h"
+#include "vmml/LidarScanBag.h"
+#include "vmml/ImageDatabaseBuilder.h"
 #include "RVizConnector.h"
 
 
