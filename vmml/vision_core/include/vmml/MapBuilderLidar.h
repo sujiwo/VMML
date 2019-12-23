@@ -14,6 +14,7 @@
 #include "MapBuilder.h"
 #include "LidarScanBag.h"
 #include "ImageBag.h"
+#include "RandomAccessBag.h"
 #include "LocalLidarMapper.h"
 
 

@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <sensor_msgs/PointCloud2.h>
 #include "vmml/MapBuilderLidar.h"
 #include "vmml/Matcher.h"
 #include "vmml/Triangulation.h"
@@ -60,7 +61,8 @@ MapBuilderLidar::run(
 	const float imageScale)
 {
 	imageSource.reset(new ImageBag(bagFd, imageTopic, imageScale));
-	velScanSource.reset(new LidarScanBag(bagFd, velodyneTopic, velodyneCalibrationFilePath));
+	velScanSource.reset(new LidarScanBag(bagFd, velodyneTopic));
+	assert(velScanSource->messageType()=="sensor_msgs/PointCloud2");
 
 	const int N = velScanSource->size();
 	cout << "Num of velodyne frames: " << N << endl;

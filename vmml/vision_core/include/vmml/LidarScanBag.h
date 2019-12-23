@@ -18,10 +18,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <velodyne_pointcloud/rawdata.h>
-//#include <velodyne_pointcloud/pointcloudXYZIR.h>
-
-//#include "utilities.h"
+#include <velodyne_pointcloud/point_types.h>
 #include "RandomAccessBag.h"
 
 
@@ -34,51 +31,7 @@ template<typename PointT>
 using ScanConstPtr = boost::shared_ptr<const pcl::PointCloud<PointT>>;
 
 /*
- * XXX: These values may need to be adjusted
- */
-const float
-	velodyneMinRange = 5.0,
-	velodyneMaxRange = 130,
-	velodyneViewDirection = 0,
-	velodyneViewWidth = 2*M_PI;
-
-
-/*
-template<typename PointT>
-class mPointCloud :
-	public velodyne_rawdata::DataContainerBase
-{
-public:
-	ScanPtr<PointT> pc;
-
-	mPointCloud() : pc(new pcl::PointCloud<PointT>) {}
-
-	void addPoint(const float& x, const float& y, const float& z,
-		const uint16_t& ring,
-		const uint16_t& azimuth,
-		const float& distance,
-		const float& intensity);
-};
-
-
-template<> void mPointCloud<pcl::PointXYZ>::addPoint(
-	const float& x, const float& y, const float& z,
-	const uint16_t& ring,
-	const uint16_t& azimuth,
-	const float& distance,
-	const float& intensity);
-
-template<> void mPointCloud<pcl::PointXYZI>::addPoint(
-	const float& x, const float& y, const float& z,
-	const uint16_t& ring,
-	const uint16_t& azimuth,
-	const float& distance,
-	const float& intensity);
-*/
-
-
-/*
- * Representation of Rosbag Velodyne Scan as point cloud
+ * Abstraction of lidar point cloud stored in ROS Bag
  */
 class LidarScanBag : public RandomAccessBag
 {
@@ -88,37 +41,21 @@ public:
 
 	LidarScanBag(
 		rosbag::Bag const &bag,
-		const std::string &topic,
-		const ros::Time &startTime = ros::TIME_MIN,
-		const ros::Time &endTime = ros::TIME_MAX,
-		const std::string &velodyneCalibrationFile=std::string(),
-		float _velodyneMinRange = velodyneMinRange,
-		float _velodyneMaxRange = velodyneMaxRange);
-
-	LidarScanBag(
-		rosbag::Bag const &bag,
-		const std::string &topic,
-		const double seconds1FromOffset,
-		const double seconds2FromOffset,
-		const std::string &velodyneCalibrationFile=std::string(),
-		float _velodyneMinRange = velodyneMinRange,
-		float _velodyneMaxRange = velodyneMaxRange);
-
-	inline LidarScanBag(rosbag::Bag const &bag,
-		const std::string &topic,
-		const std::string &velodyneCalibrationFile) :
-			LidarScanBag(bag, topic, ros::TIME_MIN, ros::TIME_MAX, velodyneCalibrationFile)
-	{}
-
+		const std::string &topic) :
+			RandomAccessBag(bag, topic)
+	{
+		if (messageType() != "sensor_msgs/PointCloud2")
+			throw std::invalid_argument("Requested topic is not of type sensor_msgs/PointCloud2");
+	}
 
 	template<typename PointT>
 	ScanConstPtr<PointT>
 	at(int position, boost::posix_time::ptime *msgTime=nullptr)
 	{
-		auto msgP = RandomAccessBag::at<velodyne_msgs::VelodyneScan>(position);
+		auto msgP = RandomAccessBag::at<sensor_msgs::PointCloud2>(position);
 		if (msgTime!=nullptr)
 			*msgTime = msgP->header.stamp.toBoost();
-		return convertMessage<PointT>(msgP);
+		return convertMessage<PointT>(*msgP);
 	}
 
 	template<typename PointT=pcl::PointXYZ>
@@ -175,69 +112,15 @@ public:
 
 protected:
 
-	boost::shared_ptr<velodyne_rawdata::RawData> data_;
-
-	void prepare(const std::string &lidarCalibFile,
-		float _velodyneMinRange,
-		float _velodyneMaxRange);
-
-/*
 	template<typename PointT>
 	ScanConstPtr<PointT>
-	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
+	convertMessage(const sensor_msgs::PointCloud2 &bagmsg)
 	{
-		mPointCloud<PointT> outPoints;
-		outPoints.pc->header.stamp = pcl_conversions::toPCL(bagmsg->header).stamp;
-		outPoints.pc->header.frame_id = bagmsg->header.frame_id;
-		outPoints.pc->height = 1;
-
-		outPoints.pc->points.reserve(bagmsg->packets.size() * data_->scansPerPacket());
-
-		for (int i=0; i<bagmsg->packets.size(); ++i) {
-			data_->unpack(bagmsg->packets[i], outPoints);
-		}
-
-		if (filtered) {
-			return VoxelGridFilter<PointT>(outPoints.pc);
-		}
-		else
-			return outPoints.pc;
-	}
-*/
-	template<typename PointT>
-	void doConvertTemporary(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<PointT> &dst);
-
-	template<typename PointT>
-	ScanConstPtr<PointT>
-	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
-	{
-		velodyne_rawdata::VPointCloud tmpPoints;
-		tmpPoints.header.stamp = pcl_conversions::toPCL(bagmsg->header).stamp;
-		tmpPoints.header.frame_id = bagmsg->header.frame_id;
-		tmpPoints.height = 1;
-
-		for (size_t i = 0; i < bagmsg->packets.size(); ++i)
-		{
-			data_->unpack(bagmsg->packets[i], tmpPoints);
-		}
-
-		ScanPtr<PointT> retPoints(new pcl::PointCloud<PointT>);
-		doConvertTemporary(tmpPoints, *retPoints);
-
-		if (filtered)
-			return VoxelGridFilter<PointT>(retPoints);
-		else return retPoints;
+		ScanPtr<PointT> cldRet(new pcl::PointCloud<PointT>);
+		pcl::fromROSMsg(bagmsg, *cldRet);
+		return cldRet;
 	}
 };
-
-
-template<>
-void LidarScanBag::doConvertTemporary<pcl::PointXYZI>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<pcl::PointXYZI> &dst);
-
-template<>
-void LidarScanBag::doConvertTemporary<pcl::PointXYZ>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<pcl::PointXYZ> &dst);
-
-
 
 }		/* namespace Vmml */
 

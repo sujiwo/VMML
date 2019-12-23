@@ -20,9 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 	# For RandomAccessBag
 	rosbag_viewer
-
 	velodyne_pointcloud
-	
+
 	# GNSS Localization (change to geodesy in the future)
 	geodesy
 	nmea_msgs
@@ -102,7 +101,7 @@ add_library(
 		src/MapPoint.cpp
 		src/Trajectory.cpp
 		src/VisionMap.cpp
-		src/LidarScanBag.cpp
+#		src/LidarScanBag.cpp
 		src/MapBuilder.cpp
 #		src/Initializer.cpp
 		src/Triangulation.cpp
@@ -203,5 +202,3 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/car_mask_meter.png
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-install(
-)

@@ -38,14 +38,13 @@ int main(int argc, char *argv[])
 	 * please run `setup install/setup.bash' prior to run this program
 	 */
 	auto maskPath = getMyPath() / "samples/meidai_mask.png";
-	auto calibPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai-64e-S2.yaml";
 	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 
 	rosbag::Bag inputBag(argv[1]);
 	ImageBag images(inputBag, "/camera1/image_raw", enlarge);
 	images.setGammaMeteringMask();
-	LidarScanBag pcdScans(inputBag, "/velodyne_packets", calibPath.string());
+	LidarScanBag pcdScans(inputBag, "/velodyne_packets");
 
 	int i1 = stoi(argv[2]);
 	auto t1 = images.timeAt(i1);

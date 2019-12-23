@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+# How To Use this script
+# 1. Run the driver node from command prompt
+# 2. Modify variables source_topic and output_topic:
+#    - source_topic is set to the topic(s) that are available in bag and required by driver
+#    - output_topic is set to topic published by driver
+# 3. Run this script with parameters: <input bag> <output bag> (must be different)
+# 4. Reindex the resulting bag
+
 import rosbag
 import rospy
 import sys
@@ -8,8 +16,13 @@ from sensor_msgs.point_cloud2 import PointCloud2
 
 bagWrite = None
 bagWriteLock = threading.Semaphore()
-source_topic = ["/ouster_driver/lidar_packets", "/ouster_driver/imu_packets"]
-output_topic = "/points_raw"
+
+# Modify these two vars
+# source_topic = ["/ouster_driver/lidar_packets", "/ouster_driver/imu_packets"]
+# output_topic = "/points_raw"
+source_topic = ["/velodyne_packets"]
+output_topic = "/velodyne_points"
+
 source_messageType = []
 realMessageTimestamp = None
 
@@ -34,6 +47,7 @@ if (__name__=="__main__"):
         if (len(source_topic)==len(source_messageType)):
             break
     
+#     Build publishers specific for each topic 
     senders = [rospy.Publisher(source_topic[i], source_messageType[i], queue_size=1) for i in range(len(source_topic))]
     receiver = rospy.Subscriber(output_topic, PointCloud2, driverOutputCallback, queue_size=1)
     

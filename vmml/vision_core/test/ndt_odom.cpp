@@ -48,8 +48,8 @@ public:
 	typedef pcl::PointCloud<Point3> Cloud3;
 
 
-	NdtOdometry(rosbag::Bag &bagSrc, const std::string &velodyneTopic, const std::string &calibPath) :
-		pcdScans(bagSrc, velodyneTopic, calibPath)
+	NdtOdometry(rosbag::Bag &bagSrc, const std::string &velodyneTopic) :
+		pcdScans(bagSrc, velodyneTopic)
 	{}
 
 
@@ -202,13 +202,9 @@ protected:
 
 int main(int argc, char *argv[])
 {
-	auto calibPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai-64e-S2.yaml";
 	rosbag::Bag inputBag(argv[1]);
 
-//	vector<MessageDivision> cpuDivs;
-//	createIntervals(pcdScans, cpuDivs);
-
-	NdtOdometry odom(inputBag, "/velodyne_packets", calibPath.string());
+	NdtOdometry odom(inputBag, "/velodyne_packets");
 	odom.runMulti();
 
 	odom.getTrajectory().dump("test.csv");

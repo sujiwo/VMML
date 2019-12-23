@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
 	// Find vocabulary, mask & velodyne calibration file
 	auto vocabPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "ORBvoc.txt";
 	auto maskPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "meidai_mask.png";
-	auto calibPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai-64e-S2.yaml";
 	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 
@@ -51,7 +50,7 @@ int main(int argc, char *argv[])
 	boost::filesystem::path bagPath(argv[1]);
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
-	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets", calibPath.string());
+	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets");
 
 	Mapper::RVizConnector rosConn(argc, argv, "mapper", tLidarToCamera);
 	rosConn.setMap(imageDbMapper.getMap());

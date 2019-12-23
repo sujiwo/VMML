@@ -7,6 +7,7 @@
 
 
 
+#include <exception>
 #include "vmml/LidarScanBag.h"
 #include <pcl_conversions/pcl_conversions.h>
 #include <ros/package.h>
@@ -15,8 +16,6 @@
 
 
 using namespace std;
-using velodyne_rawdata::VPoint;
-using velodyne_rawdata::VPointCloud;
 using pcl::PointCloud;
 
 
@@ -24,64 +23,20 @@ namespace Vmml {
 
 LidarScanBag::LidarScanBag(
 	rosbag::Bag const &bag,
-	const std::string &topic,
-	const ros::Time &startTime,
-	const ros::Time &endTime,
-	const std::string &velodyneCalibrationFile,
-	float _velodyneMinRange,
-	float _velodyneMaxRange) :
+	const std::string &topic) :
 
-		RandomAccessBag(bag, topic, startTime, endTime),
-		data_(new velodyne_rawdata::RawData())
+		RandomAccessBag(bag, topic)
 {
-	prepare(velodyneCalibrationFile, _velodyneMinRange, _velodyneMaxRange);
-}
-
-
-LidarScanBag::LidarScanBag(
-	rosbag::Bag const &bag,
-	const std::string &topic,
-	const double seconds1FromOffset,
-	const double seconds2FromOffset,
-	const std::string &velodyneCalibrationFile,
-	float _velodyneMinRange,
-	float _velodyneMaxRange) :
-
-		RandomAccessBag(bag, topic, seconds1FromOffset, seconds2FromOffset),
-		data_(new velodyne_rawdata::RawData())
-{
-	prepare(velodyneCalibrationFile, _velodyneMinRange, _velodyneMaxRange);
-}
-
-
-
-void
-LidarScanBag::prepare(const string &lidarCalibFile,
-		float _velodyneMinRange,
-		float _velodyneMaxRange)
-{
-	string fname;
-	if (lidarCalibFile.empty()) {
-		boost::filesystem::path vlp (ros::package::getPath("velodyne_pointcloud"));
-		vlp /= "params/64e_s2.1-sztaki.yaml";
-		fname = vlp.string();
-		cerr << "Bug: using default Velodyne Calibration Parameter" << endl;
-	}
-	else fname = lidarCalibFile;
-
-	if (data_->setupOffline(fname, velodyneMaxRange, velodyneMinRange)
-		== -1)
-		throw runtime_error("Unable to set velodyne converter");
-
-	data_->setParameters(_velodyneMinRange, _velodyneMaxRange, velodyneViewDirection, velodyneViewWidth);
+	if (messageType() != "sensor_msgs/PointCloud2")
+		throw invalid_argument("Requested topic is not of type sensor_msgs/PointCloud2");
 }
 
 
 using pcl::PointXYZI;
 template<>
-void LidarScanBag::doConvertTemporary<PointXYZI>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<PointXYZI> &dst)
+void LidarScanBag::doConvertTemporary<PointXYZI>(const sensor_msgs::PointCloud2 &src, pcl::PointCloud<PointXYZI> &dst)
 {
-	dst.reserve(src.size());
+	dst.reserve(src.data.size());
 	uint i = 0;
 	for (auto &p: src) {
 		PointXYZI pd;
@@ -94,7 +49,7 @@ void LidarScanBag::doConvertTemporary<PointXYZI>(const velodyne_rawdata::VPointC
 
 using pcl::PointXYZ;
 template<>
-void LidarScanBag::doConvertTemporary<pcl::PointXYZ>(const velodyne_rawdata::VPointCloud &src, pcl::PointCloud<pcl::PointXYZ> &dst)
+void LidarScanBag::doConvertTemporary<pcl::PointXYZ>(const sensor_msgs::PointCloud2 &src, pcl::PointCloud<pcl::PointXYZ> &dst)
 {
 	dst.resize(src.size());
 	uint i = 0;
