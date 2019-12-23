@@ -44,6 +44,7 @@
   <depend>roscpp</depend>
   <depend>rosbag_viewer</depend>
   <depend>geodesy</depend>
+  <depend>velodyne_pointcloud</depend>
   <buildtool_depend>catkin</buildtool_depend>
 
 

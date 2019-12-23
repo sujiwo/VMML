@@ -40,23 +40,6 @@ BinaryDescriptor::BinaryDescriptor(const BinaryDescriptor& bd) :
 }
 
 
-BinaryDescriptor::ustring
-BinaryDescriptor::serialize() const
-{
-	ustring s(bits_, size_in_bytes_);
-	return s;
-}
-
-
-BinaryDescriptor::Ptr
-BinaryDescriptor::deserialize(const BinaryDescriptor::ustring& s)
-{
-	vector<unsigned char> sv(s.begin(), s.end());
-	cv::Mat dm(sv, true);
-	return Ptr(new BinaryDescriptor(dm));
-}
-
-
 BinaryDescriptor::~BinaryDescriptor()
 {
 	delete [] bits_;
@@ -997,7 +980,10 @@ const
 void
 ImageDatabase::decodeDescriptors(
 	const vector<cv::Mat> &descriptorSerialized,
-	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
+	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId,
+	const std::unordered_map<uint64, std::vector<InvIndexItem>> &invIndexEncoded,
+	const std::unordered_map<uint64, uint64> &descriptorIdEncodedToRealDescId
+)
 {
 	dset_.clear();
 	dset_.reserve(descriptorSerialized.size());
@@ -1015,6 +1001,12 @@ ImageDatabase::decodeDescriptors(
 			desc_to_id_.size() << '-' <<
 			id_to_desc_.size() << endl;
 		abort();
+	}
+
+	inv_index_.clear();
+	for (auto &mp: invIndexEncoded) {
+//		auto desc = descriptorPtrId.at(mp.first);
+
 	}
 }
 

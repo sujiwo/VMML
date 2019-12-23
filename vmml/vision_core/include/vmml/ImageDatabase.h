@@ -25,6 +25,7 @@
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "cvobj_serialization.h"
 #include "utilities.h"
 
@@ -37,7 +38,6 @@ namespace Vmml {
 class BinaryDescriptor
 {
 public:
-	typedef std::basic_string<unsigned char> ustring;
 	typedef std::shared_ptr<BinaryDescriptor> Ptr;
 	typedef std::unordered_set<BinaryDescriptor::Ptr> Set;
 	typedef std::shared_ptr<BinaryDescriptor::Set> SetPtr;
@@ -126,9 +126,6 @@ public:
 		return *this;
 	}
 
-	ustring serialize() const;
-	static BinaryDescriptor::Ptr deserialize(const ustring& s);
-
 	cv::Mat toCvMat() const;
 	std::string toString() const;
 
@@ -136,6 +133,14 @@ public:
 	unsigned size_in_bytes_;
 	unsigned size_in_bits_;
 
+	// Serialization support
+	BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+	template <class Archive>
+	void save(Archive &ar, const unsigned int v) const;
+
+	template<class Archive>
+	void load(Archive &ar, const unsigned int v);
 };
 
 
@@ -585,8 +590,11 @@ private:
 	const;
 
 	void decodeDescriptors(
-		const vector<cv::Mat> &descriptorSerialized,
-		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId);
+		const std::vector<cv::Mat> &descriptorSerialized,
+		std::map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId,
+		const std::unordered_map<uint64, std::vector<InvIndexItem>> &invIndexEncoded,
+		const std::unordered_map<uint64, uint64> &descriptorIdEncodedToRealDescId
+		);
 
 	template<class Archive>
 	void save(Archive &ar, const unsigned int v) const;
@@ -663,9 +671,13 @@ void ImageDatabase::load(Archive &ar, const unsigned int v)
 
 	// Descriptors
 	vector<cv::Mat> descriptorSerialized;
-	map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
+	std::map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
+	std::unordered_map<uint64, std::vector<InvIndexItem>> invIndexEncoded;
+	std::unordered_map<uint64, uint64> descriptorIdEncodedToRealDescId;
 	ar >> descriptorSerialized;
-	decodeDescriptors(descriptorSerialized, descriptorPtrId);
+	ar >> invIndexEncoded;
+	ar >> descriptorIdEncodedToRealDescId;
+	decodeDescriptors(descriptorSerialized, descriptorPtrId, invIndexEncoded, descriptorIdEncodedToRealDescId);
 
 	uint numOfTrees;
 	ar >> numOfTrees;

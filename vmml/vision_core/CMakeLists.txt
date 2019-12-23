@@ -45,7 +45,7 @@ endif()
 catkin_package(
 	INCLUDE_DIRS include
 	LIBRARIES vmml
-	CATKIN_DEPENDS roscpp rosbag_viewer geodesy
+	CATKIN_DEPENDS roscpp rosbag_viewer geodesy velodyne_pointcloud
 )
 
 include_directories(
@@ -174,6 +174,9 @@ target_link_libraries(
 		vmml
 		${REQUIRED_LIBS}
 )
+
+add_executable(test_blob test/test_blob.cc)
+target_link_libraries(test_blob Boost::serialization)
 
 #add_executable(
 #	cv_optflow
