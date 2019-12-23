@@ -55,6 +55,16 @@ namespace boost {
 }
 
 
+namespace boost{
+	namespace serialization {
+		template <class Archive, typename PointScalar>
+		void serialize (Archive &ar, cv::Point_<PointScalar> &point, const unsigned int version)
+		{
+			ar & point.x & point.y;
+		}
+	}
+}
+
 
 BOOST_SERIALIZATION_SPLIT_FREE(cv::KeyPoint)
 namespace boost{
@@ -92,6 +102,7 @@ namespace boost{
 		}
 	}
 }
+
 
 
 #endif // _CV_OBJ_SERIALIZATION

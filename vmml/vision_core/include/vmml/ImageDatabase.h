@@ -21,6 +21,10 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 #include "cvobj_serialization.h"
 #include "utilities.h"
 
@@ -218,6 +222,10 @@ private:
 		bool is_bad_;
 		uint64 descriptorId;
 		uint64 root_;
+
+		template<class Archive>
+		void serialize(Archive &ar, const unsigned int version)
+		{ ar & is_leaf_ & is_bad_ & descriptorId & root_; }
 	};
 };
 
@@ -570,7 +578,10 @@ private:
 
 	void encodeDescriptors(
 		vector<cv::Mat> &descriptorSerialized,
-		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
+		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId,
+		std::unordered_map<uint64, std::vector<InvIndexItem>> &invIndexEncoded,
+		std::unordered_map<uint64, uint64> &descriptorIdEncodedToRealDescId
+		)
 	const;
 
 	void decodeDescriptors(
@@ -605,16 +616,34 @@ void ImageDatabase::save(Archive &ar, const unsigned int v) const
 	ar << min_feat_apps_;
 
 	// Descriptors
-	vector<cv::Mat> descriptorSerialized;
-	map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
-	encodeDescriptors(descriptorSerialized, descriptorPtrId);
+	std::vector<cv::Mat> descriptorSerialized;
+	std::map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
+	std::unordered_map<uint64, std::vector<InvIndexItem>> invIndexEncoded;
+	std::unordered_map<uint64, uint64> descriptorIdEncodedToRealDescId;
+
+	encodeDescriptors(descriptorSerialized, descriptorPtrId, invIndexEncoded, descriptorIdEncodedToRealDescId);
 	ar << descriptorSerialized;
+	ar << invIndexEncoded;
+	ar << descriptorIdEncodedToRealDescId;
 
 	// Trees
 	ar << trees_.size();
 	for (int i=0; i<trees_.size(); i++) {
 		ar << *trees_[i];
 
+		set<uint64> dsetEnc;
+		vector<BinaryTreeNode::BinaryTreeNodeData_> nodeData;
+		map<uint64, uint64> desc_to_node_enc;
+		uint64 rootId;
+		std::unordered_map<uint64, set<uint64>> nodesChilds;
+		std::unordered_map<uint64, set<uint64>> nodesChildDescriptors;
+		trees_[i]->encode(descriptorPtrId, dsetEnc, nodeData, desc_to_node_enc, rootId, nodesChilds, nodesChildDescriptors);
+		ar << dsetEnc
+			<< nodeData
+			<< desc_to_node_enc
+			<< rootId
+			<< nodesChilds
+			<< nodesChildDescriptors;
 	}
 }
 

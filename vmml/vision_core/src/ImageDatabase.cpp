@@ -967,7 +967,9 @@ void ImageDatabase::purgeDescriptors(const uint curr_img)
 void
 ImageDatabase::encodeDescriptors(
 	vector<cv::Mat> &descriptorSerialized,
-	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId)
+	map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId,
+	std::unordered_map<uint64, std::vector<InvIndexItem>> &invIndexEncoded,
+	std::unordered_map<uint64, uint64> &descriptorIdEncodedToRealDescId)
 const
 {
 	descriptorSerialized.reserve(dset_.size());
@@ -980,7 +982,15 @@ const
 		i++;
 	}
 
-	// XXX: call BinaryTree::encode() using these vars
+	invIndexEncoded.clear();
+	for (auto &mp: inv_index_) {
+		invIndexEncoded.insert(make_pair(descriptorPtrId.at(mp.first), mp.second));
+	}
+
+	descriptorIdEncodedToRealDescId.clear();
+	for (auto &mp: desc_to_id_) {
+		descriptorIdEncodedToRealDescId.insert(make_pair(descriptorPtrId.at(mp.first), mp.second));
+	}
 }
 
 

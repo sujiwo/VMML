@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	kfToFrameNum[curKf] = 0;
 
 //	const int maxLim = images.size();
-	const int maxLim = 2000;
+	const int maxLim = 1000;
 	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
@@ -94,8 +94,6 @@ int main(int argc, char *argv[])
 			cout << "XXX!\n";
 			continue;
 		}
-
-//		imageDb.addImage2(i, curImage->allKeypoints(), curImage->allDescriptors());
 
 		float comparisonScore = compareAndScore(*imageAnchor, *curImage);
 		bool isKeyFrame=false;
@@ -119,6 +117,10 @@ int main(int argc, char *argv[])
 
 	cout << "Done mapping\n";
 
+
+	imageDb.saveToDisk("imagedb-2000.dat");
+
+	/*
 	// Image search
 	auto queryFrame = BaseFrame::create(queryImg, camera0);
 	queryFrame->computeFeatures(bFeats);
@@ -147,6 +149,6 @@ int main(int argc, char *argv[])
 //    }
     cout << "# of images: " << imageDb.numImages() << endl;
     cout << "# of descriptors: " << imageDb.numDescriptors() << endl;
-
+*/
 	return 0;
 }
