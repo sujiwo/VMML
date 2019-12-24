@@ -39,28 +39,27 @@ void BinaryDescriptor::serialize(Archive &ar, const unsigned int v)
 template<class Archive>
 void BinaryTreeNode::serialize(Archive &ar, const uint v)
 {
-	ar
-		& is_leaf_
-		& is_bad_
-		& desc_
-		& root_
-		& ch_nodes_
-		& ch_descs_;
+	ar	& is_leaf_;
+	ar	& is_bad_;
+	ar	& desc_;
+	ar	& root_;
+	ar	& ch_nodes_;
+	ar	& ch_descs_;
 }
 
 
 template<class Archive>
 void BinaryTree::serialize(Archive &ar, const unsigned int v)
 {
-	ar  & tree_id_
-		& root_
-		& k_
-		& s_
-		& k_2_
-		& nset_
-		& desc_to_node_
-		& degraded_nodes_
-		& nvisited_nodes_;
+	ar  & tree_id_;
+	ar	& root_;
+	ar	& k_;
+	ar	& s_;
+	ar	& k_2_;
+	ar	& nset_;
+	ar	& desc_to_node_;
+	ar	& degraded_nodes_;
+	ar	& nvisited_nodes_;
 }
 
 
@@ -169,7 +168,7 @@ void ImageDatabase::load(Archive &ar, const unsigned int v)
 
 	trees_.clear();
 	for (int i=0; i<t_; i++) {
-		BinaryTree::Ptr vtree;
+		BinaryTree::Ptr vtree(new BinaryTree);
 		ar >> *vtree;
 		trees_.push_back(vtree);
 	}
