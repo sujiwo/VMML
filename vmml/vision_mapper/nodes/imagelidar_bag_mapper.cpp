@@ -31,14 +31,13 @@ const TTransform tLidarToCamera = TTransform::from_XYZ_RPY(
 int main(int argc, char *argv[])
 {
 	// Find vocabulary, mask & velodyne calibration file
-	auto vocabPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "ORBvoc.txt";
 	auto maskPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "meidai_mask.png";
 	auto calibPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai-64e-S2.yaml";
 	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 
 	rosbag::Bag mybag(argv[1]);
-	MapBuilderLidar mapBuilderz(camera0, vocabPath.string());
+	MapBuilderLidar mapBuilderz(camera0);
 	mapBuilderz.setTransformationFromLidarToCamera(tLidarToCamera);
 	mapBuilderz.run(mybag, calibPath.string(), "/velodyne_packets", "/camera1/image_raw", enlarge);
 

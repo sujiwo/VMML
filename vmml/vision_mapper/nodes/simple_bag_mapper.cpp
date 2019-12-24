@@ -53,14 +53,13 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(argv[1]);
 	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
 
-	// Find vocabulary & mask
-	auto vocabPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "ORBvoc.txt";
+	// Find mask
 	auto maskPath = boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai_mask.png";
 	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
 	camera0 = camera0 * enlarge;
 	camera0.fps = float(imageBag.size()) / Vmml::toSeconds(imageBag.length().toBoost());
 
-	MapBuilder mapBuilderz(camera0, vocabPath.string());
+	MapBuilder mapBuilderz(camera0);
 
 	/*
 	 * Disable ROS connector when debugging (set __NOROS environment variable to 1)
