@@ -13,8 +13,8 @@
 
 namespace Vmml {
 
-ImageDatabaseBuilder::ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath):
-	MapBuilder(camera0, mapVocabularyPath),
+ImageDatabaseBuilder::ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0):
+	MapBuilder(camera0),
 	mParams(_p)
 {
 	// Parameter set

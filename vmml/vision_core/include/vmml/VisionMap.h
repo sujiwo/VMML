@@ -32,6 +32,7 @@
 #include "KeyFrame.h"
 #include "Trajectory.h"
 #include "ORBVocabulary.h"
+#include "ImageDatabase.h"
 
 
 namespace Vmml {
@@ -47,8 +48,6 @@ public:
 	void reset();
 
 	int addCameraParameter (const CameraPinholeParams &vscamIntr);
-
-	bool loadVocabulary(const std::string &vocabPath);
 
 	inline const CameraPinholeParams& getCameraParameter(int cameraId) const
 	{ return cameraList[cameraId]; }
@@ -169,6 +168,9 @@ public:
 	 * Find matched keyframe candidates from database using BoW method.
 	 * The candidates are sorted according to number of similar words
 	 */
+	ImageDatabase& getImageDatabase()
+	{ return imageDb; }
+
 	std::vector<kfid>
 	findCandidates (BaseFrame &f) const;
 
@@ -180,12 +182,6 @@ public:
 
 	static Ptr create()
 	{ return Ptr(new VisionMap); }
-
-	inline const ORBVocabulary& getVocabulary() const
-	{ return myVoc; }
-
-	inline ORBVocabulary& getVocabulary()
-	{ return myVoc; }
 
 protected:
 
@@ -246,10 +242,7 @@ protected:
 	/*
 	 * Image Database Part
 	 */
-	ORBVocabulary myVoc;
-	std::map<DBoW2::WordId, std::set<kfid> > invertedKeywordDb;
-	std::map<kfid, DBoW2::BowVector> BoWList;
-	std::map<kfid, DBoW2::FeatureVector> FeatVecList;
+	ImageDatabase imageDb;
 
 	std::vector<KeyFrame::Ptr> getSortedKeyframes() const;
 };

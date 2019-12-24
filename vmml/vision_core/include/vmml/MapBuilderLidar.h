@@ -23,7 +23,7 @@ namespace Vmml {
 class MapBuilderLidar : public Vmml::MapBuilder
 {
 public:
-	MapBuilderLidar(const CameraPinholeParams &camera0, const std::string &mapVocabularyPath="");
+	MapBuilderLidar(const CameraPinholeParams &camera0);
 	virtual ~MapBuilderLidar();
 
 	inline void setTransformationFromLidarToCamera(const TTransform &tx)

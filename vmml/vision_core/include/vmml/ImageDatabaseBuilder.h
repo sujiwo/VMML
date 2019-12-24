@@ -66,7 +66,7 @@ public:
 		Matcher::PairList featureMatchesFromLastAnchor;
 	};
 
-	ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0, const std::string &mapVocabularyPath);
+	ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0);
 	virtual ~ImageDatabaseBuilder();
 
 	bool feed(CloudT::ConstPtr cloudInp, const ptime& cloudTimestamp, cv::Mat img, const ptime& imageTimestamp);

@@ -122,13 +122,11 @@ MapBuilder::TmpFrame::toKeyFrame() const
 }
 
 
-MapBuilder::MapBuilder(const CameraPinholeParams &mycam, const std::string &mapVocabularyPath) :
+MapBuilder::MapBuilder(const CameraPinholeParams &mycam) :
 	camera0(mycam)
 {
 	vMap = std::make_shared<VisionMap>();
 	vMap->addCameraParameter(camera0);
-	if (mapVocabularyPath.size()!=0)
-		vMap->loadVocabulary(mapVocabularyPath);
 }
 
 
@@ -277,11 +275,8 @@ MapBuilder::createInitialMap()
 		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
 	}
 	cout << "New map initialized: " << mapPoints.size() << " pts\n";
-	anchorKeyframe->computeBoW();
-	K2->computeBoW();
 
 	vMap->updateCovisibilityGraph(anchorKeyframe->getId());
-
 
 	// Call bundle adjustment
 	Optimizer::BundleAdjustment(*vMap, 50);

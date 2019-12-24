@@ -84,14 +84,6 @@ VisionMap::reset()
 }
 
 
-bool
-VisionMap::loadVocabulary(const std::string &vocabPath)
-{
-	cerr << "Loading vocabulary... \n";
-	return myVoc.loadFromTextFile(vocabPath);
-}
-
-
 int
 VisionMap::addCameraParameter (const CameraPinholeParams &vscamIntr)
 {
@@ -112,14 +104,11 @@ VisionMap::addKeyFrame(KeyFrame::Ptr frame)
 	/*
 	 * image database part
 	 */
-	auto kfDescriptors = KeyFrame::toDescriptorVector(frame->allDescriptors());
-	BoWList[nId] = DBoW2::BowVector();
-	FeatVecList[nId] = DBoW2::FeatureVector();
-	myVoc.transform(kfDescriptors, BoWList[nId], FeatVecList[nId], 4);
-	// Build Inverse Index
-	for (auto &bowvec: BoWList[nId]) {
-		const DBoW2::WordId wrd = bowvec.first;
-		invertedKeywordDb[wrd].insert(nId);
+	if (imageDb.numImages()==0) {
+		imageDb.addImage(nId, frame->allKeypoints(), frame->allDescriptors());
+	}
+	else {
+		imageDb.addImage2(nId, frame->allKeypoints(), frame->allDescriptors());
 	}
 
 	// This keyframe has no map points yet
@@ -422,10 +411,7 @@ VisionMap::save (const std::string &path) const
 	}
 
 	// Image Database
-	mapStore << myVoc;
-	mapStore << invertedKeywordDb;
-	mapStore << BoWList;
-	mapStore << FeatVecList;
+	mapStore << imageDb;
 
 	mapFileFd.close();
 	return true;
@@ -473,10 +459,7 @@ VisionMap::load (const std::string &path)
 		mappointInvIdx.insert(make_pair(mPt->getId(), mPt));
 	}
 
-	mapStore >> myVoc;
-	mapStore >> invertedKeywordDb;
-	mapStore >> BoWList;
-	mapStore >> FeatVecList;
+	mapStore >> imageDb;
 
 	mapFileFd.close();
 	cout << "Done\n";
@@ -485,99 +468,27 @@ VisionMap::load (const std::string &path)
 
 
 std::vector<kfid>
-VisionMap::findCandidates (BaseFrame &frame) const
+VisionMap::findCandidates (BaseFrame &queryFrame) const
 {
-	map<kfid, uint> kfCandidates;
-	kfCandidates.clear();
+	queryFrame.computeFeatures(featureDetector);
 
-	DBoW2::BowVector frameWords;
-	DBoW2::FeatureVector frameFeatureVec;
-	frame.computeFeatures(featureDetector);
-	frame.computeBoW(frameWords, frameFeatureVec, myVoc);
-
-	int maxCommonWords = 0;
-	for (auto &bWrdPtr : frameWords) {
-		auto wordId = bWrdPtr.first;
-		set<kfid> relatedKf;
-		try {
-			relatedKf = invertedKeywordDb.at(wordId);
-		} catch (out_of_range &e) { continue; }
-
-		for (const kfid &k: relatedKf) {
-			try {
-				const uint count = kfCandidates.at(k);
-				kfCandidates.at(k) = count+1;
-
-			} catch (out_of_range&) {
-				kfCandidates[k] = 1;
-			}
-
-			if (maxCommonWords < kfCandidates.at(k))
-				maxCommonWords = kfCandidates.at(k);
-		}
+	vector<vector<cv::DMatch>> featureMatches;
+	imageDb.searchDescriptors(queryFrame.allDescriptors(), featureMatches, 2, 64);
+	// Filter matches according to ratio test
+	vector<cv::DMatch> realMatches;
+	for (uint m=0; m<featureMatches.size(); m++) {
+		if (featureMatches[m][0].distance < featureMatches[m][1].distance * 0.8)
+			realMatches.push_back(featureMatches[m][0]);
 	}
 
-	if (kfCandidates.size()==0)
-		return vector<kfid>();
+	vector<ImageMatch> imageMatches;
+	imageDb.searchImages(queryFrame.allDescriptors(), realMatches, imageMatches);
 
-	int minCommonWords = maxCommonWords * 0.8f;
-
-	// Convert to scoring
-	map<kfid,double> tKfCandidateScores(kfCandidates.begin(), kfCandidates.end());
-	for (auto &ptr: kfCandidates) {
-		const kfid &k = ptr.first;
-		if (ptr.second < minCommonWords)
-			tKfCandidateScores[k] = 0;
-		else
-			tKfCandidateScores[k] = myVoc.score(frameWords, BoWList.at(k));
+	vector<kfid> keyframeMatches;
+	for (auto &im: imageMatches) {
+		keyframeMatches.push_back(im.image_id);
 	}
-
-	// Accumulate score by covisibility
-	double bestAccScore = 0;
-	map<kfid,double> tKfAccumScores;
-	for (auto kfp: tKfCandidateScores) {
-
-		double bestScore = kfp.second;
-		double accScore = bestScore;
-		kfid bestKf = kfp.first;
-
-		vector<kfid> kfNeighs = getOrderedRelatedKeyFramesFrom(kfp.first, 10);
-		for (auto &k2: kfNeighs) {
-			try {
-				double k2score = tKfCandidateScores.at(k2);
-				accScore += k2score;
-				if (bestScore < k2score) {
-					bestKf = k2;
-					bestScore = k2score;
-				}
-			} catch (exception &e) {
-				continue;
-			}
-		}
-
-		tKfAccumScores[kfp.first] = accScore;
-		if (accScore > bestAccScore)
-			bestAccScore = accScore;
-	}
-
-	// return all keyframes with accumulated scores higher than 0.75*bestAccumScore
-	double minScoreToRetain = 0.75 * bestAccScore;
-	vector<kfid> relocCandidates;
-	for (auto &p: tKfAccumScores) {
-		if (p.second > minScoreToRetain)
-			relocCandidates.push_back(p.first);
-	}
-	// Sort
-	sort(relocCandidates.begin(), relocCandidates.end(),
-		[&](const kfid &k1, const kfid &k2)
-		{
-			double v1 = tKfAccumScores[k1],
-				v2 = tKfAccumScores[k2];
-			return v1>v2;
-		}
-	);
-
-	return relocCandidates;
+	return keyframeMatches;
 }
 
 

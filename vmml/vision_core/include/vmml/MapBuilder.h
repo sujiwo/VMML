@@ -30,7 +30,7 @@ class MapBuilder
 {
 public:
 
-	MapBuilder(const CameraPinholeParams &camera0, const std::string &mapVocabularyPath="");
+	MapBuilder(const CameraPinholeParams &camera0);
 
 	virtual bool feed(cv::Mat inputImage, const ptime &timestamp);
 

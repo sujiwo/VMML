@@ -35,7 +35,6 @@ KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int ca
 	id = KeyFrame::nextId;
 	if (doComputeFeatures==true) {
 		computeFeatures(mParent->getFeatureDetector());
-		computeBoW();
 	}
 	nextId++;
 }
@@ -73,26 +72,6 @@ KeyFrame::fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<Visi
 	Ptr kfrm (new KeyFrame(frameSource, mParent, cameraNumber));
 	kfrm->frCreationTime = ts;
 	return kfrm;
-}
-
-
-void
-KeyFrame::computeBoW()
-{
-	if (mParent->BoWList[this->id].empty() or mParent->FeatVecList[this->id].empty()) {
-		vector<cv::Mat> kfDescs = toDescriptorVector(allDescriptors());
-
-		// Build BoW descriptor of this keyframe
-		mParent->BoWList[this->id] = DBoW2::BowVector();
-		mParent->FeatVecList[this->id] = DBoW2::FeatureVector();
-		mParent->myVoc.transform(kfDescs, mParent->BoWList[this->id], mParent->FeatVecList[this->id], 4);
-
-		// Build Inverse Index
-		for (auto &bowvec: mParent->BoWList[this->id]) {
-			const DBoW2::WordId wrd = bowvec.first;
-			mParent->invertedKeywordDb[wrd].insert(this->id);
-		}
-	}
 }
 
 
@@ -145,11 +124,6 @@ const
 
 	return mapPts;
 }
-
-
-const DBoW2::BowVector&
-KeyFrame::getBoW() const
-{ return mParent->BoWList.at(this->id); }
 
 
 std::vector<MapPoint::Ptr>

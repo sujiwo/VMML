@@ -71,16 +71,12 @@ public:
 	static Ptr
 	fromBaseFrame(const BaseFrame &frameSource, const std::shared_ptr<VisionMap>& mParent, int cameraNumber=0, const ptime &ts=MAX_TIME);
 
-	void computeBoW();
-
 	double computeSceneMedianDepth() const;
 
 	std::vector<mpid>
 	getMapPointsInArea (const float x, const float y, const float windowSize, const int minLevel=-1, const int maxLevel=-1) const;
 
 	int numberOfMappoints() const;
-
-	const DBoW2::BowVector& getBoW() const;
 
 	std::vector<MapPoint::Ptr> getVisibleMapPoints() const;
 

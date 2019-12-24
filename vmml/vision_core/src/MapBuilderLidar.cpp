@@ -18,8 +18,8 @@ using pcl::PointXYZ;
 namespace Vmml {
 
 
-MapBuilderLidar::MapBuilderLidar(const CameraPinholeParams &camera0, const std::string &mapVocabularyPath) :
-	MapBuilder(camera0, mapVocabularyPath)
+MapBuilderLidar::MapBuilderLidar(const CameraPinholeParams &camera0) :
+	MapBuilder(camera0)
 {
 	// TODO Auto-generated constructor stub
 
