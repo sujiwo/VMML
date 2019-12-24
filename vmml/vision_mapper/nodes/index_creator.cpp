@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
 	imageDb.addImage(curKf, imageAnchor->allKeypoints(), imageAnchor->allDescriptors());
 	kfToFrameNum[curKf] = 0;
 
-//	const int maxLim = images.size();
-	const int maxLim = 1000;
+	const int maxLim = images.size();
+//	const int maxLim = 1000;
 	for (int i=1; i<maxLim; ++i) {
 		auto curImage = BaseFrame::create(images.at(i), camera0);
 		ptime imageTimestamp = images.timeAt(i).toBoost();
@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
 		}
 
 		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << endl;
+		if (imageDb.numImages()==3) break;
 	}
 
 	trackGnss.dump("gnss.csv");
@@ -117,8 +118,10 @@ int main(int argc, char *argv[])
 
 	cout << "Done mapping\n";
 
-
 	imageDb.saveToDisk("imagedb-2000.dat");
+
+	ImageDatabase iDb2;
+	iDb2.loadFromDisk("imagedb-2000.dat");
 
 	/*
 	// Image search

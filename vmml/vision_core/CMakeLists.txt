@@ -176,7 +176,7 @@ target_link_libraries(
 )
 
 add_executable(test_blob test/test_blob.cc)
-target_link_libraries(test_blob Boost::serialization)
+target_link_libraries(test_blob ${OpenCV_LIBS} Boost::serialization Boost::system vmml)
 
 #add_executable(
 #	cv_optflow

@@ -9,7 +9,16 @@
 #define _IMAGEDATABASE_SERIALIZATION_H_
 
 #include <boost/serialization/unordered_set.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include "cvobj_serialization.h"
 #include "ImageDatabase.h"
+
 
 namespace Vmml {
 
@@ -18,7 +27,12 @@ template <class Archive>
 void BinaryDescriptor::serialize(Archive &ar, const unsigned int v)
 {
 	ar & size_in_bytes_ & size_in_bits_;
-	ar & boost::serialization::make_array(bits_, size_in_bytes_);
+    if (Archive::is_loading::value)
+    {
+        assert(bits_ == nullptr);
+        bits_ = new unsigned char[size_in_bytes_];
+    }
+	ar & boost::serialization::make_array<unsigned char>(bits_, size_in_bytes_);
 }
 
 
@@ -78,6 +92,15 @@ void ImageDatabase::save(Archive &ar, const unsigned int v) const
 	ar << purge_descriptors_;
 	ar << min_feat_apps_;
 
+	ar << dset_;
+	ar << inv_index_;
+	ar << desc_to_id_;
+	ar << recently_added_;
+
+	for (auto &t: trees_) {
+		ar << *t;
+	}
+/*
 	// Descriptors
 	std::vector<cv::Mat> descriptorSerialized;
 	std::map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
@@ -108,6 +131,7 @@ void ImageDatabase::save(Archive &ar, const unsigned int v) const
 			<< nodesChilds
 			<< nodesChildDescriptors;
 	}
+*/
 }
 
 
@@ -124,6 +148,32 @@ void ImageDatabase::load(Archive &ar, const unsigned int v)
 	ar >> purge_descriptors_;
 	ar >> min_feat_apps_;
 
+	ar >> dset_;
+	ar >> inv_index_;
+	ar >> desc_to_id_;
+	ar >> recently_added_;
+
+	id_to_desc_.clear();
+	for (auto &mp: desc_to_id_) {
+		id_to_desc_[mp.second] = mp.first;
+	}
+
+	// Load integrity check
+	for (auto &descPtr: dset_) {
+		try {
+			auto im = inv_index_.at(descPtr);
+		} catch (std::out_of_range &e) {
+			std::cerr << "Unpaired descriptor found" << std::endl;
+		}
+	}
+
+	trees_.clear();
+	for (int i=0; i<t_; i++) {
+		BinaryTree::Ptr vtree;
+		ar >> *vtree;
+		trees_.push_back(vtree);
+	}
+/*
 	// Descriptors
 	vector<cv::Mat> descriptorSerialized;
 	std::map<BinaryDescriptor::Ptr, uint64> descriptorPtrId;
@@ -141,6 +191,7 @@ void ImageDatabase::load(Archive &ar, const unsigned int v)
 		ar >> *iTree;
 		trees_.push_back(iTree);
 	}
+*/
 }
 
 

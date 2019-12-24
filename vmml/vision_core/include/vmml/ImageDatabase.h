@@ -20,13 +20,6 @@
 #include <opencv2/core/hal/hal.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_member.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/set.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include "cvobj_serialization.h"
 #include "utilities.h"
 
 
@@ -41,6 +34,10 @@ public:
 	typedef std::shared_ptr<BinaryDescriptor> Ptr;
 	typedef std::unordered_set<BinaryDescriptor::Ptr> Set;
 	typedef std::shared_ptr<BinaryDescriptor::Set> SetPtr;
+
+	explicit BinaryDescriptor():
+		bits_(nullptr), size_in_bits_(0), size_in_bytes_(0)
+	{}
 
 	explicit BinaryDescriptor(const cv::Mat& desc);
 	explicit BinaryDescriptor(const BinaryDescriptor& bd);
