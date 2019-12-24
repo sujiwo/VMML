@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <rosbag/bag.h>
 #include "vmml/ImageBag.h"
 #include "vmml/VisionMap.h"
@@ -54,6 +55,17 @@ float compareAndScore(const BaseFrame &f1, const BaseFrame &f2)
 }
 
 
+template<typename K, typename V>
+void writeCsv(const string &filepath, const map<K,V> &container)
+{
+	fstream fd(filepath, fstream::out|fstream::trunc);
+	for(auto &fmp: container) {
+		fd << fmp.first << ' ' << fmp.second << endl;
+	}
+	fd.close();
+}
+
+
 int main(int argc, char *argv[])
 {
 	Path mybagPath(argv[1]);
@@ -90,11 +102,6 @@ int main(int argc, char *argv[])
 		ptime imageTimestamp = images.timeAt(i).toBoost();
 		curImage->computeFeatures(bFeats);
 
-		if (curImage->numOfKeyPoints()<=10) {
-			cout << "XXX!\n";
-			continue;
-		}
-
 		float comparisonScore = compareAndScore(*imageAnchor, *curImage);
 		bool isKeyFrame=false;
 
@@ -110,48 +117,17 @@ int main(int argc, char *argv[])
 		}
 
 		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << endl;
-		if (imageDb.numImages()==3) break;
+//		if (imageDb.numImages()==3) break;
 	}
 
 	trackGnss.dump("gnss.csv");
 	trackImage.dump("images.csv");
 
+	// write csv file for mapping from keyframe# -> bagframe#
+	writeCsv("frames.csv", kfToFrameNum);
+
 	cout << "Done mapping\n";
 
 	imageDb.saveToDisk("imagedb-2000.dat");
-
-	ImageDatabase iDb2;
-	iDb2.loadFromDisk("imagedb-2000.dat");
-
-	/*
-	// Image search
-	auto queryFrame = BaseFrame::create(queryImg, camera0);
-	queryFrame->computeFeatures(bFeats);
-	vector<vector<cv::DMatch>> featureMatchesFromIdx;
-
-	// Searching the query descriptors against the features
-	imageDb.searchDescriptors(queryFrame->allDescriptors(), featureMatchesFromIdx, 2, 64);
-
-	// Filtering matches according to the ratio test
-	vector<cv::DMatch> matches;
-	for (unsigned m = 0; m < featureMatchesFromIdx.size(); m++) {
-		if (featureMatchesFromIdx[m][0].distance < featureMatchesFromIdx[m][1].distance * 0.8) {
-			matches.push_back(featureMatchesFromIdx[m][0]);
-		}
-	}
-
-    vector<ImageMatch> image_matches;
-    // We look for similar images according to the good matches found
-    imageDb.searchImages(queryFrame->allDescriptors(), matches, image_matches);
-
-    for (int i=0; i<min(5, (int)image_matches.size()); ++i) {
-    	cout << image_matches[i].image_id << '-' << kfToFrameNum.at(image_matches[i].image_id) << " : " << image_matches[i].score << endl;
-    }
-//    for (auto &imgMatch: image_matches) {
-//    	cout << imgMatch.first << ": " << imgMatch.second << endl;
-//    }
-    cout << "# of images: " << imageDb.numImages() << endl;
-    cout << "# of descriptors: " << imageDb.numDescriptors() << endl;
-*/
 	return 0;
 }

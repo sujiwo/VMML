@@ -394,9 +394,7 @@ private:
 	void printNode(BinaryTreeNode::Ptr n);
 	void deleteNodeRecursive(BinaryTreeNode::Ptr n);
 
-	/*
-	 * these two functions are helper method for serialization, called by ImageDatabase
-	 */
+/*
 	void encode (
 		const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrId,
 		set<uint64> &dsetEnc,
@@ -408,6 +406,7 @@ private:
 	) const;
 
 	void decode ();
+*/
 };
 
 
@@ -562,6 +561,7 @@ private:
 	void deleteDescriptor(BinaryDescriptor::Ptr q);
 	void purgeDescriptors(const uint curr_img);
 
+/*
 	void encodeDescriptors(
 		vector<cv::Mat> &descriptorSerialized,
 		map<BinaryDescriptor::Ptr, uint64> &descriptorPtrId,
@@ -576,6 +576,7 @@ private:
 		const std::unordered_map<uint64, std::vector<InvIndexItem>> &invIndexEncoded,
 		const std::unordered_map<uint64, uint64> &descriptorIdEncodedToRealDescId
 		);
+*/
 
 	template<class Archive>
 	void save(Archive &ar, const unsigned int v) const;

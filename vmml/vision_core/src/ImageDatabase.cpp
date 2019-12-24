@@ -445,6 +445,7 @@ void BinaryTree::printNode(BinaryTreeNode::Ptr n)
 }
 
 
+/*
 void
 BinaryTree::encode (
 	const std::map<BinaryDescriptor::Ptr, uint64_t> &descriptorPtrToId,			// the input
@@ -503,6 +504,7 @@ const
 		nodesChildDescriptors[nodeId] = chDescs;
 	}
 }
+*/
 
 
 ImageDatabase::ImageDatabase(
@@ -947,6 +949,7 @@ void ImageDatabase::purgeDescriptors(const uint curr_img)
 }
 
 
+/*
 void
 ImageDatabase::encodeDescriptors(
 	vector<cv::Mat> &descriptorSerialized,
@@ -1009,6 +1012,7 @@ ImageDatabase::decodeDescriptors(
 
 	}
 }
+*/
 
 
 void

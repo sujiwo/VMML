@@ -61,9 +61,13 @@ public:
 	friend class BucketFeature;
 
 	BaseFrame();
+	BaseFrame(cv::Mat img);
 	BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p=Pose::Identity());
 	BaseFrame(const BaseFrame &copy);
 	virtual ~BaseFrame();
+
+	inline static Ptr create(cv::Mat img)
+	{ return Ptr(new BaseFrame(img)); }
 
 	static
 	Ptr create(cv::Mat img, const CameraPinholeParams &cam, const Pose &p=Pose::Identity());

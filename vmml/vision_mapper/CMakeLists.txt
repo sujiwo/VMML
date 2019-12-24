@@ -143,6 +143,22 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+add_executable(
+	test_imagedb
+		nodes/test_imagedb.cpp
+)
+
+target_link_libraries(
+	test_imagedb
+		${catkin_LIBRARIES}
+		${vision_core_LIBRARIES}
+		${OpenCV_LIBS}
+)
+
+install(
+	TARGETS test_imagedb
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 add_executable(
 	imagedb_mapper

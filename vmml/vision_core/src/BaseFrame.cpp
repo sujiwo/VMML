@@ -27,6 +27,13 @@ BaseFrame::BaseFrame() :
 {}
 
 
+BaseFrame::BaseFrame(cv::Mat img) :
+	image(img),
+	cameraParam(CameraPinholeParams(0, 0, 0, 0, img.cols, img.rows)),
+	mPose(Pose::Identity())
+{}
+
+
 BaseFrame::BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p) :
 	image(img),
 	mPose(p),
