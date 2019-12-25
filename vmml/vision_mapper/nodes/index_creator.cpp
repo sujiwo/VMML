@@ -66,12 +66,25 @@ void writeCsv(const string &filepath, const map<K,V> &container)
 }
 
 
+string selectTopicForGnssLocalization(const rosbag::Bag &bagsrc)
+{
+	auto topicList = RandomAccessBag::getTopicList(bagsrc);
+	for (auto &topicPair: topicList) {
+		if (topicPair.second=="nmea_msgs/Sentence" or topicPair.second=="sensor_msgs/NavSatFix")
+			return topicPair.first;
+	}
+	throw runtime_error("There is no supported message type for GNSS Localization");
+}
+
+
 int main(int argc, char *argv[])
 {
+	cout << "Opening bag... ";
 	Path mybagPath(argv[1]);
 	rosbag::Bag mybag(mybagPath.string());
+	cout << "Done" << endl;
 
-	ImageBag images(mybag, "/camera1/image_raw", 0.416666666667);
+	ImageBag images(mybag, "/front_rgb/image_raw", 0.416666666667);
 	uint width, height;
 	images.getImageDimensions(width, height);
 
@@ -81,8 +94,10 @@ int main(int argc, char *argv[])
 
 	CameraPinholeParams camera0(0, 0, 0, 0, width, height);
 
-	auto trackGnss = TrajectoryGNSS::fromRosBag(mybag, "/nmea_sentence");
+	auto gnssTopic = selectTopicForGnssLocalization(mybag);
+	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
 	trackGnss.dump("gnss.csv");
+	exit(1);
 
 	Trajectory trackImage;
 	kfid curKf = 0;

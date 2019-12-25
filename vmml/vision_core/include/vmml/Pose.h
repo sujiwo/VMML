@@ -45,6 +45,9 @@ Vector3d quaternionToRPY (const Quaterniond &q);
 class TQuaternion : public Eigen::Quaterniond
 {
 public:
+	inline TQuaternion() :
+		Eigen::Quaterniond(1.0, 0, 0, 0) {}
+
 	inline TQuaternion(const double &x, const double &y, const double &z, const double &w):
 		Quaterniond(w, x, y, z)
 	{}

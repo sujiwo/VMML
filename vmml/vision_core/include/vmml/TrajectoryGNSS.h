@@ -31,6 +31,9 @@ public:
 	static TrajectoryGNSS
 	fromRosBag2(rosbag::Bag &bag, const std::string &topicName);
 
+	static TrajectoryGNSS
+	fromRosBagSatFix(rosbag::Bag &bag, const std::string &topicName, int plane=7);
+
 protected:
 };
 

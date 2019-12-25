@@ -189,19 +189,19 @@ target_link_libraries(test_blob ${OpenCV_LIBS} Boost::serialization Boost::syste
 #)
 
 # Generic Vocabulary handling
-add_custom_target (orb_vocabulary 
-	ALL 
-		bunzip2 -c ${CMAKE_CURRENT_SOURCE_DIR}/samples/ORBvoc.txt.bz2 > ORBvoc.txt
-	DEPENDS samples/ORBvoc.txt.bz2
-	COMMENT "Extracting vocabulary... "
-)
+#add_custom_target (orb_vocabulary 
+#	ALL 
+#		bunzip2 -c ${CMAKE_CURRENT_SOURCE_DIR}/samples/ORBvoc.txt.bz2 > ORBvoc.txt
+#	DEPENDS samples/ORBvoc.txt.bz2
+#	COMMENT "Extracting vocabulary... "
+#)
 
 install(
 	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/car_mask_meter.png
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+#install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/car_mask_meter.png
+#	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#)
 

@@ -25,7 +25,7 @@ ImageBag::ImageBag(const rosbag::Bag &bag, const std::string &imageTopic, float 
 	zoomRatio(zoom),
 	imgPreps(ImagePreprocessor::ProcessMode::AGC)
 {
-	setGammaMeteringMask();
+//	setGammaMeteringMask();
 }
 
 

@@ -7,6 +7,7 @@
 
 #include <geodesy/utm.h>
 #include <nmea_msgs/Sentence.h>
+#include <sensor_msgs/NavSatFix.h>
 #include <gnss/geo_pos_conv.hpp>
 #include "RandomAccessBag.h"
 #include "vmml/TrajectoryGNSS.h"
@@ -350,6 +351,55 @@ TrajectoryGNSS::fromRosBag2(rosbag::Bag &bag, const std::string &topicName)
 
 	return vehicleTrack;
 }
+
+
+
+TrajectoryGNSS
+TrajectoryGNSS::fromRosBagSatFix(rosbag::Bag &bag, const std::string &topicName, int _plane)
+{
+	TrajectoryGNSS vehicleTrack;
+
+	RandomAccessBag nmeaBag(bag, topicName);
+	if (nmeaBag.messageType() != "sensor_msgs/NavSatFix")
+		throw runtime_error("Not GNSS bag");
+
+	PoseStamped prev_pose, pose;
+	TQuaternion quat;
+
+	for (int i=0; i<nmeaBag.size(); i++) {
+		auto currentMessage = nmeaBag.at<sensor_msgs::NavSatFix>(i);
+		ros::Time current_time = currentMessage->header.stamp;
+
+		geo_pos_conv geo;
+
+		geo.set_plane(_plane);
+		geo.llh_to_xyz(currentMessage->latitude, currentMessage->longitude, currentMessage->altitude);
+
+		tf::Transform pose_transform;
+		tf::Quaternion pose_q;
+
+		// pose.header.stamp = ros::Time::now();
+		Vector3d position(geo.y(), geo.x(), geo.z());
+		double yaw;
+
+		double distance = sqrt(pow(position.y() - prev_pose.position().y(), 2) +
+				pow(position.x() - prev_pose.position().x(), 2));
+//		std::cout << "distance : " << distance << std::endl;
+
+		if (distance > 0.2)
+		{
+			yaw = atan2(position.y() - prev_pose.position().y(), position.x() - prev_pose.position().x());
+			quat = TQuaternion(0, 0, yaw);
+			prev_pose = pose;
+		}
+
+		pose = PoseStamped(position, quat, current_time.toBoost());
+		vehicleTrack.push_back(pose);
+	}
+
+	return vehicleTrack;
+}
+
 
 
 } /* namespace Vmml */
