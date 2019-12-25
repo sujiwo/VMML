@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	vector<ImageMatch> imageMatches;
 	visDb.searchImages(queryFrame->allDescriptors(), realMatches, imageMatches);
 
-	for (int i=0; i<min(5, (int)imageMatches.size()); i++) {
+	for (int i=0; i<min(10, (int)imageMatches.size()); i++) {
 		cout << imageMatches[i].image_id << ' ' << imageMatches[i].score << endl;
 	}
 

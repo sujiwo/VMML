@@ -96,11 +96,7 @@ int main(int argc, char *argv[])
 
 	auto gnssTopic = selectTopicForGnssLocalization(mybag);
 	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
-	auto trajectoryO = trackGnss.setToOrigin(false);
-	auto trajectoryP = trackGnss.setToOrigin(true);
-	trajectoryO.dump("gnss1.csv");
-	trajectoryP.dump("gnss2.csv");
-	exit(0);
+	trackGnss.dump("gnss.csv");
 
 	Trajectory trackImage;
 	kfid curKf = 0;
@@ -134,7 +130,7 @@ int main(int argc, char *argv[])
 			kfToFrameNum[curKf] = i;
 
 			// put keyframe images for reference
-			string imgName = "kf" + to_string(i) + ".png";
+			string imgName = "kf" + to_string(curKf) + ".png";
 			cv::imwrite(imgName, curImage->getImage());
 		}
 
@@ -142,7 +138,6 @@ int main(int argc, char *argv[])
 //		if (imageDb.numImages()==3) break;
 	}
 
-	trackGnss.dump("gnss.csv");
 	trackImage.dump("images.csv");
 
 	// write csv file for mapping from keyframe# -> bagframe#
