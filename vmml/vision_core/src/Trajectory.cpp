@@ -365,11 +365,16 @@ Trajectory::transform(const TTransform &tx)
 
 
 Trajectory
-Trajectory::setToOrigin() const
+Trajectory::setToOrigin(bool onlyPosition) const
 {
 	Trajectory mOrig;
 
-	mOrig.push_back(PoseStamped(Pose::Identity(), at(0).timestamp));
+	if (onlyPosition==false) {
+		mOrig.push_back(PoseStamped(Pose::Identity(), at(0).timestamp));
+	} else {
+		mOrig.push_back(PoseStamped(Vector3d::Identity(), at(0).orientation(), at(0).timestamp));
+	}
+
 	for (int i=1; i<size(); ++i) {
 		ptime t = at(i).timestamp;
 		TTransform tx = at(i-1).inverse() * at(i);

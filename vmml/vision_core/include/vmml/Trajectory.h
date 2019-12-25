@@ -180,7 +180,9 @@ public:
 	void transform(const TTransform &tx);
 
 	// Create new trajectory like this, but the first position is origin
-	Trajectory setToOrigin() const;
+	// if onlyPosition is set to true, returned trajectory has starting position at origin
+	// but not changing orientation
+	Trajectory setToOrigin(bool onlyPosition=false) const;
 
 	double getElapsedDistance (const uint frontPos, const uint backPos=0) const;
 
