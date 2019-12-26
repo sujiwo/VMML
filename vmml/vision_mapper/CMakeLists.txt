@@ -11,6 +11,7 @@ add_compile_options(-std=c++11 -frtti -fopenmp)
 
 find_package(catkin REQUIRED COMPONENTS 
 	roscpp
+	rosbag_storage
 	std_msgs
 	tf
 	vision_core
@@ -53,17 +54,27 @@ include_directories(
 	${vision_core_SOURCE_DIR}
 )
 
+set(common_class 
+	src/RVizConnector.cpp
+	src/ProgramOptions.cpp
+)
+
+set(common_libs
+	${catkin_LIBRARIES}
+	${vision_core_LIBRARIES}
+	${OpenCV_LIBS}
+	Boost::program_options
+)
+
 add_executable(
 	simple_bag_mapper
 		nodes/simple_bag_mapper.cpp
-		src/RVizConnector.cpp
+		${common_class}
 )
 
 target_link_libraries(
 	simple_bag_mapper
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
+		${common_libs}
 )
 
 install(
@@ -74,14 +85,12 @@ install(
 add_executable(
 	imagelidar_bag_mapper
 		nodes/imagelidar_bag_mapper.cpp
-		src/RVizConnector.cpp
+		${common_class}
 )
 
 target_link_libraries(
 	imagelidar_bag_mapper
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
+		${common_libs}
 )
 
 install(
@@ -163,14 +172,12 @@ install(
 add_executable(
 	imagedb_mapper
 		nodes/imagedb_mapper.cpp
-		src/RVizConnector.cpp
+		${common_class}
 )
 
 target_link_libraries(
 	imagedb_mapper
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
+		${common_libs}
 )
 
 install(
@@ -189,3 +196,21 @@ install(
 	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai_mask.png
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+
+add_executable(
+	test_program_options
+		nodes/test_program_options.cpp
+		${common_class}
+)
+
+target_link_libraries(
+	test_program_options
+		${common_libs}
+)
+
+install(
+	TARGETS test_program_options
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+

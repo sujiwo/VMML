@@ -15,6 +15,7 @@
 #include "vmml/LidarScanBag.h"
 #include "vmml/ImageDatabaseBuilder.h"
 #include "RVizConnector.h"
+#include "ProgramOptions.h"
 
 
 using namespace std;
@@ -33,6 +34,8 @@ const float enlarge = 0.333333333333;
 const TTransform tLidarToCamera = TTransform::from_XYZ_RPY(
 	Eigen::Vector3d(0.9, 0.3, -0.6),
 	-1.520777, -0.015, -1.5488);
+
+Vmml::Mapper::ProgramOptions progOptions;
 
 
 int main(int argc, char *argv[])
