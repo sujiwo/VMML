@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package (Boost REQUIRED COMPONENTS serialization python graph filesystem)
+find_package (Boost REQUIRED COMPONENTS serialization python graph filesystem program_options)
 find_package (OpenCV 3 REQUIRED)
 find_package (Eigen3 REQUIRED)
 find_package (PCL REQUIRED)
