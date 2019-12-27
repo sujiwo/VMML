@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.8.3)
 project(vision_mapper)
 
 # XXX: Find better way to find libg2o by sharing script
@@ -185,16 +184,11 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-# Default Velodyne HDL-64E-S2 calibration file
+# Default samples
 install(
-	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai-64e-S2.yaml
+	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/params
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-# Default mask
-install(
-	FILES ${CMAKE_CURRENT_SOURCE_DIR}/params/meidai_mask.png
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+	PATTERN "*"
 )
 
 

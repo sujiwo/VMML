@@ -43,6 +43,20 @@ using po::value;
 const string dConfigFile = "config.ini";
 
 
+std::ostream& operator<< (std::ostream& out, const cv::Size& sz)
+{
+	out << '(' << sz.width << 'x' << sz.height << ')';
+	return out;
+}
+
+
+std::ostream& operator<< (std::ostream& out, const cv::MatSize& sz)
+{
+	out << sz();
+	return out;
+}
+
+
 ProgramOptions::ProgramOptions() :
 	_options("Option Parser for mapper"),
 	_vmPackagePath(boost::filesystem::path(ros::package::getPath("vision_mapper")))
@@ -50,13 +64,13 @@ ProgramOptions::ProgramOptions() :
 	_options.add_options()
 		("help", value<string>()->notifier(boost::bind(&ProgramOptions::showHelp, this, _1)), "Show help")
 
+		("work-dir", 		value<string>()->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
+
 		("feature-mask", 	value<string>()->notifier(bind(&ProgramOptions::openFeatureMask, this, _1)), "Image file mask for feature detection")
 
 		("light-mask", 		value<string>(),						"Image file mask for gamma equalization")
 
 		("bag-file", 		value<string>()->notifier(bind(&ProgramOptions::openBag, this, _1)), "Bag file input")
-
-		("work-dir", 		value<string>()->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
 
 		("resize", 			value<double>()->default_value(1.0)->notifier(
 				[&](const double &d){imageResizeFactor=d;}),
@@ -100,12 +114,18 @@ void
 ProgramOptions::openFeatureMask(const std::string &f)
 {
 	featureMask = cv::imread(f, cv::IMREAD_GRAYSCALE);
+
+	if (featureMask.empty())
+		throw runtime_error("Unable to open feature mask file");
+
 	auto factor = _optionValues["resize"].as<double>();
 	cout << "Mask size: " << featureMask.size << endl;
 	if (factor!=1.0) {
 		cv::resize(featureMask, featureMask, cv::Size(), factor, factor);
 		cout << "Resized to " << featureMask.size << endl;
+		camera0 = camera0 * factor;
 	}
+	camera0.mask = featureMask;
 }
 
 
@@ -113,6 +133,10 @@ void
 ProgramOptions::openLightMask(const std::string &f)
 {
 	lightMask = cv::imread(f, cv::IMREAD_GRAYSCALE);
+
+	if (lightMask.empty())
+		throw runtime_error("Unable to open light mask file");
+
 	auto factor = _optionValues["resize"].as<double>();
 	cout << "Light Mask size: " << lightMask.size << endl;
 	if (factor!=1.0) {
@@ -166,6 +190,21 @@ ProgramOptions::openWorkDir(const std::string &f)
 	auto configPath = workDir / dConfigFile;
 
 	INIReader cfg(configPath.string());
+	camera0.fx = cfg.GetReal("camera_parameter", "fx", 0);
+	camera0.fy = cfg.GetReal("camera_parameter", "fy", 0);
+	camera0.cx = cfg.GetReal("camera_parameter", "cx", 0);
+	camera0.cy = cfg.GetReal("camera_parameter", "cy", 0);
+
+	double tx = cfg.GetReal("lidar_to_camera", "x", 0),
+		ty = cfg.GetReal("lidar_to_camera", "y", 0),
+		tz = cfg.GetReal("lidar_to_camera", "z", 0),
+		rx = cfg.GetReal("lidar_to_camera", "roll", 0),
+		ry = cfg.GetReal("lidar_to_camera", "pitch", 0),
+		rz = cfg.GetReal("lidar_to_camera", "yaw", 0);
+	lidarToCamera = TTransform::from_XYZ_RPY(Eigen::Vector3d(tx,ty,tz), rx, ry, rz);
+
+	openLightMask((workDir/"light_mask.png").string());
+	openFeatureMask((workDir/"feature_mask.png").string());
 /*
 
 	fstream cfgFd (configPath.string(), fstream::in);

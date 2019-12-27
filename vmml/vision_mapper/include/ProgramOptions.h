@@ -13,6 +13,7 @@
 #include <boost/program_options.hpp>
 #include "vmml/utilities.h"
 #include "vmml/CameraPinholeParams.h"
+#include "vmml/Pose.h"
 #include "RandomAccessBag.h"
 
 
@@ -34,6 +35,12 @@ public:
 
 	rosbag::Bag& getInputBag()
 	{ return inputBag; }
+
+	const CameraPinholeParams& getCameraParameters() const
+	{ return camera0; }
+
+	const TTransform& getLidarToCameraTransform() const
+	{ return lidarToCamera; }
 
 	template<typename tp>
 	tp get(const std::string &cf)
@@ -67,6 +74,10 @@ protected:
 	Path workDir;
 
 	rosbag::Bag inputBag;
+
+	CameraPinholeParams camera0;
+
+	TTransform lidarToCamera=TTransform::Identity();
 };
 
 } /* namespace Mapper */
