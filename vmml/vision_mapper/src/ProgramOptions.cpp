@@ -156,6 +156,7 @@ ProgramOptions::openBag(const std::string &f)
 
 	if (inputBag.isOpen()==true) {
 		cout << "Done\n";
+		inputBagPath = Path(f);
 		auto bagTopics = RandomAccessBag::getTopicList(inputBag);
 		vector<string> topicList;
 		for (auto &tp: bagTopics) {
@@ -223,13 +224,24 @@ ProgramOptions::openWorkDir(const std::string &f)
 
 
 ImageBag::Ptr
-ProgramOptions::getImageBag() const
+ProgramOptions::getImageBag()
 {
 	if (imageBag==nullptr) {
 		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic, imageResizeFactor));
 	}
 
 	return imageBag;
+}
+
+
+LidarScanBag::Ptr
+ProgramOptions::getLidarScanBag()
+{
+	if (lidarBag==nullptr) {
+		lidarBag = LidarScanBag::Ptr(new LidarScanBag(inputBag, lidarTopic));
+	}
+
+	return lidarBag;
 }
 
 

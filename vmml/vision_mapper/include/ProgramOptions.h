@@ -37,7 +37,9 @@ public:
 	rosbag::Bag& getInputBag()
 	{ return inputBag; }
 
-	ImageBag::Ptr getImageBag() const;
+	ImageBag::Ptr getImageBag();
+
+	LidarScanBag::Ptr getLidarScanBag();
 
 	const CameraPinholeParams& getCameraParameters() const
 	{ return camera0; }
@@ -57,6 +59,12 @@ public:
 
 	const std::string& getLidarTopic() const
 	{ return lidarTopic; }
+
+	const Path& getWorkDir() const
+	{ return workDir; }
+
+	const Path& getBagPath() const
+	{ return inputBagPath; }
 
 protected:
 	boost::program_options::options_description _options;
@@ -85,6 +93,7 @@ protected:
 
 	Path workDir;
 
+	Path inputBagPath;
 	rosbag::Bag inputBag;
 	ImageBag::Ptr imageBag=nullptr;
 	LidarScanBag::Ptr lidarBag=nullptr;

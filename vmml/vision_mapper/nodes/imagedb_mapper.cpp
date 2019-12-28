@@ -35,12 +35,10 @@ int main(int argc, char *argv[])
 	ImageDatabaseBuilder imageDbMapper(idbParams, camera0);
 	imageDbMapper.setTranformationFromLidarToCamera(progOptions.getLidarToCameraTransform());
 
-//	boost::filesystem::path bagPath(argv[1]);
-//	rosbag::Bag mybag(argv[1]);
-	Vmml::ImageBag imageBag(progOptions.getInputBag(), "/camera1/image_raw", progOptions.getImageResizeFactor());
-	Vmml::LidarScanBag lidarBag(progOptions.getInputBag(), "/velodyne_packets");
+	Vmml::ImageBag imageBag(progOptions.getInputBag(), progOptions.getImageTopic(), progOptions.getImageResizeFactor());
+	Vmml::LidarScanBag lidarBag(progOptions.getInputBag(), progOptions.getLidarTopic());
 
-	Mapper::RVizConnector rosConn(argc, argv, "mapper", tLidarToCamera);
+	Mapper::RVizConnector rosConn(argc, argv, "mapper", progOptions.getLidarToCameraTransform());
 	rosConn.setMap(imageDbMapper.getMap());
 
 	int limit;
@@ -68,13 +66,14 @@ int main(int argc, char *argv[])
 		rosConn.publishFrameWithLidar(*(imageDbMapper.getLastFrame()));
 	}
 
-	auto mapFilenameBasename = boost::filesystem::basename(bagPath);
-	imageDbMapper.getMap()->save(mapFilenameBasename+".vmap");
-	imageDbMapper.getTrajectory().dump(mapFilenameBasename+"-lidar.csv");
-	imageDbMapper.getMap()->dumpCameraTrajectory().dump(mapFilenameBasename+"-camera.csv");
+	auto mapFilenameBasename = boost::filesystem::basename(progOptions.getBagPath());
+	auto workDir = progOptions.getWorkDir();
+	imageDbMapper.getMap()->save((workDir / (mapFilenameBasename+".vmap")).string());
+	imageDbMapper.getTrajectory().dump((workDir / (mapFilenameBasename+"-lidar.csv")).string());
+	imageDbMapper.getMap()->dumpCameraTrajectory().dump((workDir/(mapFilenameBasename+"-camera.csv")).string());
 
 	auto mapCloud = imageDbMapper.getMap()->dumpPointCloudFromMapPoints();
-	pcl::io::savePCDFileBinary(mapFilenameBasename+"-vmap.pcd", *mapCloud);
+	pcl::io::savePCDFileBinary((workDir/(mapFilenameBasename+"-vmap.pcd")).string(), *mapCloud);
 
 	return 0;
 }
