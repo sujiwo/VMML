@@ -14,7 +14,8 @@
 #include "vmml/utilities.h"
 #include "vmml/CameraPinholeParams.h"
 #include "vmml/Pose.h"
-#include "RandomAccessBag.h"
+#include "vmml/ImageBag.h"
+#include "vmml/LidarScanBag.h"
 
 
 namespace Vmml {
@@ -36,6 +37,8 @@ public:
 	rosbag::Bag& getInputBag()
 	{ return inputBag; }
 
+	ImageBag::Ptr getImageBag() const;
+
 	const CameraPinholeParams& getCameraParameters() const
 	{ return camera0; }
 
@@ -45,6 +48,15 @@ public:
 	template<typename tp>
 	tp get(const std::string &cf)
 	{ return _optionValues.at(cf).as<tp>(); }
+
+	const double getImageResizeFactor() const
+	{ return imageResizeFactor; }
+
+	const std::string& getImageTopic() const
+	{ return imageTopic; }
+
+	const std::string& getLidarTopic() const
+	{ return lidarTopic; }
 
 protected:
 	boost::program_options::options_description _options;
@@ -74,6 +86,8 @@ protected:
 	Path workDir;
 
 	rosbag::Bag inputBag;
+	ImageBag::Ptr imageBag=nullptr;
+	LidarScanBag::Ptr lidarBag=nullptr;
 
 	CameraPinholeParams camera0;
 

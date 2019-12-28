@@ -4,6 +4,8 @@
  *  Created on: Dec 26, 2019
  *      Author: sujiwo
  */
+
+#include <ros/ros.h>
 #include <string>
 #include <iostream>
 #include <exception>
@@ -217,6 +219,17 @@ ProgramOptions::openWorkDir(const std::string &f)
 
 	cfgFd.close();
 */
+}
+
+
+ImageBag::Ptr
+ProgramOptions::getImageBag() const
+{
+	if (imageBag==nullptr) {
+		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic, imageResizeFactor));
+	}
+
+	return imageBag;
 }
 
 

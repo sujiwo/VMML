@@ -22,37 +22,23 @@ using namespace std;
 using namespace Vmml;
 
 
-CameraPinholeParams camera0 (
-	1150.96938467,	// fx
-	1150.96938467,	// fy
-	988.511326762,	// cx
-	692.803953253,	// cy
-	1920, 1440);	// width, height
-const float enlarge = 0.333333333333;
-
-// XXX: Supply your own values!
-const TTransform tLidarToCamera = TTransform::from_XYZ_RPY(
-	Eigen::Vector3d(0.9, 0.3, -0.6),
-	-1.520777, -0.015, -1.5488);
-
 Vmml::Mapper::ProgramOptions progOptions;
 
 
 int main(int argc, char *argv[])
 {
-	// Find mask & velodyne calibration file
-	auto maskPath = boost::filesystem::path(ros::package::getPath("vision_core")) / "meidai_mask.png";
-	camera0.mask = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
-	camera0 = camera0 * enlarge;
+	progOptions.parseCommandLineArgs(argc, argv);
+
+	auto camera0 = progOptions.getCameraParameters();
 
 	ImageDatabaseBuilder::Param idbParams;
 	ImageDatabaseBuilder imageDbMapper(idbParams, camera0);
-	imageDbMapper.setTranformationFromLidarToCamera(tLidarToCamera);
+	imageDbMapper.setTranformationFromLidarToCamera(progOptions.getLidarToCameraTransform());
 
-	boost::filesystem::path bagPath(argv[1]);
-	rosbag::Bag mybag(argv[1]);
-	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
-	Vmml::LidarScanBag lidarBag(mybag, "/velodyne_packets");
+//	boost::filesystem::path bagPath(argv[1]);
+//	rosbag::Bag mybag(argv[1]);
+	Vmml::ImageBag imageBag(progOptions.getInputBag(), "/camera1/image_raw", progOptions.getImageResizeFactor());
+	Vmml::LidarScanBag lidarBag(progOptions.getInputBag(), "/velodyne_packets");
 
 	Mapper::RVizConnector rosConn(argc, argv, "mapper", tLidarToCamera);
 	rosConn.setMap(imageDbMapper.getMap());
