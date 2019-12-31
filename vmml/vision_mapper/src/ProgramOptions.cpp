@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <fstream>
 #include <ros/package.h>
+#include <sensor_msgs/Image.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -66,7 +67,7 @@ ProgramOptions::ProgramOptions() :
 	_options.add_options()
 		("help", value<string>()->notifier(boost::bind(&ProgramOptions::showHelp, this, _1)), "Show help")
 
-		("work-dir", 		value<string>()->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
+		("work-dir", 		value<string>()->default_value("")->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
 
 		("feature-mask",	value<string>()->notifier(
 				[&](const string &s){featureMaskImagePath = s;}),
@@ -133,7 +134,6 @@ ProgramOptions::openFeatureMask(const std::string &f)
 	if (factor!=1.0) {
 		cv::resize(featureMask, featureMask, cv::Size(), factor, factor);
 		cout << "Resized to " << featureMask.size << endl;
-		camera0 = camera0 * factor;
 	}
 	camera0.mask = featureMask;
 }
@@ -159,13 +159,20 @@ ProgramOptions::openLightMask(const std::string &f)
 void
 ProgramOptions::openWorkDir(const std::string &f)
 {
-	workDir = Path(f);
+	if (f.empty()) {
+		workDir = boost::filesystem::current_path();
+	}
+	else workDir = Path(f);
+
 	if (boost::filesystem::is_directory(workDir)==false)
 		throw runtime_error(f+ " is not directory");
 
 	auto configPath = workDir / dConfigFile;
 
 	INIReader cfg(configPath.string());
+	if (cfg.ParseError()!=0)
+		throw runtime_error("Unable to open configuration file config.ini");
+
 	camera0.fx = cfg.GetReal("camera_parameter", "fx", 0);
 	camera0.fy = cfg.GetReal("camera_parameter", "fy", 0);
 	camera0.cx = cfg.GetReal("camera_parameter", "cx", 0);
@@ -178,6 +185,11 @@ ProgramOptions::openWorkDir(const std::string &f)
 		ry = cfg.GetReal("lidar_to_camera", "pitch", 0),
 		rz = cfg.GetReal("lidar_to_camera", "yaw", 0);
 	lidarToCamera = TTransform::from_XYZ_RPY(Eigen::Vector3d(tx,ty,tz), rx, ry, rz);
+
+	if (featureMaskImagePath.empty())
+		featureMaskImagePath = workDir / "feature_mask.png";
+	if (lightMaskImagePath.empty())
+		lightMaskImagePath = workDir / "light_mask.png";
 }
 
 
@@ -190,6 +202,7 @@ ProgramOptions::getImageBag()
 			throw runtime_error("Image topic is not set using --image-topic");
 
 		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic, imageResizeFactor));
+		cout << "Using `" << imageTopic << "' as image topic\n";
 	}
 
 	return imageBag;
@@ -224,35 +237,31 @@ ProgramOptions::openInputs()
 		for (auto &tp: bagTopics) {
 			cout << tp.first << "->" << tp.second << endl;
 			topicList.push_back(tp.first);
+
+			// Guess image topic
+			if (tp.second=="sensor_msgs/Image" and imageTopic.empty())
+				imageTopic = tp.first;
+
+			// Guess lidar topic
+			if (tp.second=="sensor_msgs/PointCloud2" and lidarTopic.empty())
+				lidarTopic = tp.first;
 		}
-/*
-
-		auto it=_optionValues["image-topic"].as<string>();
-		if (std::find(topicList.begin(), topicList.end(), it)==topicList.end())
-			cout << "Image topic not found: " << it << endl;
-
-		it=_optionValues["image-lidar"].as<string>();
-		if (std::find(topicList.begin(), topicList.end(), it)==topicList.end())
-			cout << "Lidar topic not found: " << it << endl;
-
-		it=_optionValues["gnss-topic"].as<string>();
-		if (std::find(topicList.begin(), topicList.end(), it)==topicList.end())
-			cout << "GNSS topic not found: " << it << endl;
-*/
 	}
 
 	else cout << "Failed\n";
 
-	auto imgBag = getImageBag();
-	auto imgSz = imgBag->at(0);
-	camera0.width = imgSz.rows;
-	camera0.height = imgSz.cols;
+	getImageBag();
+	auto imgSz = imageBag->at(0);
+	camera0.height = imgSz.rows * 1/imageResizeFactor;
+	camera0.width = imgSz.cols * 1/imageResizeFactor;
 	camera0 = camera0 * imageResizeFactor;
 
-	getLidarScanBag();
+	if (!lidarTopic.empty())
+		getLidarScanBag();
 
+	// masks will be set with size corrected by resize parameter
 	openFeatureMask(featureMaskImagePath.string());
-	openLightMask(lightMaskImagePath.string());
+	imageBag->setGammaMeteringMask(lightMaskImagePath.string());
 }
 
 } /* namespace Mapper */

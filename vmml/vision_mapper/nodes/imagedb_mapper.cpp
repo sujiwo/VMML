@@ -35,30 +35,28 @@ int main(int argc, char *argv[])
 	ImageDatabaseBuilder imageDbMapper(idbParams, camera0);
 	imageDbMapper.setTranformationFromLidarToCamera(progOptions.getLidarToCameraTransform());
 
-	Vmml::ImageBag imageBag(progOptions.getInputBag(), progOptions.getImageTopic(), progOptions.getImageResizeFactor());
-	Vmml::LidarScanBag lidarBag(progOptions.getInputBag(), progOptions.getLidarTopic());
+	auto imageBag = progOptions.getImageBag();
+	auto lidarBag = progOptions.getLidarScanBag();
 
 	Mapper::RVizConnector rosConn(argc, argv, "mapper", progOptions.getLidarToCameraTransform());
 	rosConn.setMap(imageDbMapper.getMap());
 
-	int limit = lidarBag.size();
-
-	for (int li=0; li<limit; li++) {
+	for (int li=0; li<lidarBag->size(); li++) {
 
 		ptime lidarTimestamp, imageTimestamp;
 		cv::Mat nearImage;
-		auto lidarScan = lidarBag.getUnfiltered<ImageDatabaseBuilder::PointT>(li, &lidarTimestamp);
+		auto lidarScan = lidarBag->getUnfiltered<ImageDatabaseBuilder::PointT>(li, &lidarTimestamp);
 
 		try {
-			uint imageN = imageBag.getPositionAtTime(ros::Time::fromBoost(lidarTimestamp));
-			imageTimestamp = imageBag.timeAt(imageN).toBoost();
-			nearImage = imageBag.at(imageN);
+			uint imageN = imageBag->getPositionAtTime(ros::Time::fromBoost(lidarTimestamp));
+			imageTimestamp = imageBag->timeAt(imageN).toBoost();
+			nearImage = imageBag->at(imageN);
 		} catch (out_of_range &e) {
 			continue;
 		}
 
 		auto isKey = imageDbMapper.feed(lidarScan, lidarTimestamp, nearImage, imageTimestamp);
-		cout << (isKey ? "*" : "") << li  << " / " << limit << endl;
+		cout << (isKey ? "*" : "") << li  << " / " << lidarBag->size() << endl;
 
 		rosConn.publishFrameWithLidar(*(imageDbMapper.getLastFrame()));
 	}

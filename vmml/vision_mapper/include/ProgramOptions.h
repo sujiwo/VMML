@@ -66,6 +66,9 @@ public:
 	const Path& getBagPath() const
 	{ return inputBagPath; }
 
+	inline boost::program_options::options_description_easy_init addOptions()
+	{ return _options.add_options(); }
+
 protected:
 	boost::program_options::options_description _options;
 	boost::program_options::variables_map _optionValues;
