@@ -68,11 +68,17 @@ ProgramOptions::ProgramOptions() :
 
 		("work-dir", 		value<string>()->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
 
-		("feature-mask", 	value<string>()->notifier(bind(&ProgramOptions::openFeatureMask, this, _1)), "Image file mask for feature detection")
+		("feature-mask",	value<string>()->notifier(
+				[&](const string &s){featureMaskImagePath = s;}),
+				"Image file mask for feature detection")
 
-		("light-mask", 		value<string>(),						"Image file mask for gamma equalization")
+		("light-mask", 		value<string>()->notifier(
+				[&](const string &s){lightMaskImagePath = s;}),
+				"Image file mask for gamma equalization")
 
-		("bag-file", 		value<string>()->notifier(bind(&ProgramOptions::openBag, this, _1)), "Bag file input")
+		("bag-file", 		value<string>()->notifier(
+				[&](const string &b){inputBagPath = b;}),
+				"Bag file input")
 
 		("resize", 			value<double>()->default_value(1.0)->notifier(
 				[&](const double &d){imageResizeFactor=d;}),
@@ -109,6 +115,8 @@ ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
 {
 	po::store(po::parse_command_line(argc, argv, _options), _optionValues);
 	po::notify(_optionValues);
+
+	openInputs();
 }
 
 
@@ -149,14 +157,68 @@ ProgramOptions::openLightMask(const std::string &f)
 
 
 void
-ProgramOptions::openBag(const std::string &f)
+ProgramOptions::openWorkDir(const std::string &f)
 {
+	workDir = Path(f);
+	if (boost::filesystem::is_directory(workDir)==false)
+		throw runtime_error(f+ " is not directory");
+
+	auto configPath = workDir / dConfigFile;
+
+	INIReader cfg(configPath.string());
+	camera0.fx = cfg.GetReal("camera_parameter", "fx", 0);
+	camera0.fy = cfg.GetReal("camera_parameter", "fy", 0);
+	camera0.cx = cfg.GetReal("camera_parameter", "cx", 0);
+	camera0.cy = cfg.GetReal("camera_parameter", "cy", 0);
+
+	double tx = cfg.GetReal("lidar_to_camera", "x", 0),
+		ty = cfg.GetReal("lidar_to_camera", "y", 0),
+		tz = cfg.GetReal("lidar_to_camera", "z", 0),
+		rx = cfg.GetReal("lidar_to_camera", "roll", 0),
+		ry = cfg.GetReal("lidar_to_camera", "pitch", 0),
+		rz = cfg.GetReal("lidar_to_camera", "yaw", 0);
+	lidarToCamera = TTransform::from_XYZ_RPY(Eigen::Vector3d(tx,ty,tz), rx, ry, rz);
+}
+
+
+ImageBag::Ptr
+ProgramOptions::getImageBag()
+{
+	if (imageBag==nullptr) {
+
+		if (imageTopic.empty())
+			throw runtime_error("Image topic is not set using --image-topic");
+
+		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic, imageResizeFactor));
+	}
+
+	return imageBag;
+}
+
+
+LidarScanBag::Ptr
+ProgramOptions::getLidarScanBag()
+{
+	if (lidarBag==nullptr) {
+
+		if (lidarTopic.empty())
+			throw runtime_error("Image topic is not set using --lidar-topic");
+		lidarBag = LidarScanBag::Ptr(new LidarScanBag(inputBag, lidarTopic));
+	}
+
+	return lidarBag;
+}
+
+
+void
+ProgramOptions::openInputs()
+{
+	// Open Bag
 	cout << "Opening bag... ";
-	inputBag.open(f, rosbag::bagmode::Read);
+	inputBag.open(inputBagPath.string(), rosbag::bagmode::Read);
 
 	if (inputBag.isOpen()==true) {
 		cout << "Done\n";
-		inputBagPath = Path(f);
 		auto bagTopics = RandomAccessBag::getTopicList(inputBag);
 		vector<string> topicList;
 		for (auto &tp: bagTopics) {
@@ -180,75 +242,17 @@ ProgramOptions::openBag(const std::string &f)
 	}
 
 	else cout << "Failed\n";
-}
 
+	auto imgBag = getImageBag();
+	auto imgSz = imgBag->at(0);
+	camera0.width = imgSz.rows;
+	camera0.height = imgSz.cols;
+	camera0 = camera0 * imageResizeFactor;
 
-void
-ProgramOptions::openWorkDir(const std::string &f)
-{
-	workDir = Path(f);
-	if (boost::filesystem::is_directory(workDir)==false)
-		throw runtime_error(f+ " is not directory");
+	getLidarScanBag();
 
-	auto configPath = workDir / dConfigFile;
-
-	INIReader cfg(configPath.string());
-	camera0.fx = cfg.GetReal("camera_parameter", "fx", 0);
-	camera0.fy = cfg.GetReal("camera_parameter", "fy", 0);
-	camera0.cx = cfg.GetReal("camera_parameter", "cx", 0);
-	camera0.cy = cfg.GetReal("camera_parameter", "cy", 0);
-
-	double tx = cfg.GetReal("lidar_to_camera", "x", 0),
-		ty = cfg.GetReal("lidar_to_camera", "y", 0),
-		tz = cfg.GetReal("lidar_to_camera", "z", 0),
-		rx = cfg.GetReal("lidar_to_camera", "roll", 0),
-		ry = cfg.GetReal("lidar_to_camera", "pitch", 0),
-		rz = cfg.GetReal("lidar_to_camera", "yaw", 0);
-	lidarToCamera = TTransform::from_XYZ_RPY(Eigen::Vector3d(tx,ty,tz), rx, ry, rz);
-
-	openLightMask((workDir/"light_mask.png").string());
-	openFeatureMask((workDir/"feature_mask.png").string());
-/*
-
-	fstream cfgFd (configPath.string(), fstream::in);
-	if (!cfgFd.is_open())
-		throw runtime_error("Unable to open "+configPath.string());
-
-	// fetch more program options from here
-	po::store(po::parse_config_file(cfgFd, _options, true), _optionValues);
-
-
-	cfgFd.close();
-*/
-}
-
-
-ImageBag::Ptr
-ProgramOptions::getImageBag()
-{
-	if (imageBag==nullptr) {
-		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic, imageResizeFactor));
-	}
-
-	return imageBag;
-}
-
-
-LidarScanBag::Ptr
-ProgramOptions::getLidarScanBag()
-{
-	if (lidarBag==nullptr) {
-		lidarBag = LidarScanBag::Ptr(new LidarScanBag(inputBag, lidarTopic));
-	}
-
-	return lidarBag;
-}
-
-
-void
-ProgramOptions::setValues()
-{
-
+	openFeatureMask(featureMaskImagePath.string());
+	openLightMask(lightMaskImagePath.string());
 }
 
 } /* namespace Mapper */

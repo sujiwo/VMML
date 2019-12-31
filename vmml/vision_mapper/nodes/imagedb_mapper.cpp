@@ -41,10 +41,7 @@ int main(int argc, char *argv[])
 	Mapper::RVizConnector rosConn(argc, argv, "mapper", progOptions.getLidarToCameraTransform());
 	rosConn.setMap(imageDbMapper.getMap());
 
-	int limit;
-	if (argc>2)
-		limit = stoi(argv[2]);
-	else limit = lidarBag.size();
+	int limit = lidarBag.size();
 
 	for (int li=0; li<limit; li++) {
 

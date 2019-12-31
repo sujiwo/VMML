@@ -71,13 +71,12 @@ protected:
 	boost::program_options::variables_map _optionValues;
 	Path _vmPackagePath;
 
-	void setValues();
+	void openInputs();
 
 	void showHelp(const std::string &h);
 
 	void openFeatureMask(const std::string &f);
 	void openLightMask(const std::string &f);
-	void openBag(const std::string &);
 	void openWorkDir(const std::string &);
 
 	// Common input for mapper programs
@@ -94,6 +93,7 @@ protected:
 	Path workDir;
 
 	Path inputBagPath;
+	Path featureMaskImagePath, lightMaskImagePath;
 	rosbag::Bag inputBag;
 	ImageBag::Ptr imageBag=nullptr;
 	LidarScanBag::Ptr lidarBag=nullptr;
