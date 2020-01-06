@@ -40,6 +40,8 @@ public:
 
 	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
 
+	void publishPlainBaseFrame(const Vmml::BaseFrame &frame);
+
 	void publishPointcloud();
 
 	inline bool isRosUsed() const

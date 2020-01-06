@@ -270,7 +270,8 @@ ProgramOptions::openInputs()
 		getLidarScanBag();
 
 	// masks will be set with size corrected by resize parameter
-	openFeatureMask(featureMaskImagePath.string());
+	if (boost::filesystem::exists(featureMaskImagePath))
+		openFeatureMask(featureMaskImagePath.string());
 	if (boost::filesystem::exists(lightMaskImagePath))
 		imageBag->setGammaMeteringMask(lightMaskImagePath.string());
 }

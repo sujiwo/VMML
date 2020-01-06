@@ -137,13 +137,12 @@ install(
 add_executable(
 	index_creator
 		nodes/index_creator.cpp
+		${common_class}
 )
 
 target_link_libraries(
 	index_creator
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
+		${common_libs}
 )
 
 install(

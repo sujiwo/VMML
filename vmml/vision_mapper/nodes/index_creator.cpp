@@ -81,24 +81,20 @@ string selectTopicForGnssLocalization(const rosbag::Bag &bagsrc)
 
 int main(int argc, char *argv[])
 {
-	cout << "Opening bag... ";
-	Path mybagPath(argv[1]);
-	rosbag::Bag mybag(mybagPath.string());
-	cout << "Done" << endl;
+	Vmml::Mapper::ProgramOptions progOptions;
+	progOptions.parseCommandLineArgs(argc, argv);
 
-	ImageBag images(mybag, "/front_rgb/image_raw", 0.416666666667);
-	uint width, height;
-	images.getImageDimensions(width, height);
+	Vmml::Mapper::RVizConnector rosConn(argc, argv, "index_creator");
 
-	cv::Mat queryImg = cv::imread("query-image.png", cv::IMREAD_GRAYSCALE);
-	if (queryImg.empty())
-		cerr << "Unable to open query image\n";
+	rosbag::Bag &mybag = progOptions.getInputBag();
 
-	CameraPinholeParams camera0(0, 0, 0, 0, width, height);
+	auto &images = *progOptions.getImageBag();
+
+	auto camera0 = progOptions.getCameraParameters();
 
 	auto gnssTopic = selectTopicForGnssLocalization(mybag);
 	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
-	trackGnss.dump("gnss.csv");
+	trackGnss.dump((progOptions.getWorkDir()/"gnss.csv").string());
 
 	Trajectory trackImage;
 	kfid curKf = 0;
@@ -134,19 +130,20 @@ int main(int argc, char *argv[])
 			// put keyframe images for reference
 			string imgName = "kf" + to_string(curKf) + ".png";
 			cv::imwrite(imgName, curImage->getImage());
+			rosConn.publishPlainBaseFrame(*curImage);
 		}
 
 		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << endl;
 //		if (imageDb.numImages()==3) break;
 	}
 
-	trackImage.dump("images.csv");
+	trackImage.dump((progOptions.getWorkDir() / "images.csv").string());
 
 	// write csv file for mapping from keyframe# -> bagframe#
-	writeCsv("frames.csv", kfToFrameNum);
+	writeCsv((progOptions.getWorkDir()/"frames.csv").string(), kfToFrameNum);
 
 	cout << "Done mapping\n";
 
-	imageDb.saveToDisk("imagedb-2000.dat");
+	imageDb.saveToDisk((progOptions.getWorkDir()/"imagedb-2000.dat").string());
 	return 0;
 }

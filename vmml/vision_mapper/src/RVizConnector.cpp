@@ -198,6 +198,21 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 
 
 void
+RVizConnector::publishPlainBaseFrame(const Vmml::BaseFrame &frame)
+{
+	if (rosDisabled==true)
+		return;
+
+	cv_bridge::CvImage cvImg;
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+
+	cvImg.image = frame.getImage().clone();
+	cvImg.header.stamp = ros::Time::fromBoost(currentTime);
+	imagePub.publish(cvImg.toImageMsg());
+}
+
+
+void
 RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFrame& relatedKeyFrame)
 {
 	if (rosDisabled)
