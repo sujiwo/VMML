@@ -35,10 +35,11 @@ BaseFrame::BaseFrame(cv::Mat img) :
 
 
 BaseFrame::BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p) :
-	image(img),
 	mPose(p),
 	cameraParam(cam)
-{}
+{
+	image = cam.undistort(img);
+}
 
 
 BaseFrame::BaseFrame(const BaseFrame &c) :

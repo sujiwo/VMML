@@ -6,6 +6,8 @@
  */
 
 #include <opencv2/imgproc.hpp>
+#include <Eigen/Core>
+#include <opencv2/core/eigen.hpp>
 #include "vmml/CameraPinholeParams.h"
 
 
@@ -103,6 +105,18 @@ CameraPinholeParams::getVerticalFoV() const
 {
 	double tanT = cy / fy;
 	return 2 * atan(tanT);
+}
+
+
+cv::Mat
+CameraPinholeParams::undistort(cv::Mat origin) const
+{
+	cv::Mat imgd, distc;
+
+	cv::eigen2cv(distortionCoeffs, distc);
+	cv::undistort(origin, imgd, toCvMat(), distc);
+
+	return imgd;
 }
 
 } /* namespace Vmml */

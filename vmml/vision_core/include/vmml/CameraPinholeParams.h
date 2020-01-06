@@ -23,7 +23,8 @@ struct CameraPinholeParams
 		fx=0, fy=0,
 		cx=0, cy=0;
 	int width, height;
-	// XXX: Distortion parameters
+
+	Eigen::VectorXd distortionCoeffs = Eigen::VectorXd::Zero(5);
 
 	// Mask specific for this camera
 	cv::Mat mask;
@@ -59,6 +60,11 @@ struct CameraPinholeParams
 		ar & fx & fy & cx & cy &
 		width & height & fps & heightFg &
 		mask;
+
+		if (Archive::is_loading::value) {
+			distortionCoeffs = Eigen::VectorXd::Zero(5);
+		}
+		ar & boost::serialization::make_array<double>(distortionCoeffs.data(), 5);
 	}
 
 /*
