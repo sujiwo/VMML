@@ -18,7 +18,10 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
+
+// XXX: I don't expect this file to be changed across velodyne driver versions
 #include <velodyne_pointcloud/point_types.h>
+
 #include "RandomAccessBag.h"
 
 
@@ -44,8 +47,8 @@ public:
 		const std::string &topic) :
 			RandomAccessBag(bag, topic)
 	{
-		if (messageType() != "sensor_msgs/PointCloud2")
-			throw std::invalid_argument("Requested topic is not of type sensor_msgs/PointCloud2");
+		if (messageType() != requiredMessageType())
+			throw std::invalid_argument("Requested topic is not of type "+requiredMessageType());
 	}
 
 	template<typename PointT>
@@ -120,6 +123,9 @@ protected:
 		pcl::fromROSMsg(bagmsg, *cldRet);
 		return cldRet;
 	}
+
+	inline virtual const std::string requiredMessageType()
+	{ return "sensor_msgs/PointCloud2"; }
 };
 
 }		/* namespace Vmml */

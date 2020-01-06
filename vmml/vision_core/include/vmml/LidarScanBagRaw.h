@@ -5,8 +5,8 @@
  *      Author: sujiwo
  */
 
-#ifndef _LIDARSCANBAG2_H_
-#define _LIDARSCANBAG2_H_
+#ifndef _LIDARSCANBAGRAW_H_
+#define _LIDARSCANBAGRAW_H_
 
 
 #include <string>
@@ -20,12 +20,14 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <velodyne_pointcloud/rawdata.h>
 #include <velodyne_pointcloud/pointcloudXYZIR.h>
+#include "LidarScanBag.h"
 
-//#include "utilities.h"
+#include "utilities.h"
 #include "RandomAccessBag.h"
 
 
 namespace Vmml {
+
 
 template<typename PointT>
 using ScanPtr = boost::shared_ptr<pcl::PointCloud<PointT>>;
@@ -76,98 +78,18 @@ template<> void mPointCloud<pcl::PointXYZI>::addPoint(
 
 /*
  * Representation of Rosbag Velodyne Scan as point cloud
+ * Contrarily from parent class, this class reads velodyne pointcloud directly
+ * as velodyne_msgs/VelodyneScan. It requires calibration file.
  */
-class LidarScanBagRaw : public RandomAccessBag
+class LidarScanBagRaw : public LidarScanBag
 {
 public:
 
 	typedef std::shared_ptr<LidarScanBagRaw> Ptr;
 
-	LidarScanBagRaw(
-		rosbag::Bag const &bag,
-		const std::string &topic,
-		const ros::Time &startTime = ros::TIME_MIN,
-		const ros::Time &endTime = ros::TIME_MAX,
-		const std::string &velodyneCalibrationFile=std::string(),
-		float _velodyneMinRange = velodyneMinRange,
-		float _velodyneMaxRange = velodyneMaxRange);
-
-	LidarScanBagRaw(
-		rosbag::Bag const &bag,
-		const std::string &topic,
-		const double seconds1FromOffset,
-		const double seconds2FromOffset,
-		const std::string &velodyneCalibrationFile=std::string(),
-		float _velodyneMinRange = velodyneMinRange,
-		float _velodyneMaxRange = velodyneMaxRange);
-
-	inline LidarScanBagRaw(rosbag::Bag const &bag,
-		const std::string &topic,
-		const std::string &velodyneCalibrationFile) :
-		LidarScanBagRaw(bag, topic, ros::TIME_MIN, ros::TIME_MAX, velodyneCalibrationFile)
-	{}
-
-
-	template<typename PointT>
-	ScanConstPtr<PointT>
-	at(int position, boost::posix_time::ptime *msgTime=nullptr)
-	{
-		auto msgP = RandomAccessBag::at<velodyne_msgs::VelodyneScan>(position);
-		if (msgTime!=nullptr)
-			*msgTime = msgP->header.stamp.toBoost();
-		return convertMessage<PointT>(msgP);
-	}
-
-	template<typename PointT=pcl::PointXYZ>
-	ScanConstPtr<PointT>
-	getFiltered(int position, boost::posix_time::ptime *msgTime=nullptr)
-	{
-		auto filterState = filtered;
-		filtered = true;
-		auto scan = at<PointT>(position, msgTime);
-		filtered = filterState;
-		return scan;
-	}
-
-	template<typename PointT=pcl::PointXYZ>
-	ScanConstPtr<PointT>
-	getUnfiltered(int position, boost::posix_time::ptime *msgTime=nullptr)
-	{
-		auto filterState = filtered;
-		filtered = false;
-		auto scan = at<PointT>(position, msgTime);
-		filtered = filterState;
-		return scan;
-	}
-
-	template<typename PointT>
-	static
-	ScanConstPtr<PointT>
-	VoxelGridFilter (
-		ScanConstPtr<PointT> vcloud,
-		double voxel_leaf_size=0.2,
-		double measurement_range=3.0)
-	{
-		ScanPtr<PointT> filteredGridCLoud(new pcl::PointCloud<PointT>);
-
-		assert(voxel_leaf_size>=0.1);
-		pcl::VoxelGrid<PointT> voxel_grid_filter;
-		voxel_grid_filter.setLeafSize(voxel_leaf_size, voxel_leaf_size, voxel_leaf_size);
-		voxel_grid_filter.setInputCloud(vcloud);
-		voxel_grid_filter.filter(*filteredGridCLoud);
-
-		return filteredGridCLoud;
-	}
-
-	template<typename PointT>
-	static
-	bool save(const pcl::PointCloud<PointT> &vcloud, const std::string &filename)
-	{
-		return pcl::io::savePCDFileBinary(filename, vcloud);
-	}
-
-	// switch for filtering
-	bool filtered = false;
+	LidarScanBagRaw(rosbag::Bag const &bag, const std::string &topic,
+		const std::string &velodyneCalibrationFile,
+		const float _velodyneMinRange=velodyneMinRange, const float _velodyneMaxRange=velodyneMaxRange);
 
 
 protected:
@@ -199,8 +121,12 @@ protected:
 		else
 			return outPoints.pc;
 	}
+
+	inline virtual const std::string requiredMessageType()
+	{ return "velodyne_msgs/VelodyneScan"; }
+
 };
 
 }		/* namespace Vmml */
 
-#endif /* _LIDARSCANBAG2_H_ */
+#endif /* _LIDARSCANBAGRAW_H_ */

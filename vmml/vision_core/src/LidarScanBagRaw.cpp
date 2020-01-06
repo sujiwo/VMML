@@ -22,37 +22,14 @@ using pcl::PointCloud;
 
 namespace Vmml {
 
-LidarScanBagRaw::LidarScanBagRaw(
-	rosbag::Bag const &bag,
-	const std::string &topic,
-	const ros::Time &startTime,
-	const ros::Time &endTime,
-	const std::string &velodyneCalibrationFile,
-	float _velodyneMinRange,
-	float _velodyneMaxRange) :
 
-		RandomAccessBag(bag, topic, startTime, endTime),
-		data_(new velodyne_rawdata::RawData())
+LidarScanBagRaw::LidarScanBagRaw(rosbag::Bag const &bag, const std::string &topic,
+		const std::string &velodyneCalibrationFile,
+		const float _velodyneMinRange, const float _velodyneMaxRange) :
+	LidarScanBag(bag, topic)
 {
 	prepare(velodyneCalibrationFile, _velodyneMinRange, _velodyneMaxRange);
 }
-
-
-LidarScanBagRaw::LidarScanBagRaw(
-	rosbag::Bag const &bag,
-	const std::string &topic,
-	const double seconds1FromOffset,
-	const double seconds2FromOffset,
-	const std::string &velodyneCalibrationFile,
-	float _velodyneMinRange,
-	float _velodyneMaxRange) :
-
-		RandomAccessBag(bag, topic, seconds1FromOffset, seconds2FromOffset),
-		data_(new velodyne_rawdata::RawData())
-{
-	prepare(velodyneCalibrationFile, _velodyneMinRange, _velodyneMaxRange);
-}
-
 
 
 void
