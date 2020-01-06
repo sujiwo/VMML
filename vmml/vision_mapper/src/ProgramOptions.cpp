@@ -145,7 +145,7 @@ ProgramOptions::openLightMask(const std::string &f)
 	lightMask = cv::imread(f, cv::IMREAD_GRAYSCALE);
 
 	if (lightMask.empty())
-		throw runtime_error("Unable to open light mask file");
+		return;
 
 	auto factor = _optionValues["resize"].as<double>();
 	cout << "Light Mask size: " << lightMask.size << endl;
@@ -177,6 +177,11 @@ ProgramOptions::openWorkDir(const std::string &f)
 	camera0.fy = cfg.GetReal("camera_parameter", "fy", 0);
 	camera0.cx = cfg.GetReal("camera_parameter", "cx", 0);
 	camera0.cy = cfg.GetReal("camera_parameter", "cy", 0);
+	camera0.distortionCoeffs[0] = cfg.GetReal("camera_parameter", "d1", 0);
+	camera0.distortionCoeffs[1] = cfg.GetReal("camera_parameter", "d2", 0);
+	camera0.distortionCoeffs[2] = cfg.GetReal("camera_parameter", "d3", 0);
+	camera0.distortionCoeffs[3] = cfg.GetReal("camera_parameter", "d4", 0);
+	camera0.distortionCoeffs[4] = cfg.GetReal("camera_parameter", "d5", 0);
 
 	double tx = cfg.GetReal("lidar_to_camera", "x", 0),
 		ty = cfg.GetReal("lidar_to_camera", "y", 0),
@@ -245,6 +250,11 @@ ProgramOptions::openInputs()
 			// Guess lidar topic
 			if (tp.second=="sensor_msgs/PointCloud2" and lidarTopic.empty())
 				lidarTopic = tp.first;
+
+/*
+			if (tp.second=="velodyne_msgs/VelodyneScan" and lidarTopic.empty())
+				lidarTopic = tp.first;
+*/
 		}
 	}
 
@@ -261,7 +271,8 @@ ProgramOptions::openInputs()
 
 	// masks will be set with size corrected by resize parameter
 	openFeatureMask(featureMaskImagePath.string());
-	imageBag->setGammaMeteringMask(lightMaskImagePath.string());
+	if (boost::filesystem::exists(lightMaskImagePath))
+		imageBag->setGammaMeteringMask(lightMaskImagePath.string());
 }
 
 } /* namespace Mapper */

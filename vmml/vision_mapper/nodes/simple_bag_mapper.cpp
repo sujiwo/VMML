@@ -13,6 +13,7 @@
 #include "RVizConnector.h"
 #include "vmml/ImageBag.h"
 #include "vmml/utilities.h"
+#include "ProgramOptions.h"
 
 
 using namespace std;
