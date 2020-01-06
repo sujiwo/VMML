@@ -203,6 +203,8 @@ RVizConnector::publishPlainBaseFrame(const Vmml::BaseFrame &frame)
 	if (rosDisabled==true)
 		return;
 
+	currentTime = Vmml::getCurrentTime();
+
 	cv_bridge::CvImage cvImg;
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
 
@@ -217,6 +219,8 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Vmml::KeyFra
 {
 	if (rosDisabled)
 		return;
+
+	currentTime = Vmml::getCurrentTime();
 
 	cv_bridge::CvImage cvImg;
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;

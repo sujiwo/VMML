@@ -128,13 +128,14 @@ int main(int argc, char *argv[])
 			kfToFrameNum[curKf] = i;
 
 			// put keyframe images for reference
+/*
 			string imgName = "kf" + to_string(curKf) + ".png";
 			cv::imwrite(imgName, curImage->getImage());
+*/
 			rosConn.publishPlainBaseFrame(*curImage);
 		}
 
 		cout << i+1 << " / " << maxLim << (isKeyFrame==true?"*":"") << endl;
-//		if (imageDb.numImages()==3) break;
 	}
 
 	trackImage.dump((progOptions.getWorkDir() / "images.csv").string());
