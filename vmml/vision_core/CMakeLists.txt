@@ -8,12 +8,7 @@ set (CMAKE_MODULE_PATH
 		${CMAKE_MODULE_PATH} 
 		"${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 set (CMAKE_INCLUDE_CURRENT_DIR		ON)
-#set (CMAKE_AUTOMOC					ON)
-#set (CMAKE_AUTOUIC					ON)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
