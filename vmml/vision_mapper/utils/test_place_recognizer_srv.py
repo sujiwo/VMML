@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -8,6 +9,7 @@ from vision_mapper.srv import place_recognizer
 bridge = CvBridge()
 
 
+# XXX: The server may need proper image size
 def runPlaceRecognizer(inputFilePath):
     image = cv2.imread(inputFilePath)
     msg = bridge.cv2_to_imgmsg(image, "bgr8")
@@ -17,5 +19,6 @@ def runPlaceRecognizer(inputFilePath):
 
 
 if __name__=='__main__':
-    print("Yes")
+    res = runPlaceRecognizer(sys.argv[1])
+    print(res)
     pass
