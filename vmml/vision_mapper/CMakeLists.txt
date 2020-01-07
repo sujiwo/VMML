@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 	cv_bridge
 	image_transport
 	pcl_conversions
+	message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -36,6 +37,17 @@ if (OPENMP_FOUND)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
+
+add_service_files(
+FILES
+	place_recognizer.srv
+)
+
+generate_messages(
+	DEPENDENCIES
+		std_msgs
+		sensor_msgs
+)
 
 catkin_package(
 	CATKIN_DEPENDS vision_core
@@ -204,6 +216,22 @@ target_link_libraries(
 
 install(
 	TARGETS test_program_options
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+add_executable(
+	place_recognizer_srv
+		nodes/place_recognizer_srv.cpp
+		${common_class}
+)
+
+target_link_libraries(
+	place_recognizer_srv
+		${common_libs}
+)
+
+install(
+	TARGETS place_recognizer_srv
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
