@@ -79,6 +79,56 @@ string selectTopicForGnssLocalization(const rosbag::Bag &bagsrc)
 }
 
 
+class IndexCreator
+{
+public:
+IndexCreator(const CameraPinholeParams &c, uint numOfFeaturesReq=numberOfFeatures) :
+	cameraPars(c)
+{
+	 bMatcher = cv::BFMatcher::create();
+	 bFeats = cv::ORB::create(
+		 numOfFeaturesReq,
+			1.2,
+			8,
+			32,
+			0,
+			2,
+			cv::ORB::HARRIS_SCORE,
+			32,
+			10);
+}
+
+void run(const ImageBag::Ptr &src)
+{
+	imageSrc = src;
+
+	kfid curKf = 0;
+
+	auto imageAnchor = BaseFrame::create(imageSrc->at(0), cameraPars);
+	imageAnchor->computeFeatures(bFeats);
+	imageDb.addImage(curKf, imageAnchor->allKeypoints(), imageAnchor->allDescriptors());
+
+}
+
+const map<kfid, uint64> getKeyFrameMapping() const
+{ return keyframeToBagFrameId; }
+
+const ImageDatabase& getImageDb() const
+{ return imageDb; }
+
+
+protected:
+	map<kfid, uint64> keyframeToBagFrameId;
+	ImageDatabase imageDb;
+	ImageBag::Ptr imageSrc;
+
+	cv::Ptr<cv::DescriptorMatcher> bMatcher;
+	cv::Ptr<cv::FeatureDetector> bFeats;
+
+	const CameraPinholeParams cameraPars;
+};
+
+
 int main(int argc, char *argv[])
 {
 	Vmml::Mapper::ProgramOptions progOptions;
@@ -128,10 +178,8 @@ int main(int argc, char *argv[])
 			kfToFrameNum[curKf] = i;
 
 			// put keyframe images for reference
-/*
-			string imgName = "kf" + to_string(curKf) + ".png";
+			string imgName = (progOptions.getWorkDir() / ("kf" + to_string(curKf) + ".png")).string();
 			cv::imwrite(imgName, curImage->getImage());
-*/
 			rosConn.publishPlainBaseFrame(*curImage);
 		}
 

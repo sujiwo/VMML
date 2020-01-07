@@ -53,6 +53,12 @@ bool PlaceRecognizerService(
 
 	vector<ImageMatch> imageMatches;
 	imageDb.searchImages(queryFrame->allDescriptors(), realMatches, imageMatches);
+	response.keyframeId.clear();
+	for (int i=0; i<min(10, (int)imageMatches.size()); i++) {
+		response.keyframeId.push_back(imageMatches[i].image_id);
+//		cout << imageMatches[i].image_id << ' ' << imageMatches[i].score << endl;
+	}
+
 
 	return true;
 }
