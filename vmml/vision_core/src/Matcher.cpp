@@ -269,6 +269,19 @@ Matcher::matchBruteForce(
 
 
 /*
+ * Match features using Sparse Lucas-Kanade Optical Flow
+ */
+int
+Matcher::matchOpticalFlow(
+	const BaseFrame &F1,
+	const BaseFrame &F2,
+	PairList &featurePairs)
+{
+	return 0;
+}
+
+
+/*
  * This function matches features from two images using
  * epipolar geometry
  */
