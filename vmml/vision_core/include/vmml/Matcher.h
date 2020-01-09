@@ -42,6 +42,15 @@ public:
 		bool checkOrientation=true
 	);
 
+	/*
+	 * Match features using Sparse Lucas-Kanade Optical Flow
+	 */
+	static int
+	matchOpticalFlow(
+		const BaseFrame &F1,
+		const BaseFrame &F2,
+		PairList &featurePairs);
+
 	static void matchViso(const BaseFrame &F1, const BaseFrame &F2, PairList &featurePairs);
 
 	// Match with epipolar constraints
