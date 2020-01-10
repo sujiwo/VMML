@@ -277,6 +277,16 @@ Matcher::matchOpticalFlow(
 	const BaseFrame &F2,
 	PairList &featurePairs)
 {
+	vector<uchar> statusOf(F1.numOfKeyPoints());
+	vector<float> errOf(F1.numOfKeyPoints());
+
+	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(), F1.allKeypoints(), F2.allKeypoints(), statusOf, errOf);
+	featurePairs.clear();
+
+	for (int i=0; i<F1.numOfKeyPoints(); i++) {
+//		if (F1)
+	}
+
 	return 0;
 }
 
