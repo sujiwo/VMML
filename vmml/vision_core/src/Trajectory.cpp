@@ -242,22 +242,30 @@ Trajectory::isInside(const ptime &t) const
 bool
 Trajectory::dump(const std::string &filename) const
 {
-	fstream dsTrFd (filename, ios_base::out|ios_base::trunc);
-	if (!dsTrFd.is_open()) {
-		throw runtime_error("Unable to create "+filename);
+	fstream trackFd;
+	ostream xo(NULL);
+
+	if (filename.empty())
+		xo.rdbuf(cout.rdbuf());
+	else {
+		trackFd.open(filename, ios_base::out|ios_base::trunc);
+		if (!trackFd.is_open())
+			throw runtime_error("Unable to create "+filename);
+		xo.rdbuf(trackFd.rdbuf());
 	}
 
 	for (int i=0; i<size(); ++i) {
 		// Timestamp, position and orientation
-		dsTrFd << at(i).dump() << ' ';
+		xo << at(i).dump() << ' ';
 		// Linear Velocity
 		auto vl = getVelocityAt(i);
-		dsTrFd << dumpVector(vl.linear);
+		xo << dumpVector(vl.linear);
 
-		dsTrFd << endl;
+		xo << endl;
 	}
 
-	dsTrFd.close();
+	if (filename.empty()==false)
+		trackFd.close();
 
 	return true;
 }

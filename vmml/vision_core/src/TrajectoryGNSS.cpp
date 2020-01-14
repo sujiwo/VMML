@@ -368,7 +368,7 @@ TrajectoryGNSS::fromRosBagSatFix(rosbag::Bag &bag, const std::string &topicName,
 
 	for (int i=0; i<nmeaBag.size(); i++) {
 		auto currentMessage = nmeaBag.at<sensor_msgs::NavSatFix>(i);
-		ros::Time current_time = currentMessage->header.stamp;
+		ros::Time current_time = nmeaBag.timeAt(i);
 
 		geo_pos_conv geo;
 

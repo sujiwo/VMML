@@ -231,18 +231,14 @@ ros::Time RandomAccessBag::timeFromStart(const double seconds) const {
 typedef std::map<uint32_t, rosbag::ConnectionInfo *> connectionListT;
 //ACCESS_PRIVATE_FIELD(rosbag::Bag, connectionListT, connections_);
 
+/*
+ * Returns list of topics and their message types
+ * topic -> message type
+ */
 std::map<std::string, std::string>
 RandomAccessBag::getTopicList(const rosbag::Bag &bag) {
   std::map<std::string, std::string> topicList;
 
-/*
-  const connectionListT &bagConnList = access_private::connections_(bag);
-
-  for (auto &conp : bagConnList) {
-    auto conn = conp.second;
-    topicList.insert(make_pair(conn->topic, conn->datatype));
-  }
-*/
   rosbag::View nview(bag);
   vector<const rosbag::ConnectionInfo*> conList = nview.getConnections();
   for (auto &conn: conList) {

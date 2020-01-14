@@ -158,7 +158,8 @@ public:
 
 	Trajectory subset(const ptime &start, const ptime &stop) const;
 
-	bool dump(const std::string &filename) const;
+	// Output this trajectory to a file, or to stdout when empty filename is given
+	bool dump(const std::string &filename="") const;
 
 	/*
 	 * Estimate velocities

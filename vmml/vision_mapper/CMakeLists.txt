@@ -235,3 +235,18 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+add_executable(
+	image_trajectory
+		nodes/image_trajectory.cpp
+)
+
+target_link_libraries(
+	image_trajectory
+		${common_libs}
+)
+
+install(
+	TARGETS image_trajectory
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
