@@ -384,17 +384,18 @@ TrajectoryGNSS::fromRosBagSatFix(rosbag::Bag &bag, const std::string &topicName,
 
 		double distance = sqrt(pow(position.y() - prev_pose.position().y(), 2) +
 				pow(position.x() - prev_pose.position().x(), 2));
-//		std::cout << "distance : " << distance << std::endl;
 
+		// Only output pose when condition is right
 		if (distance > 0.2)
 		{
 			yaw = atan2(position.y() - prev_pose.position().y(), position.x() - prev_pose.position().x());
 			quat = TQuaternion(0, 0, yaw);
 			prev_pose = pose;
+
+			pose = PoseStamped(position, quat, current_time.toBoost());
+			vehicleTrack.push_back(pose);
 		}
 
-		pose = PoseStamped(position, quat, current_time.toBoost());
-		vehicleTrack.push_back(pose);
 	}
 
 	return vehicleTrack;
