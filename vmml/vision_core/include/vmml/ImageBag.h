@@ -44,6 +44,10 @@ public:
 
 	void getOriginalImageDimensions(uint &width, uint &height);
 
+	// Simulate reduced number of images per seconds
+	void desample(const float hz, std::vector<uint64> &desamplePos) const;
+
+
 protected:
 	float zoomRatio;
 

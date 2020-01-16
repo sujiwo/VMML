@@ -170,7 +170,12 @@ inline double toSeconds (const tduration &td)
 /*
  * Convert UNIX timestamp in seconds to ptime
  */
-ptime fromSeconds (const double s);
+ptime timeFromSeconds (const double s);
+
+/*
+ * Convert UNIX timestamp in seconds to tduration
+ */
+tduration durationFromSeconds (const double s);
 
 void debugMsg(const std::string &s, double is_error=false);
 

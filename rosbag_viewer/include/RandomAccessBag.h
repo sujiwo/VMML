@@ -140,6 +140,11 @@ public:
 
   std::string messageType() const;
 
+  inline float hz() const
+  {
+	  return float(size()) / (getBagStopTime()-getBagStartTime()).toSec();
+  }
+
   static std::map<std::string, std::string>
   getTopicList(const rosbag::Bag &bag);
 

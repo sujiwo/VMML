@@ -76,27 +76,13 @@ ProgramOptions::ProgramOptions() :
 		("light-mask", 		value<string>()->notifier(
 				[&](const string &s){lightMaskImagePath = s;}),
 				"Image file mask for gamma equalization")
-
-		("bag-file", 		value<string>()->notifier(
-				[&](const string &b){inputBagPath = b;}),
-				"Bag file input")
-
-		("resize", 			value<double>()->default_value(1.0)->notifier(
-				[&](const double &d){imageResizeFactor=d;}),
-				"Resize all masks and images from bags with a scalar value (0-1.0)")
-
-		("image-topic",		value<string>()->default_value("")->notifier(
-				[&](const string &t){imageTopic=t;}),
-				"Image topic contained in bag")
-
-		("lidar-topic",		value<string>()->default_value("")->notifier(
-				[&](const string &t){lidarTopic=t;}),
-				"Point cloud topic contained in bag")
-
-		("gnss-topic",		value<string>()->default_value("")->notifier(
-				[&](const string &t){gnssTopic=t;}),
-				"GNSS topic contained in bag")
 	;
+
+	addSimpleOptions("bag-file", "Bag file input", inputBagPath);
+	addSimpleOptions("resize", "Resize all masks and images from bags with a scalar value (0-1.0)", imageResizeFactor);
+	addSimpleOptions("image-topic", "Image topic contained in bag", imageTopic);
+	addSimpleOptions("lidar-topic", "Point cloud topic contained in bag", lidarTopic);
+	addSimpleOptions("gnss-topic", "GNSS topic contained in bag", gnssTopic);
 }
 
 

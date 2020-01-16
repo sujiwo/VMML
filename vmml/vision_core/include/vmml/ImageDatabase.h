@@ -528,6 +528,8 @@ public:
 	void saveToDisk(const std::string &f) const;
 	void loadFromDisk(const std::string &f);
 
+	std::map<kfid,uint64> keyframeIdToBag;
+
 private:
 	BinaryDescriptor::Set dset_;
 	unsigned k_;

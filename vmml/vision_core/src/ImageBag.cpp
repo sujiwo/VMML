@@ -147,4 +147,31 @@ ImageBag::equalizeGamma(const cv::Mat &src) const
 }
 
 
+/*
+ * XXX: Desampling algorithm should be improved, as it returns lower-than-requested
+ */
+void
+ImageBag::desample(const float newFreq, std::vector<uint64> &messagePosList) const
+{
+	// Must be lower than current frequency
+	assert(newFreq < hz());
+
+	// Has not been time-constrained
+	assert(mIsTimeConstrained==false);
+
+	const double lengthInSeconds = (getBagStopTime()-getBagStartTime()).toSec();
+
+	uint posWk = 0, nextWk;
+	const double tIntrv = 1.0 / newFreq;
+	for (double twork=0.0; twork<lengthInSeconds; twork+=1.0) {
+		double tMax = min(twork+1.0, lengthInSeconds);
+		double tm = twork+tIntrv;
+		while (tm < tMax) {
+			uint p = getPositionAtDurationSecond(tm);
+			messagePosList.push_back(p);
+			tm += tIntrv;
+		}
+	}
+}
+
 } /* namespace Vmml */

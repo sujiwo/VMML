@@ -96,6 +96,8 @@ void ImageDatabase::save(Archive &ar, const unsigned int v) const
 	ar << desc_to_id_;
 	ar << recently_added_;
 
+	ar << keyframeIdToBag;
+
 	for (auto &t: trees_) {
 		ar << *t;
 	}
@@ -157,7 +159,7 @@ void ImageDatabase::load(Archive &ar, const unsigned int v)
 		id_to_desc_[mp.second] = mp.first;
 	}
 
-	// Load integrity check
+	// Run integrity check
 	for (auto &descPtr: dset_) {
 		try {
 			auto im = inv_index_.at(descPtr);
@@ -165,6 +167,8 @@ void ImageDatabase::load(Archive &ar, const unsigned int v)
 			std::cerr << "Unpaired descriptor found" << std::endl;
 		}
 	}
+
+	ar >> keyframeIdToBag;
 
 	trees_.clear();
 	for (int i=0; i<t_; i++) {

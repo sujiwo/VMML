@@ -60,11 +60,18 @@ double toSeconds (const ptime &pt)
 }
 
 
-ptime fromSeconds (const double s)
+ptime timeFromSeconds (const double s)
 {
 	long micro_ts = s*1e6;
 	tduration td = boost::posix_time::microseconds(micro_ts);
 	return epoch + td;
+}
+
+
+tduration durationFromSeconds (const double s)
+{
+	long micro_ts = s*1e6;
+	return boost::posix_time::microseconds(micro_ts);
 }
 
 }		// namespace Vmml

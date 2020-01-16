@@ -69,6 +69,21 @@ public:
 	inline boost::program_options::options_description_easy_init addOptions()
 	{ return _options.add_options(); }
 
+
+	/*
+	 * Add an option. When user sets it, its value will be stored to S
+	 */
+	template<typename T>
+	void addSimpleOptions(const std::string &opt, const std::string &description, T& S)
+	{
+		_options.add_options()(opt.c_str(), boost::program_options::value<T>()
+			->notifier([&](const T&v){
+				S = v;
+			}),
+			description.c_str()
+		);
+	}
+
 protected:
 	boost::program_options::options_description _options;
 	boost::program_options::variables_map _optionValues;

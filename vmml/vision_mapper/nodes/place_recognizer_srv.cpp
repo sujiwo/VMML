@@ -55,7 +55,8 @@ bool PlaceRecognizerService(
 	imageDb.searchImages(queryFrame->allDescriptors(), realMatches, imageMatches);
 	response.keyframeId.clear();
 	for (int i=0; i<min(10, (int)imageMatches.size()); i++) {
-		response.keyframeId.push_back(imageMatches[i].image_id);
+		int bagRefId = imageDb.keyframeIdToBag.at(imageMatches[i].image_id);
+		response.keyframeId.push_back(bagRefId);
 //		cout << imageMatches[i].image_id << ' ' << imageMatches[i].score << endl;
 	}
 
