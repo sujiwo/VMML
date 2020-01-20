@@ -141,6 +141,9 @@ int main(int argc, char *argv[])
 
 	rosbag::Bag &mybag = progOptions.getInputBag();
 
+	/*
+	 * Need to reduce frame rate of the bag
+	 */
 	auto &images = *progOptions.getImageBag();
 	vector<uint64> imageRedSamples;
 	images.desample(frameRate, imageRedSamples);

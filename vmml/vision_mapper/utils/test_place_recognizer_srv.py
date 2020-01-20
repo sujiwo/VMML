@@ -50,15 +50,15 @@ if __name__=='__main__':
         qResult, timeRun = runPlaceRecognizer(pathId)
 #         testResults[queryId] = qResult
         
-        evaluateImage = np.zeros((0,0), dtype=np.uint8)
-        qImage = cv2.resize(cv2.imread(pathId), (800,450))
-        evaluateImage = combineImage(evaluateImage, qImage, "Query") 
-        
-        for qr in qResult:
-            kfPath = keyframeDir + str(qr) + ".png"
-            kfImage = cv2.resize(cv2.imread(kfPath), (800,450))
-            evaluateImage = combineImage(evaluateImage, kfImage, qr)
-        cv2.imwrite(str(queryId)+".png", evaluateImage)
+#         evaluateImage = np.zeros((0,0), dtype=np.uint8)
+#         qImage = cv2.resize(cv2.imread(pathId), (800,450))
+#         evaluateImage = combineImage(evaluateImage, qImage, "Query") 
+#         
+#         for qr in qResult:
+#             kfPath = keyframeDir + str(qr) + ".png"
+#             kfImage = cv2.resize(cv2.imread(kfPath), (800,450))
+#             evaluateImage = combineImage(evaluateImage, kfImage, qr)
+#         cv2.imwrite(str(queryId)+".png", evaluateImage)
         testResults.append({'id': queryId, 'ans': qResult, 'time': timeRun})
         print(queryId, timeRun)
     

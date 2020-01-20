@@ -39,7 +39,11 @@ bool PlaceRecognizerService(
 	vision_mapper::place_recognizer::Response &response)
 {
 	cv_bridge::CvImagePtr imageReq = cv_bridge::toCvCopy(request.input, sensor_msgs::image_encodings::BGR8);
-	auto queryFrame = BaseFrame::create(imageReq->image);
+
+	cv::Mat workImg;
+	cv::resize(imageReq->image, workImg, cv::Size(), 0.41666666667, 0.41666666666667);
+
+	auto queryFrame = BaseFrame::create(workImg);
 	queryFrame->computeFeatures(bFeats);
 
 	vector<vector<cv::DMatch>> featureMatches;
@@ -60,7 +64,6 @@ bool PlaceRecognizerService(
 //		cout << imageMatches[i].image_id << ' ' << imageMatches[i].score << endl;
 	}
 
-
 	return true;
 }
 
@@ -73,6 +76,7 @@ int main(int argc, char *argv[])
 	imageDb.loadFromDisk(argv[1]);
 
 	ros::ServiceServer placeRecognSrv = rosNode.advertiseService("place_recognizer", PlaceRecognizerService);
+	cout << "Ready\n";
 
 	ros::spin();
 	return 0;
