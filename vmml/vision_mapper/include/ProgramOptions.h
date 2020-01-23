@@ -91,7 +91,7 @@ protected:
 
 	void openInputs();
 
-	void showHelp(const std::string &h);
+	void showHelp();
 
 	void openFeatureMask(const std::string &f);
 	void openLightMask(const std::string &f);

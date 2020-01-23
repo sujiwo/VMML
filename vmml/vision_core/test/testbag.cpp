@@ -10,6 +10,8 @@
 #include "vmml/TrajectoryGNSS.h"
 #include "vmml/utilities.h"
 #include "vmml/LidarScanBag.h"
+#include "vmml/ImageBag.h"
+#include <opencv2/highgui.hpp>
 
 using namespace std;
 using namespace Vmml;
@@ -20,17 +22,12 @@ int main(int argc, char *argv[])
 	Path mybagPath(argv[1]);
 	rosbag::Bag mybag(mybagPath.string());
 
-/*
-	auto track1 = TrajectoryGNSS::fromRosBag(mybag, "/nmea_sentence").setToOrigin();
-	auto track2 = TrajectoryGNSS::fromRosBag2(mybag, "/nmea_sentence").setToOrigin();
+	ImageBag ost(mybag, "/front_rgb/image_raw");
+	ost.setTimeConstraint(72.84, 215.59);
+	uint size = ost.size();
 
-	track1.dump("test-method1.csv");
-	track2.dump("test-method2.csv");
-*/
-
-	LidarScanBag ost(mybag, "/points_raw");
-	auto mcloud = ost.at<pcl::PointXYZ>(100);
-	pcl::io::savePCDFileBinary("/tmp/100.pcd", *mcloud);
+	auto img0 = ost.at(0);
+	cv::imwrite("/tmp/0.png", img0);
 
 	return 0;
 }

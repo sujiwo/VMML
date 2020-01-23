@@ -115,6 +115,7 @@ void RandomAccessBag::createCache() {
   iterator it = begin();
   size_t sz = this->size();
   conn = getConnections()[0];
+  msgPtr.clear();
   msgPtr.reserve(sz);
 
   for (uint32_t p = 0; p < sz; p++) {
@@ -126,32 +127,34 @@ void RandomAccessBag::createCache() {
   }
 }
 
-void RandomAccessBag::setTimeConstraint(const double seconds1,
-                                        const double seconds2) {
-  assert(seconds1 <= seconds2);
 
-  ros::Duration td1(seconds1), td2(seconds2);
-
-  assert(bagStartTime + td2 <= bagStopTime);
-
-  ros::Time t1 = bagStartTime + td1, t2 = bagStartTime + td2;
-
-  setTimeConstraint(t1, t2);
+void RandomAccessBag::setTimeConstraint(const double seconds1, const double seconds2)
+{
+	assert(seconds1 <= seconds2);
+	ros::Duration td1(seconds1), td2(seconds2);
+	assert(bagStartTime + td2 <= bagStopTime);
+	ros::Time t1 = bagStartTime + td1, t2 = bagStartTime + td2;
+	setTimeConstraint(t1, t2);
 }
 
-void RandomAccessBag::setTimeConstraint(const ros::Time &t1,
-                                        const ros::Time &t2) {
-  if (t1 < bagStartTime or t1 > bagStopTime)
-    throw out_of_range("Requested start time is out of range");
 
-  if (t2 < bagStartTime or t2 > bagStopTime)
-    throw out_of_range("Requested stop time is out of range");
+void RandomAccessBag::setTimeConstraint(const ros::Time &t1, const ros::Time &t2)
+{
+	if (t1 < bagStartTime or t1 > bagStopTime)
+		throw out_of_range("Requested start time is out of range");
 
-  queries_.clear();
-  ranges_.clear();
-  addQuery(bagstore, rosbag::TopicQuery(viewTopic), t1, t2);
-  createCache();
-  mIsTimeConstrained = true;
+	if (t2 < bagStartTime or t2 > bagStopTime)
+		throw out_of_range("Requested stop time is out of range");
+
+	originalZeroIndex = getPositionAtTime(t1);
+
+	queries_.clear();
+	ranges_.clear();
+	addQuery(bagstore, rosbag::TopicQuery(viewTopic), t1, t2);
+	createCache();
+	bagStartTime = getBeginTime();
+	bagStopTime = getEndTime();
+	mIsTimeConstrained = true;
 }
 
 void RandomAccessBag::resetTimeConstraint() {

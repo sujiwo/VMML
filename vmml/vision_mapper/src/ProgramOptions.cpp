@@ -65,9 +65,9 @@ ProgramOptions::ProgramOptions() :
 	_vmPackagePath(boost::filesystem::path(ros::package::getPath("vision_mapper")))
 {
 	_options.add_options()
-		("help", value<string>()->notifier(boost::bind(&ProgramOptions::showHelp, this, _1)), "Show help")
+		("help", "Show help")
 
-		("work-dir", 		value<string>()->default_value("")->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
+		("work-dir", 		value<string>()->notifier(bind(&ProgramOptions::openWorkDir, this, _1)), "Working directory")
 
 		("feature-mask",	value<string>()->notifier(
 				[&](const string &s){featureMaskImagePath = s;}),
@@ -86,10 +86,11 @@ ProgramOptions::ProgramOptions() :
 }
 
 
-void ProgramOptions::showHelp(const string &s)
+void ProgramOptions::showHelp()
 {
 	// XXX: fix me
-	cout << "This is help" << endl;
+	cout << _options << endl;
+	exit(1);
 }
 
 
@@ -102,6 +103,8 @@ ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
 {
 	po::store(po::parse_command_line(argc, argv, _options), _optionValues);
 	po::notify(_optionValues);
+
+	if (_optionValues.count("help")) showHelp();
 
 	openInputs();
 }

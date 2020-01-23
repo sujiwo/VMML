@@ -156,9 +156,6 @@ ImageBag::desample(const float newFreq, std::vector<uint64> &messagePosList) con
 	// Must be lower than current frequency
 	assert(newFreq < hz());
 
-	// Has not been time-constrained
-	assert(mIsTimeConstrained==false);
-
 	const double lengthInSeconds = (getBagStopTime()-getBagStartTime()).toSec();
 
 	uint posWk = 0, nextWk;

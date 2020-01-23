@@ -19,6 +19,7 @@
 
 
 using namespace Vmml;
+using namespace std;
 
 
 ImageDatabase imageDb;

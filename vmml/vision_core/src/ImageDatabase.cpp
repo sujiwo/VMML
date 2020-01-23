@@ -776,14 +776,14 @@ void ImageDatabase::searchDescriptor(
 	unsigned checks)
 const
 {
-	unsigned points_searched = 0;
+	uint points_searched = 0;
 	NodePriorityQueue pq;
 	DescriptorQueue r;
 
 	// Initializing search structures
 	std::vector<NodeQueue::Ptr> pqs;
 	std::vector<DescriptorQueue::Ptr> rs;
-	for (unsigned i = 0; i < trees_.size(); i++) {
+	for (uint i = 0; i < trees_.size(); i++) {
 		NodeQueue::Ptr tpq = std::make_shared<NodeQueue>();
 		pqs.push_back(tpq);
 
@@ -793,16 +793,16 @@ const
 
 	// Searching in the trees
 	#pragma omp parallel for
-		for (unsigned i = 0; i < trees_.size(); i++) {
+		for (uint i = 0; i < trees_.size(); i++) {
 			trees_[i]->traverseFromRoot(q, pqs[i], rs[i]);
 		}
 
 	//  Gathering results from each individual search
 	std::unordered_set<BinaryDescriptor::Ptr> already_added;
-	for (unsigned i = 0; i < trees_.size(); i++) {
+	for (uint i = 0; i < trees_.size(); i++) {
 		// Obtaining descriptor nodes
-		unsigned r_size = rs[i]->size();
-		for (unsigned j = 0; j < r_size; j++) {
+		uint r_size = rs[i]->size();
+		for (uint j = 0; j < r_size; j++) {
 			DescriptorQueueItem r_item = rs[i]->get(j);
 			std::pair<std::unordered_set<BinaryDescriptor::Ptr>::iterator,
 					bool > result;
@@ -817,10 +817,10 @@ const
 	// Continuing the search if not enough descriptors have been checked
 	if (points_searched < checks) {
 		// Gathering the next nodes to search
-		for (unsigned i = 0; i < trees_.size(); i++) {
+		for (uint i = 0; i < trees_.size(); i++) {
 			// Obtaining priority queue nodes
-			unsigned pq_size = pqs[i]->size();
-			for (unsigned j = 0; j < pq_size; j++) {
+			uint pq_size = pqs[i]->size();
+			for (uint j = 0; j < pq_size; j++) {
 				pq.push(pqs[i]->get(j));
 			}
 		}
@@ -837,11 +837,11 @@ const
 			trees_[n.tree_id]->traverseFromNode(q, n.node, tpq, tr);
 
 			// Adding new nodes to search to PQ
-			for (unsigned i = 0; i < tpq->size(); i++) {
+			for (uint i = 0; i < tpq->size(); i++) {
 			pq.push(tpq->get(i));
 			}
 
-			for (unsigned j = 0; j < tr->size(); j++) {
+			for (uint j = 0; j < tr->size(); j++) {
 				DescriptorQueueItem r_item = tr->get(j);
 				std::pair<std::unordered_set<BinaryDescriptor::Ptr>::iterator, bool> result;
 				result = already_added.insert(r_item.desc);
@@ -857,12 +857,11 @@ const
 	// Returning the required number of descriptors descriptors
 	neigh->clear();
 	distances->clear();
-	unsigned ndescs = std::min(knn, r.size());
+	uint ndescs = std::min(knn, r.size());
 	for (unsigned i = 0; i < ndescs; i++) {
-	DescriptorQueueItem d = r.get(i);
-
-	neigh->push_back(d.desc);
-	distances->push_back(d.dist);
+		DescriptorQueueItem d = r.get(i);
+		neigh->push_back(d.desc);
+		distances->push_back(d.dist);
 	}
 }
 

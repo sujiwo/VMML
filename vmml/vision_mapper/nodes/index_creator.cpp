@@ -132,23 +132,39 @@ protected:
 int main(int argc, char *argv[])
 {
 	float frameRate=10.0;
+	string mapFilename = "imagedb-full.dat";
+	float startTimeSeconds=0;
+	float maxSecondsFromStart=-1;
 
 	Vmml::Mapper::ProgramOptions progOptions;
 	progOptions.addSimpleOptions("frame-rate", "Reduce image rate", frameRate);
+	progOptions.addSimpleOptions("map-name", "Resulting map file name in working directory", mapFilename);
+	progOptions.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
+	progOptions.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
 	progOptions.parseCommandLineArgs(argc, argv);
 
 	Vmml::Mapper::RVizConnector rosConn(argc, argv, "index_creator");
 
 	rosbag::Bag &mybag = progOptions.getInputBag();
 
+	auto &images = *progOptions.getImageBag();
+	uint N;
+	if (maxSecondsFromStart>0) N = images.getPositionAtDurationSecond(maxSecondsFromStart);
+	else N = images.size();
+	const int maxLim = N;
+
 	/*
 	 * Need to reduce frame rate of the bag
 	 */
-	auto &images = *progOptions.getImageBag();
+	const int N1 = images.size();
+	if (maxSecondsFromStart>0)
+		images.setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
+	const int N2 = images.size();
 	vector<uint64> imageRedSamples;
 	images.desample(frameRate, imageRedSamples);
 	auto tLen = (images.timeAt(imageRedSamples.back())-images.timeAt(imageRedSamples.front())).toSec();
 	cout << "Frequency after desampled: " << float(imageRedSamples.size()) / tLen << endl;
+	cout << "# of target frames: " << imageRedSamples.size() << endl;
 
 	auto camera0 = progOptions.getCameraParameters();
 
@@ -161,15 +177,14 @@ int main(int argc, char *argv[])
 
 	ImageDatabase imageDb;
 
-	const int maxLim = images.size();
-//	const int maxLim = 1000;
-
 	kfid keyframeId = 0;
 	for (int imageBagId: imageRedSamples) {
+		cout << imageBagId+1 << " / " << maxLim;
 		auto curImage = BaseFrame::create(images.at(imageBagId), camera0);
 		ptime imageTimestamp = images.timeAt(imageBagId).toBoost();
 		curImage->computeFeatures(bFeats);
 
+		auto t1 = getCurrentTime();
 		if (keyframeId==0) {
 			// No checks
 			imageDb.addImage(keyframeId, curImage->allKeypoints(), curImage->allDescriptors());
@@ -177,10 +192,11 @@ int main(int argc, char *argv[])
 		else
 			// Perform checks
 			imageDb.addImage2(keyframeId, curImage->allKeypoints(), curImage->allDescriptors());
+		auto t2 = getCurrentTime();
 
 		rosConn.publishPlainBaseFrame(*curImage);
-		cout << imageBagId+1 << " / " << maxLim << endl;
-		imageDb.keyframeIdToBag[keyframeId] = imageBagId;
+		cout << ", " << toSeconds(t2-t1) << endl;
+		imageDb.keyframeIdToBag[keyframeId] = images.getOriginalZeroIndex()+imageBagId;
 		keyframeId += 1;
 	}
 
@@ -189,6 +205,8 @@ int main(int argc, char *argv[])
 
 	cout << "Done mapping\n";
 
-	imageDb.saveToDisk((progOptions.getWorkDir()/"imagedb-full.dat").string());
+	auto completeMapName = progOptions.getWorkDir() / mapFilename;
+	imageDb.saveToDisk(completeMapName.string());
+	cout << "Saved to " << completeMapName.string() << endl;
 	return 0;
 }

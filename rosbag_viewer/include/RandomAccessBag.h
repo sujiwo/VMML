@@ -79,8 +79,7 @@ public:
    * A note about seconds in this function:
    * These parameters are time (in seconds) from start of the bag
    */
-  void setTimeConstraint(const double seconds1FromOffset,
-                         const double seconds2FromOffset);
+  void setTimeConstraint(const double seconds1FromOffset=-1, const double seconds2FromOffset=-1);
 
   /*
    * Getter
@@ -148,6 +147,9 @@ public:
   static std::map<std::string, std::string>
   getTopicList(const rosbag::Bag &bag);
 
+  const uint getOriginalZeroIndex() const
+  { return originalZeroIndex; }
+
 protected:
   void createCache();
 
@@ -170,6 +172,10 @@ protected:
 
   ros::Time bagStartTime, bagStopTime;
   const std::string viewTopic;
+
+  // If time-constrained, this value is used for mapping of a position to original position
+  // (when not time-constrained)
+  uint originalZeroIndex=0;
 };
 
 #endif /* _RANDOMACCESSBAG_H_ */
