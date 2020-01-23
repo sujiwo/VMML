@@ -148,18 +148,15 @@ int main(int argc, char *argv[])
 	rosbag::Bag &mybag = progOptions.getInputBag();
 
 	auto &images = *progOptions.getImageBag();
-	uint N;
-	if (maxSecondsFromStart>0) N = images.getPositionAtDurationSecond(maxSecondsFromStart);
-	else N = images.size();
-	const int maxLim = N;
 
 	/*
 	 * Need to reduce frame rate of the bag
 	 */
-	const int N1 = images.size();
 	if (maxSecondsFromStart>0)
 		images.setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
-	const int N2 = images.size();
+
+	const int maxLim = images.size();
+
 	vector<uint64> imageRedSamples;
 	images.desample(frameRate, imageRedSamples);
 	auto tLen = (images.timeAt(imageRedSamples.back())-images.timeAt(imageRedSamples.front())).toSec();

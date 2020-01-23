@@ -23,10 +23,9 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(mybagPath.string());
 
 	ImageBag ost(mybag, "/front_rgb/image_raw");
-	ost.setTimeConstraint(72.84, 215.59);
 	uint size = ost.size();
 
-	auto img0 = ost.at(0);
+	auto img0 = ost.at(14539);
 	cv::imwrite("/tmp/0.png", img0);
 
 	return 0;

@@ -48,8 +48,11 @@ ImageBag::at(unsigned int position, bool raw)
 		auto imgPtr = cv_bridge::toCvCopy(bImageMsg, sensor_msgs::image_encodings::BGR8);
 		cv::Mat imageRes;
 		cv::resize(imgPtr->image, imageRes, cv::Size(), zoomRatio, zoomRatio, cv::INTER_CUBIC);
-		if (imgPreps.maskIsEmpty()==false)
-			imgPreps.preprocess(imageRes);
+
+		/*if (imgPreps.maskIsEmpty()==false)*/
+		// Preprocess is enabled for all condition, even if lighting mask is not supplied
+		imgPreps.preprocess(imageRes);
+
 		return imageRes;
 	}
 }
