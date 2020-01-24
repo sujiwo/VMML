@@ -15,6 +15,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include "vmml/ImageDatabase.h"
 #include "vmml/BaseFrame.h"
+#include "vmml/ImagePreprocessor.h"
 #include "vision_mapper/place_recognizer.h"
 
 
@@ -24,7 +25,7 @@ using namespace std;
 
 ImageDatabase imageDb;
 cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
-		3000,
+		700,
 		1.2,
 		8,
 		32,
@@ -43,6 +44,7 @@ bool PlaceRecognizerService(
 
 	cv::Mat workImg;
 	cv::resize(imageReq->image, workImg, cv::Size(), 0.41666666667, 0.41666666666667);
+	workImg = ImagePreprocessor::autoAdjustGammaRGB(workImg);
 
 	auto queryFrame = BaseFrame::create(workImg);
 	queryFrame->computeFeatures(bFeats);

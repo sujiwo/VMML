@@ -41,7 +41,7 @@ if __name__=='__main__':
 #     res = runPlaceRecognizer(sys.argv[1])
 #     print(res)
 
-    testResults = []
+    testResults = {}
     
     for i in range(1, len(sys.argv)):
         queryId = int(os.path.basename(os.path.splitext(sys.argv[i])[0]))
@@ -59,7 +59,7 @@ if __name__=='__main__':
 #             kfImage = cv2.resize(cv2.imread(kfPath), (800,450))
 #             evaluateImage = combineImage(evaluateImage, kfImage, qr)
 #         cv2.imwrite(str(queryId)+".png", evaluateImage)
-        testResults.append({'id': queryId, 'ans': qResult, 'time': timeRun})
+        testResults[queryId]={'id': queryId, 'ans': qResult, 'time': timeRun}
         print(queryId, timeRun)
     
     pickle.dump(testResults, open("place_recognizer_results.pickle", "wb"))

@@ -33,7 +33,7 @@ linearIdleThreshold = 10.0,
 imageSameThrScore = 0.15;
 
 const uint
-numberOfFeatures = 1500;
+numberOfFeatures = 700;
 
 
 cv::Ptr<cv::DescriptorMatcher> bMatcher = cv::BFMatcher::create();
