@@ -45,24 +45,23 @@ bool PlaceRecognizerService(
 	cv::Mat workImg;
 	cv::resize(imageReq->image, workImg, cv::Size(), 0.6666666667, 0.6666666666667);
 	workImg = ImagePreprocessor::autoAdjustGammaRGB(workImg);
-	cv::imwrite("/tmp/procx.png", workImg);
 
 	auto queryFrame = BaseFrame::create(workImg);
 	queryFrame->computeFeatures(bFeats);
 
 	vector<vector<cv::DMatch>> featureMatches;
-	imageDb.searchDescriptors(queryFrame->allDescriptors(), featureMatches, 2, 64);
+	imageDb.searchDescriptors(queryFrame->allDescriptors(), featureMatches, 2, 32);
 	// Filter matches according to ratio test
 	vector<cv::DMatch> realMatches;
 	for (uint m=0; m<featureMatches.size(); m++) {
-		if (featureMatches[m][0].distance < featureMatches[m][1].distance * 0.8)
+		if (featureMatches[m][0].distance < featureMatches[m][1].distance * 0.65)
 			realMatches.push_back(featureMatches[m][0]);
 	}
 
 	vector<ImageMatch> imageMatches;
 	imageDb.searchImages(queryFrame->allDescriptors(), realMatches, imageMatches);
 	response.keyframeId.clear();
-	for (int i=0; i<min(10, (int)imageMatches.size()); i++) {
+	for (int i=0; i<min(15, (int)imageMatches.size()); i++) {
 		int bagRefId = imageDb.keyframeIdToBag.at(imageMatches[i].image_id);
 		response.keyframeId.push_back(bagRefId);
 //		cout << imageMatches[i].image_id << ' ' << imageMatches[i].score << endl;
