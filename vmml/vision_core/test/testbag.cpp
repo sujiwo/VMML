@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <string>
 #include <rosbag/bag.h>
 #include <pcl/io/pcd_io.h>
 #include "vmml/TrajectoryGNSS.h"
@@ -23,10 +24,9 @@ int main(int argc, char *argv[])
 	rosbag::Bag mybag(mybagPath.string());
 
 	ImageBag ost(mybag, "/front_rgb/image_raw");
-	uint size = ost.size();
 
-	auto img0 = ost.at(14539);
-	cv::imwrite("/tmp/0.png", img0);
+	auto img0 = ost.at(stoi(argv[2]));
+	cv::imwrite("/tmp/proc.png", img0);
 
 	return 0;
 }

@@ -25,7 +25,7 @@ using namespace std;
 
 ImageDatabase imageDb;
 cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
-		700,
+		2000,
 		1.2,
 		8,
 		32,
@@ -43,8 +43,9 @@ bool PlaceRecognizerService(
 	cv_bridge::CvImagePtr imageReq = cv_bridge::toCvCopy(request.input, sensor_msgs::image_encodings::BGR8);
 
 	cv::Mat workImg;
-	cv::resize(imageReq->image, workImg, cv::Size(), 0.41666666667, 0.41666666666667);
+	cv::resize(imageReq->image, workImg, cv::Size(), 0.6666666667, 0.6666666666667);
 	workImg = ImagePreprocessor::autoAdjustGammaRGB(workImg);
+	cv::imwrite("/tmp/procx.png", workImg);
 
 	auto queryFrame = BaseFrame::create(workImg);
 	queryFrame->computeFeatures(bFeats);

@@ -161,12 +161,13 @@ cv::Mat ImagePreprocessor::autoAdjustGammaMono(cv::Mat &grayImg, float *gamma, c
 		}
 	}
 
-	// no changes if proper/over-exposed
-	// XXX: Need to review this
-	if (midtone >= 0.5)
-		return grayImg;
-
 	float g = logf (0.5) / logf(midtone);
+
+	// no changes if proper/over-exposed
+	if (midtone >= 0.5)
+		g = 1.0;
+
+
 	if (gamma != NULL) {
 		*gamma = g;
 		return cv::Mat();
@@ -185,6 +186,7 @@ cv::Mat ImagePreprocessor::autoAdjustGammaRGB (const cv::Mat &rgbImg, const cv::
 	cv::Mat monoImg;
 
 	cv::cvtColor (rgbImg, monoImg, CV_BGR2GRAY);
+
 	float gamma;
 	autoAdjustGammaMono (monoImg, &gamma, mask);
 	cv::Mat LUT = setGamma (monoImg, gamma, true);
