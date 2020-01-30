@@ -28,11 +28,11 @@ cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
 		2000,
 		1.2,
 		8,
-		32,
+		31,
 		0,
 		2,
 		cv::ORB::HARRIS_SCORE,
-		32,
+		31,
 		10);
 
 

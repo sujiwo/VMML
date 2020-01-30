@@ -33,7 +33,7 @@ linearIdleThreshold = 10.0,
 imageSameThrScore = 0.15;
 
 const uint
-numberOfFeatures = 700;
+numberOfFeatures = 3000;
 
 
 cv::Ptr<cv::DescriptorMatcher> bMatcher = cv::BFMatcher::create();
@@ -41,11 +41,11 @@ cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
 		numberOfFeatures,
 		1.2,
 		8,
-		32,
+		31,
 		0,
 		2,
 		cv::ORB::HARRIS_SCORE,
-		32,
+		31,
 		10);
 
 
@@ -90,11 +90,11 @@ IndexCreator(const CameraPinholeParams &c, uint numOfFeaturesReq=numberOfFeature
 		 numOfFeaturesReq,
 			1.2,
 			8,
-			32,
+			10,
 			0,
 			2,
 			cv::ORB::HARRIS_SCORE,
-			32,
+			10,
 			10);
 }
 

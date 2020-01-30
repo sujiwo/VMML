@@ -6,6 +6,7 @@
  */
 
 #include <vector>
+#include <opencv2/bioinspired.hpp>
 #include "vmml/ImagePreprocessor.h"
 
 
@@ -265,3 +266,11 @@ cv::Mat ImagePreprocessor::cdf (cv::Mat &grayImage, cv::Mat mask)
 	rcdf = rcdf / cv::sum(hist)[0];
 	return rcdf;
 }
+
+
+cv::Mat
+ImagePreprocessor::retinaHdr(const cv::Mat &rgbImage)
+{
+//	cv::Ptr<cv::bioinspired::RetinaFastToneMapping> retina = cv::bioinspired::
+}
+

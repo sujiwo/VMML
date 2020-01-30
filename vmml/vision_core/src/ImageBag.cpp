@@ -51,7 +51,8 @@ ImageBag::at(unsigned int position, bool raw)
 
 		/*if (imgPreps.maskIsEmpty()==false)*/
 		// Preprocess is enabled for all condition, even if lighting mask is not supplied
-		imgPreps.preprocess(imageRes);
+		if (doPreprocess==true)
+			imgPreps.preprocess(imageRes);
 
 		return imageRes;
 	}

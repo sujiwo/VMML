@@ -45,6 +45,8 @@ public:
 	static cv::Mat autoAdjustGammaMono (cv::Mat &grayImage, float *gamma=NULL, cv::Mat mask=cv::Mat());
 	static cv::Mat toIlluminatiInvariant (const cv::Mat &rgbImage, const float alpha);
 
+	static cv::Mat retinaHdr(const cv::Mat &rgbImage);
+
 	static cv::Mat histogram (cv::Mat &inputMono, cv::Mat mask=cv::Mat());
 
 	inline bool maskIsEmpty() const

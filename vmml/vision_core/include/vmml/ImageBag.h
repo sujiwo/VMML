@@ -47,6 +47,7 @@ public:
 	// Simulate reduced number of images per seconds
 	void desample(const float hz, std::vector<uint64> &desamplePos) const;
 
+	bool doPreprocess = true;
 
 protected:
 	float zoomRatio;
