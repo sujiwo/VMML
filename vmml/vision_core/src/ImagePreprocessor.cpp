@@ -113,22 +113,30 @@ ImagePreprocessor::detectSmear(cv::Mat &rgbImage, const float tolerance)
 }
 
 
-cv::Mat ImagePreprocessor::toIlluminatiInvariant (const cv::Mat &rgbImage, const float alpha)
+cv::Mat ImagePreprocessor::toIlluminatiInvariant (const cv::Mat &imageBayer, const float alpha)
 {
-	cv::Mat iImage (rgbImage.rows, rgbImage.cols, CV_8UC1);
-//	cout << rgbImage.rows << ' ' << rgbImage.cols << endl;
+	cv::Mat iImage (imageBayer.rows/2, imageBayer.cols/2, CV_8UC1),
+			grey (imageBayer.rows/2, imageBayer.cols/2, CV_32F);
 
-	cv::MatConstIterator_<cv::Vec3b> it, end;
-	for (it=rgbImage.begin<cv::Vec3b>(), end=rgbImage.end<cv::Vec3b>(); it!=end; ++it) {
-//		cv::Vec3b &curPixel = *it;
-		float
-			fb = (*it)[0] / 255.0,
-			fg = (*it)[1] / 255.0,
-			fr = (*it)[2] / 255.0;
-		float iPix = 0.5 + logf(fg) - alpha*logf(fb) - (1-alpha)*logf(fr);
-		iImage.at<uchar>(it.pos()) = (uchar)(iPix*255);
+	for (int i=0; i<iImage.rows; i++) {
+		for (int j=0; j<iImage.cols; j++) {
+			auto pr=i*2;
+			auto pc=j*2;
+			float g1=float(imageBayer.at<uchar>(pr,pc)) / 255.0;
+			float r=float(imageBayer.at<uchar>(pr,pc+1)) / 255.0;
+			float b=float(imageBayer.at<uchar>(pr+1,pc)) / 255.0;
+			float g2=float(imageBayer.at<uchar>(pr+1,pc+1)) / 255.0;
+			float g=(g1+g2)/2.0;
+            float iv = 0.5 + log10f(g) - alpha*log10f(b) - (1-alpha)*log10f(r);
+            grey.at<float>(i,j) = iv;
+		}
 	}
 
+	// Normalize
+	double maxVal;
+	cv::minMaxIdx(grey, NULL, &maxVal);
+	grey = grey / maxVal;
+	grey.convertTo(iImage, iImage.type());
 	return iImage;
 }
 

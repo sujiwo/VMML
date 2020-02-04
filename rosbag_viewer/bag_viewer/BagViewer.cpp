@@ -167,15 +167,22 @@ BagViewer::on_prevFrameBtn_clicked(bool checked)
 
 void BagViewer::on_topicSelector_currentIndexChanged(int i) { setTopic(i); }
 
-void BagViewer::on_saveButton_clicked(bool checked) {
-  QString fname = QFileDialog::getSaveFileName(this, tr("Save Image"));
-  if (fname.length() == 0)
-    return;
+void BagViewer::on_saveButton_clicked(bool checked)
+{
+	string fname = QFileDialog::getSaveFileName(this, tr("Save Image")).toStdString();
+	if (fname.length() == 0)
+		return;
 
-  cv::Mat rgb;
-  cv::cvtColor(currentImage, rgb, CV_RGB2BGR);
+	if (fname.substr(fname.size(), 4)==".mat") {
 
-  cv::imwrite(fname.toStdString(), rgb);
+	}
+
+	else {
+		cv::Mat rgb;
+		cv::cvtColor(currentImage, rgb, CV_RGB2BGR);
+
+		cv::imwrite(fname, rgb);
+	}
 }
 
 void BagViewer::on_copyImageBtn_clicked(bool checked)

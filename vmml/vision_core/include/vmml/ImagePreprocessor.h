@@ -43,7 +43,7 @@ public:
 //	static cv::Mat autoAdjustGammaRGB (cv::Mat &rgbImage, cv::Mat mask=cv::Mat());
 	static cv::Mat autoAdjustGammaRGB (const cv::Mat &rgbImage, const cv::Mat &mask=cv::Mat());
 	static cv::Mat autoAdjustGammaMono (cv::Mat &grayImage, float *gamma=NULL, cv::Mat mask=cv::Mat());
-	static cv::Mat toIlluminatiInvariant (const cv::Mat &rgbImage, const float alpha);
+	static cv::Mat toIlluminatiInvariant (const cv::Mat &bayerImage, const float alpha);
 
 	static cv::Mat retinaHdr(const cv::Mat &rgbImage);
 

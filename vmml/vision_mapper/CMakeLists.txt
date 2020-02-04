@@ -250,3 +250,13 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+add_executable(
+	test_rgb_filters
+		nodes/test_rgb_filters.cpp
+)
+
+target_link_libraries(
+	test_rgb_filters
+		${common_libs}
+)
+
