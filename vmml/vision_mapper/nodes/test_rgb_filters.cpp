@@ -12,10 +12,12 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
+#include <opencv2/features2d.hpp>
 #include "vmml/ImagePreprocessor.h"
 
 
 image_transport::Publisher imagePub;
+auto orbDet = cv::ORB::create(1500);
 
 
 void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
