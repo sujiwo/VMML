@@ -16,18 +16,33 @@
 #include "vmml/ImagePreprocessor.h"
 
 
+using namespace std;
+
+
 image_transport::Publisher imagePub;
-auto orbDet = cv::ORB::create(1500);
+//auto detector = cv::AKAZE::create();
+auto detector = cv::ORB::create(6000);
 
 
 void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
 {
-	auto imgRaw = cv_bridge::toCvShare(imgMsg);
-	auto imagePrep = ImagePreprocessor::toIlluminatiInvariant(imgRaw->image, 0.3975);
+	auto imgRaw = cv_bridge::toCvShare(imgMsg, "bgr8");
+	auto imagePrep = ImagePreprocessor::retinaHdr(imgRaw->image);
+
+	// ORB Test
+	std::vector<cv::KeyPoint> kpList;
+	cv::Mat descriptors, drawFrameKeypts;
+	detector->detectAndCompute(
+		imagePrep,
+		cv::Mat(),
+		kpList,
+		descriptors);
+	cv::drawKeypoints(imagePrep, kpList, drawFrameKeypts);
+	cerr << "# features: " << kpList.size() << endl;
 
 	cv_bridge::CvImage cvImg;
-	cvImg.encoding = sensor_msgs::image_encodings::MONO8;
-	cvImg.image = imagePrep;
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+	cvImg.image = drawFrameKeypts;
 	cvImg.header.stamp = ros::Time::now();
 
 	imagePub.publish(cvImg.toImageMsg());

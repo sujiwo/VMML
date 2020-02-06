@@ -36,7 +36,7 @@ def imageConvertBayer(imageBayer, alpha):
             iv = 0.5 + np.log10(g) - alpha*np.log10(b) - (1-alpha)*np.log10(r)
             grey[i,j] = iv
     # Normalize
-    grey = grey / np.max(grey)
+    grey = np.clip(grey, 0.0, 1.0)
     return np.array(grey*255, dtype=np.uint8)
 
 

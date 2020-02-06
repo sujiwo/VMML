@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <opencv2/bioinspired.hpp>
+#include <opencv2/xphoto.hpp>
 #include "vmml/ImagePreprocessor.h"
 
 
@@ -286,6 +287,16 @@ cv::Mat ImagePreprocessor::cdf (cv::Mat &grayImage, cv::Mat mask)
 cv::Mat
 ImagePreprocessor::retinaHdr(const cv::Mat &rgbImage)
 {
-//	cv::Ptr<cv::bioinspired::RetinaFastToneMapping> retina = cv::bioinspired::
+	static cv::Ptr<cv::bioinspired::Retina> mRetina;
+	if (mRetina.empty()) {
+		mRetina = cv::bioinspired::createRetina(rgbImage.size());
+		mRetina->clearBuffers();
+	}
+
+	cv::Mat mret = rgbImage.clone();
+	mRetina->run(mret);
+
+	return mret;
+
 }
 
