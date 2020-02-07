@@ -47,6 +47,8 @@ public:
 
 	static cv::Mat retinaHdr(const cv::Mat &rgbImage);
 
+	static cv::Mat GrayWorld(const cv::Mat &rgbImage);
+
 	static cv::Mat histogram (cv::Mat &inputMono, cv::Mat mask=cv::Mat());
 
 	inline bool maskIsEmpty() const

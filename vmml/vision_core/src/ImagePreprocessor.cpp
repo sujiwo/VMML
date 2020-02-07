@@ -121,6 +121,14 @@ T clamp(const T &v, const T &min, const T &max=numeric_limits<T>::max())
 }
 
 
+template<typename T, typename U>
+T clamp(const U &v, const U &min=numeric_limits<T>::min(), const U &max=numeric_limits<T>::max())
+{
+	U vcrop = (v<min ? min : (v>max ? max : v));
+	return (T)v;
+}
+
+
 cv::Mat ImagePreprocessor::toIlluminatiInvariant (const cv::Mat &imageBayer, const float alpha)
 {
 	cv::Mat iImage (imageBayer.rows/2, imageBayer.cols/2, CV_8UC1);
@@ -300,3 +308,41 @@ ImagePreprocessor::retinaHdr(const cv::Mat &rgbImage)
 
 }
 
+
+cv::Mat
+ImagePreprocessor::GrayWorld(const cv::Mat &bgrImage)
+{
+	double B=0, G=0, R=0;
+	cv::Mat dsRes(bgrImage.size(), CV_8UC3);
+
+	for (int i=0; i<bgrImage.rows; i++) {
+		for (int j=0; j<bgrImage.cols; j++) {
+			auto color = bgrImage.at<cv::Vec3b>(i, j);
+			B += float(color[0]);
+			G += float(color[1]);
+			R += float(color[2]);
+		}
+	}
+
+	B /= bgrImage.cols*bgrImage.rows;
+	G /= bgrImage.cols*bgrImage.rows;
+	R /= bgrImage.cols*bgrImage.rows;
+	double grayVal = (B+G+R)/3;
+	double
+		kr = grayVal / R,
+		kg = grayVal / G,
+		kb = grayVal / B;
+
+	for (int i=0; i<bgrImage.rows; ++i) {
+		for (int j=0; j<bgrImage.cols; ++j) {
+			auto colorSrc = bgrImage.at<cv::Vec3b>(i, j);
+			cv::Vec3b colorDst;
+			colorDst[0] = clamp<uchar>(colorSrc[0] * kb);
+			colorDst[1] = clamp<uchar>(colorSrc[1] * kg);
+			colorDst[2] = clamp<uchar>(colorSrc[2] * kr);
+			dsRes.at<cv::Vec3b>(i, j) = colorDst;
+		}
+	}
+
+	return dsRes;
+}
