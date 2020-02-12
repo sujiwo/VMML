@@ -17,6 +17,7 @@
 #include "vmml/Matcher.h"
 #include "vmml/ImageDatabase.h"
 #include "vmml/utilities.h"
+#include "vmml/ImagePreprocessor.h"
 #include "ProgramOptions.h"
 #include "RVizConnector.h"
 
@@ -148,6 +149,7 @@ int main(int argc, char *argv[])
 	rosbag::Bag &mybag = progOptions.getInputBag();
 
 	auto &images = *progOptions.getImageBag();
+	images.doPreprocess = false;
 
 	/*
 	 * Need to reduce frame rate of the bag
@@ -177,21 +179,28 @@ int main(int argc, char *argv[])
 	kfid keyframeId = 0;
 	for (int imageBagId: imageRedSamples) {
 		cout << imageBagId+1 << " / " << maxLim;
-		auto curImage = BaseFrame::create(images.at(imageBagId), camera0);
+
+		auto curImage = images.at(imageBagId);
+		cv::Vec3f
+			weights(0.3333, 0.3333, 0.3333),
+			sigmas(10, 10, 10);
+		curImage = ImagePreprocessor::retinaHdr(curImage, weights, sigmas, 128, 128, 1.0, 10);
+
+		auto curFrame = BaseFrame::create(curImage, camera0);
 		ptime imageTimestamp = images.timeAt(imageBagId).toBoost();
-		curImage->computeFeatures(bFeats);
+		curFrame->computeFeatures(bFeats);
 
 		auto t1 = getCurrentTime();
 		if (keyframeId==0) {
 			// No checks
-			imageDb.addImage(keyframeId, curImage->allKeypoints(), curImage->allDescriptors());
+			imageDb.addImage(keyframeId, curFrame->allKeypoints(), curFrame->allDescriptors());
 		}
 		else
 			// Perform checks
-			imageDb.addImage2(keyframeId, curImage->allKeypoints(), curImage->allDescriptors());
+			imageDb.addImage2(keyframeId, curFrame->allKeypoints(), curFrame->allDescriptors());
 		auto t2 = getCurrentTime();
 
-		rosConn.publishPlainBaseFrame(*curImage);
+		rosConn.publishPlainBaseFrame(*curFrame);
 		cout << ", " << toSeconds(t2-t1) << endl;
 		imageDb.keyframeIdToBag[keyframeId] = images.getOriginalZeroIndex()+imageBagId;
 		keyframeId += 1;

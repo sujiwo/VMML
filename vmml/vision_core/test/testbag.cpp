@@ -29,7 +29,11 @@ int main(int argc, char *argv[])
 	ImageBag ost(mybag, "/front_rgb/image_raw");
 
 	auto img0 = ost.at(stoi(argv[2]));
-	auto imgp = ImagePreprocessor::GrayWorld(img0);
+
+	cv::Vec3f
+		weights(0.3333, 0.3333, 0.3333),
+		sigmas(10, 10, 10);
+	auto imgp = ImagePreprocessor::retinaHdr(img0, weights, sigmas, 128, 128, 1.0, 10);
 	cv::imwrite("/tmp/proc.png", imgp);
 
 	return 0;

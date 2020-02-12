@@ -45,7 +45,16 @@ public:
 	static cv::Mat autoAdjustGammaMono (cv::Mat &grayImage, float *gamma=NULL, cv::Mat mask=cv::Mat());
 	static cv::Mat toIlluminatiInvariant (const cv::Mat &bayerImage, const float alpha);
 
-	static cv::Mat retinaHdr(const cv::Mat &rgbImage);
+	/*
+	 * Multi-scale Retinex with Color Restoration
+	 */
+	static cv::Mat retinaHdr(const cv::Mat &rgbImage,
+		cv::Vec3f weights=cv::Vec3f(-1,-1,-1),
+		cv::Vec3f sigmas=cv::Vec3f(),
+		int gain=1,
+		int offset=0,
+		double restoration_factor=1.0,
+		double color_gain=1.0);
 
 	static cv::Mat GrayWorld(const cv::Mat &rgbImage);
 

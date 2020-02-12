@@ -293,19 +293,74 @@ cv::Mat ImagePreprocessor::cdf (cv::Mat &grayImage, cv::Mat mask)
 
 
 cv::Mat
-ImagePreprocessor::retinaHdr(const cv::Mat &rgbImage)
+ImagePreprocessor::retinaHdr(const cv::Mat &rgbImage, cv::Vec3f weights, cv::Vec3f sigmas, int gain, int offset, double restoration_factor, double color_gain)
 {
-	static cv::Ptr<cv::bioinspired::Retina> mRetina;
-	if (mRetina.empty()) {
-		mRetina = cv::bioinspired::createRetina(rgbImage.size());
-		mRetina->clearBuffers();
+	cv::Mat A, B, C, fA, fB, fC, fsA, fsB, fsC, fsD, fsE, fsF;
+
+	if (weights[0]==-1 and weights[1]==-1 and weights[2]==-1)
+		weights[0]=weights[1]=weights[2]=1.0/float(rgbImage.channels());
+
+	rgbImage.convertTo(fB, CV_32F);
+	cv::log(fB, fA);
+
+	float weight = weights[0]+weights[1]+weights[2];
+	if (weight != 1.0)
+		fA.convertTo(fA, -1, weight);
+
+	// Filter at each scale
+	for (int i=0; i<3; i++) {
+		A = rgbImage.clone();
+		cv::GaussianBlur(A, A, cv::Size(0,0), sigmas[i]);
+
+		A.convertTo(fB, fB.type());
+		cv::log(fB, fC);
+
+		// compute weighted difference
+		fC = fC * weights[i];
+		fA = fA - fC;
 	}
 
-	cv::Mat mret = rgbImage.clone();
-	mRetina->run(mret);
+	// Color restoration
+	{
+		vector<cv::Mat> rgbs;
 
-	return mret;
+		// Divide image into channels, convert and store sum
+		cv::split(rgbImage, rgbs);
+		rgbs[0].convertTo(fsA, CV_32F);
+		rgbs[1].convertTo(fsB, CV_32F);
+		rgbs[2].convertTo(fsC, CV_32F);
 
+		// Normalize weights
+		fsD = fsA + fsB + fsC;
+		cv::divide(fsA, fsD, fsA, restoration_factor);
+		cv::divide(fsB, fsD, fsB, restoration_factor);
+		cv::divide(fsC, fsD, fsC, restoration_factor);
+
+		fsA.convertTo(fsA, -1, 1, 1);
+		fsB.convertTo(fsB, -1, 1, 1);
+		fsC.convertTo(fsC, -1, 1, 1);
+
+		// Log weights
+		cv::log(fsA, fsA);
+		cv::log(fsB, fsB);
+		cv::log(fsC, fsC);
+
+		// Divide retinex image, weight accordingly and recombine
+		vector<cv::Mat> defs;
+		cv::split(fA, defs);
+
+		cv::multiply(defs[0], fsA, defs[0], color_gain);
+		cv::multiply(defs[1], fsB, defs[1], color_gain);
+		cv::multiply(defs[2], fsC, defs[2], color_gain);
+
+		cv::merge(defs, fA);
+	}
+
+	// Restore
+	cv::Mat RetImg;
+	fA.convertTo(RetImg, CV_8UC3, gain, offset);
+
+	return RetImg;
 }
 
 

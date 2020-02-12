@@ -4,6 +4,7 @@ import rospy
 import cv_bridge
 import cv2
 from sensor_msgs.msg import Image
+from copy import copy
 import numpy as np
 
 
@@ -40,6 +41,26 @@ def imageConvertBayer(imageBayer, alpha):
     return np.array(grey*255, dtype=np.uint8)
 
 
+def Retinex(image, sigma, gain, offset):
+    fA = image.astype(np.float32)
+    min_nonzero = np.min(fA[np.nonzero(fA)])
+    fA[fA==0.0] = min_nonzero
+    fB = np.log(fA)
+    
+    A = copy(image)
+    cv2.GaussianBlur(A, (0,0), sigma, A)
+    fA = A.astype(np.float32)
+    fC = np.log(fA)
+    
+    fA = fB - fC
+    # XXX: need better formula
+    return cv2.convertScaleAbs(fA, None, gain, offset)
+
+
+def MultiScaleRetinexColorRestoration(image):
+    fA = image
+    pass
+
 def imageHandler(imageMsg):
     cImage = bridge.imgmsg_to_cv2(imageMsg, 'passthrough')
     cImage = imageConvertBayer(cImage, _alpha)
@@ -49,13 +70,24 @@ def imageHandler(imageMsg):
     pass
 
 
+# For publishing images to ROS
+# if __name__=='__main__':
+# 
+#     rospy.init_node("imgprocx", anonymous=True)
+# 
+#     imageSub = rospy.Subscriber("/front_rgb/image_raw", Image, imageHandler, queue_size=1)
+#     publisher = rospy.Publisher("/front_rgb/image_rgb", Image, queue_size=1)
+#     bridge = cv_bridge.CvBridge()
+# 
+#     rospy.spin()
+
+
+# For testing directly
 if __name__=='__main__':
-
-    rospy.init_node("imgprocx", anonymous=True)
-
-    imageSub = rospy.Subscriber("/front_rgb/image_raw", Image, imageHandler, queue_size=1)
-    publisher = rospy.Publisher("/front_rgb/image_rgb", Image, queue_size=1)
-    bridge = cv_bridge.CvBridge()
-
-    rospy.spin()
     
+    image=cv2.imread('/home/sujiwo/VmmlWorkspace/test_dir2/queries/14539.png')
+    imageRetx = Retinex(image, 10, 256, 256)
+    
+    pass
+
+
