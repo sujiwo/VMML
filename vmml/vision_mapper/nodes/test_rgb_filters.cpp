@@ -21,8 +21,17 @@ using namespace std;
 
 
 image_transport::Publisher imagePub1, imagePub2;
-//auto detector = cv::AKAZE::create();
-auto detector = cv::ORB::create(3000);
+auto detector2 = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE, 256, 3, 0.03f, 8);
+auto detector = cv::ORB::create(
+		3000,
+		1.2,
+		8,
+		31,
+		0,
+		2,
+		cv::ORB::HARRIS_SCORE,
+		31,
+		10);
 const float alpha = 0.3975;
 
 
@@ -133,7 +142,7 @@ void imageHandlerGrayWorld(const sensor_msgs::Image::ConstPtr &imgMsg)
 void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
 {
 	thread handler1([&] {
-		imageHandlerGrayWorld(imgMsg);
+		imageHandlerAutoGamma(imgMsg);
 	});
 
 	thread handler2([&] {
@@ -151,7 +160,7 @@ int main(int argc, char *argv[])
 	ros::NodeHandle mNode;
 
 	image_transport::ImageTransport iTrans(mNode);
-	imagePub1 = iTrans.advertise("/front_rgb/gray_world", 1);
+	imagePub1 = iTrans.advertise("/front_rgb/auto_gamma", 1);
 	imagePub2 = iTrans.advertise("/front_rgb/retinex", 1);
 
 	ros::Subscriber imgSub = mNode.subscribe("/front_rgb/image_raw", 1, imageHandler);
