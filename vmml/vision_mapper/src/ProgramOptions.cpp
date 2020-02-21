@@ -46,6 +46,7 @@ using po::value;
 const string dConfigFile = "config.ini";
 
 
+#if CV_MAJOR_VERSION<=3
 std::ostream& operator<< (std::ostream& out, const cv::Size& sz)
 {
 	out << '(' << sz.width << 'x' << sz.height << ')';
@@ -58,6 +59,7 @@ std::ostream& operator<< (std::ostream& out, const cv::MatSize& sz)
 	out << sz();
 	return out;
 }
+#endif
 
 
 ProgramOptions::ProgramOptions() :

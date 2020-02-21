@@ -38,6 +38,13 @@ if (OPENMP_FOUND)
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+if(SEGNET_DIR)
+	message("SegNet is set")
+	include("${SEGNET_DIR}/share/Caffe/CaffeConfig.cmake")
+	message("SegNet include: " "${Caffe_INCLUDE_DIRS}")
+endif()
+
+
 add_service_files(
 FILES
 	place_recognizer.srv
@@ -63,6 +70,7 @@ include_directories(
 	${Boost_INCLUDE_DIRS}
 	${G2O_INCLUDE_DIR}	
 	${vision_core_SOURCE_DIR}
+	${Caffe_INCLUDE_DIRS}
 )
 
 set(common_class 
