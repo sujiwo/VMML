@@ -11,6 +11,7 @@
 
 #include <string>
 #include <memory>
+#include <opencv2/core.hpp>
 #include <caffe/caffe.hpp>
 
 
@@ -31,6 +32,8 @@ public:
 
 protected:
 	std::shared_ptr<caffe::Net<float>> mNet;
+	cv::Size imgInputSize;
+	uint numChannels;
 };
 
 } /* namespace Mapper */

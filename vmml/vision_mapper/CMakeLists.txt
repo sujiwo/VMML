@@ -44,6 +44,7 @@ if(SEGNET_DIR)
 	message("SegNet include: " "${Caffe_INCLUDE_DIRS}")
 	set(SEGNET_FOUND true)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSEGNET_FOUND=1")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SEGNET_DIR}/lib")
 endif()
 
 
