@@ -42,6 +42,8 @@ if(SEGNET_DIR)
 	message("SegNet is set")
 	include("${SEGNET_DIR}/share/Caffe/CaffeConfig.cmake")
 	message("SegNet include: " "${Caffe_INCLUDE_DIRS}")
+	set(SEGNET_FOUND true)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSEGNET_FOUND=1")
 endif()
 
 
@@ -77,6 +79,9 @@ set(common_class
 	src/RVizConnector.cpp
 	src/ProgramOptions.cpp
 )
+if (SEGNET_FOUND)
+	list(APPEND common_class src/Segmentation.cpp)
+endif()
 
 set(common_libs
 	${catkin_LIBRARIES}
@@ -84,6 +89,9 @@ set(common_libs
 	${OpenCV_LIBS}
 	Boost::program_options
 )
+if (SEGNET_FOUND)
+	list(APPEND common_libs ${Caffe_LIBRARIES})
+endif()
 
 add_executable(
 	simple_bag_mapper
