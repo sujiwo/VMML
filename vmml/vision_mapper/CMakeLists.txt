@@ -76,6 +76,7 @@ include_directories(
 	${Caffe_INCLUDE_DIRS}
 )
 
+#XXX: Put these into a separate library
 set(common_class 
 	src/RVizConnector.cpp
 	src/ProgramOptions.cpp
@@ -270,6 +271,7 @@ install(
 add_executable(
 	test_rgb_filters
 		nodes/test_rgb_filters.cpp
+		${common_class}
 )
 
 target_link_libraries(

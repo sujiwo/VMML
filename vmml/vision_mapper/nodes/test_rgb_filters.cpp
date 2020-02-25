@@ -15,6 +15,8 @@
 #include <image_transport/image_transport.h>
 #include <opencv2/features2d.hpp>
 #include "vmml/ImagePreprocessor.h"
+#include "vmml/utilities.h"
+#include "Segmentation.h"
 
 
 using namespace std;
@@ -33,6 +35,8 @@ auto detector = cv::ORB::create(
 		31,
 		10);
 const float alpha = 0.3975;
+
+shared_ptr<Vmml::Mapper::Segmentation> gSegment=NULL;
 
 
 void imageHandlerAutoGamma(const sensor_msgs::Image::ConstPtr &imgMsg)
@@ -139,6 +143,20 @@ void imageHandlerGrayWorld(const sensor_msgs::Image::ConstPtr &imgMsg)
 }
 
 
+void imageHandlerSSMask(const sensor_msgs::Image::ConstPtr &imgMsg)
+{
+	auto imgBgr = cv_bridge::toCvCopy(imgMsg, "bgr8");
+	auto mask = gSegment->buildMask(imgBgr->image);
+
+	cv_bridge::CvImage cvImg;
+	cvImg.encoding = sensor_msgs::image_encodings::MONO8;
+	cvImg.image = mask;
+	cvImg.header.stamp = ros::Time::now();
+
+	imagePub2.publish(cvImg.toImageMsg());
+}
+
+
 void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
 {
 	thread handler1([&] {
@@ -146,7 +164,7 @@ void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
 	});
 
 	thread handler2([&] {
-		imageHandlerRetinex(imgMsg);
+		imageHandlerSSMask(imgMsg);
 	});
 
 	handler1.join();
@@ -158,6 +176,8 @@ int main(int argc, char *argv[])
 {
 	ros::init(argc, argv, "test_rgb_filters");
 	ros::NodeHandle mNode;
+
+	gSegment.reset(new Vmml::Mapper::Segmentation("/home/sujiwo/caffe-segnet/segnet_model_driving_webdemo.prototxt", "/home/sujiwo/caffe-segnet/segnet_weights_driving_webdemo.caffemodel"));
 
 	image_transport::ImageTransport iTrans(mNode);
 	imagePub1 = iTrans.advertise("/front_rgb/auto_gamma", 1);
