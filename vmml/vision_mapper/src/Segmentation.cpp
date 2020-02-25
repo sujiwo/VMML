@@ -35,6 +35,10 @@ Segmentation::Segmentation(const std::string &modelPath, const std::string &weig
 cv::Mat
 Segmentation::segment(const cv::Mat &sourceImage)
 {
+	/*
+	 * For multi-threaded applications (ex: ROS nodes),
+	 * we need to set mode to GPU again
+	 */
 	Caffe::set_mode(Caffe::GPU);
 
 	auto origin_size=sourceImage.size();
@@ -95,7 +99,7 @@ Segmentation::segment(const cv::Mat &sourceImage)
 	cv::Mat merged_output_image (output_layer->height(), output_layer->width(), CV_32F, const_cast<float *>(output_layer->cpu_data())),
 		merged_gray;
 	merged_output_image.convertTo(merged_gray, CV_8U);
-	cv::resize(merged_gray, merged_gray, origin_size, 0, 0, CV_INTER_NN);
+	cv::resize(merged_gray, merged_gray, origin_size, 0, 0, cv::INTER_NEAREST);
 	return merged_gray;
 }
 

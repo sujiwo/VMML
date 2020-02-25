@@ -42,6 +42,8 @@ shared_ptr<Vmml::Mapper::Segmentation> gSegment=NULL;
 void imageHandlerAutoGamma(const sensor_msgs::Image::ConstPtr &imgMsg)
 {
 	auto imgBgr = cv_bridge::toCvShare(imgMsg, "bgr8");
+	auto mask = gSegment->buildMask(imgBgr->image);
+
 	auto imagePrep = ImagePreprocessor::autoAdjustGammaRGB(imgBgr->image);
 
 	// ORB Test
@@ -49,7 +51,7 @@ void imageHandlerAutoGamma(const sensor_msgs::Image::ConstPtr &imgMsg)
 	cv::Mat descriptors, drawFrameKeypts;
 	detector->detectAndCompute(
 		imagePrep,
-		cv::Mat(),
+		mask,
 		kpList,
 		descriptors);
 	cv::drawKeypoints(imagePrep, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
@@ -163,12 +165,12 @@ void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
 		imageHandlerAutoGamma(imgMsg);
 	});
 
-	thread handler2([&] {
-		imageHandlerSSMask(imgMsg);
-	});
+//	thread handler2([&] {
+//		imageHandlerSSMask(imgMsg);
+//	});
 
 	handler1.join();
-	handler2.join();
+//	handler2.join();
 }
 
 

@@ -18,6 +18,7 @@
 #include "vmml/ImageDatabase.h"
 #include "vmml/utilities.h"
 #include "vmml/ImagePreprocessor.h"
+#include "Segmentation.h"
 #include "ProgramOptions.h"
 #include "RVizConnector.h"
 
