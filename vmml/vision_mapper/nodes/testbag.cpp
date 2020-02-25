@@ -13,6 +13,7 @@
 #include "vmml/LidarScanBag.h"
 #include "vmml/ImageBag.h"
 #include "vmml/ImagePreprocessor.h"
+#include "Segmentation.h"
 #include <opencv2/highgui.hpp>
 
 using namespace std;
@@ -33,18 +34,12 @@ int main(int argc, char *argv[])
 	auto img0 = ost.at(frameNum),
 		imgRaw = ost.at(frameNum, true);
 
-	const float alpha = 0.3975;
-	auto imgIl = ImagePreprocessor::toIlluminatiInvariant(imgRaw, alpha);
-	cv::imwrite("/tmp/image-illuminati.png", imgIl);
+	Mapper::Segmentation
+		gSegment("/home/sujiwo/caffe-segnet/segnet_model_driving_webdemo.prototxt",
+			"/home/sujiwo/caffe-segnet/segnet_weights_driving_webdemo.caffemodel");
 
-	auto imgAgc = ImagePreprocessor::autoAdjustGammaRGB(img0);
-	cv::imwrite("/tmp/image-agc.png", imgAgc);
-
-	cv::Vec3f
-		weights(0.3333, 0.3333, 0.3333),
-		sigmas(10, 10, 10);
-	auto imgp = ImagePreprocessor::retinaHdr(img0, weights, sigmas, 128, 128, 1.0, 10);
-	cv::imwrite("/tmp/image-retinex.png", imgp);
+	auto mask = gSegment.buildMask(img0);
+	cv::imwrite("/tmp/mask.png", mask);
 
 	return 0;
 }

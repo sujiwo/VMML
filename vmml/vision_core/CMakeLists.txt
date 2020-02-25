@@ -159,17 +159,6 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 )
 
-add_executable(
-	testbag
-		test/testbag.cpp
-)
-
-target_link_libraries(
-	testbag
-		vmml
-		${REQUIRED_LIBS}
-)
-
 add_executable(test_blob test/test_blob.cc)
 target_link_libraries(test_blob ${OpenCV_LIBS} Boost::serialization Boost::system vmml)
 

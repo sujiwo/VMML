@@ -12,6 +12,7 @@
 #include <string>
 #include <memory>
 #include <opencv2/core.hpp>
+#define USE_OPENCV 1
 #include <caffe/caffe.hpp>
 
 

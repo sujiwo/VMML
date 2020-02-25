@@ -35,6 +35,8 @@ Segmentation::Segmentation(const std::string &modelPath, const std::string &weig
 cv::Mat
 Segmentation::segment(const cv::Mat &sourceImage)
 {
+	Caffe::set_mode(Caffe::GPU);
+
 	auto origin_size=sourceImage.size();
 
 	auto input_layer = mNet->input_blobs()[0];

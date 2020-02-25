@@ -43,7 +43,7 @@ if(SEGNET_DIR)
 	include("${SEGNET_DIR}/share/Caffe/CaffeConfig.cmake")
 	message("SegNet include: " "${Caffe_INCLUDE_DIRS}")
 	set(SEGNET_FOUND true)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSEGNET_FOUND=1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_CUDNN -DUSE_LEVELDB -DUSE_LMDB -DUSE_OPENCV -DSEGNET_FOUND=1")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SEGNET_DIR}/lib")
 endif()
 
@@ -76,7 +76,6 @@ include_directories(
 	${Caffe_INCLUDE_DIRS}
 )
 
-#XXX: Put these into a separate library
 set(common_class 
 	src/RVizConnector.cpp
 	src/ProgramOptions.cpp
@@ -95,14 +94,19 @@ if (SEGNET_FOUND)
 	list(APPEND common_libs ${Caffe_LIBRARIES})
 endif()
 
+
+add_library(vmml_mapper STATIC
+	${common_class}
+)
+
 add_executable(
 	simple_bag_mapper
 		nodes/simple_bag_mapper.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	simple_bag_mapper
+		vmml_mapper
 		${common_libs}
 )
 
@@ -114,11 +118,11 @@ install(
 add_executable(
 	imagelidar_bag_mapper
 		nodes/imagelidar_bag_mapper.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	imagelidar_bag_mapper
+		vmml_mapper
 		${common_libs}
 )
 
@@ -145,33 +149,33 @@ install(
 )
 
 
-add_executable(
-	vocabulary_creator
-		src/RVizConnector.cpp
-		nodes/vocabulary_creator.cpp
-)
-
-target_link_libraries(
-	vocabulary_creator
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
-)
-
-install(
-	TARGETS vocabulary_creator
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	vocabulary_creator
+#		src/RVizConnector.cpp
+#		nodes/vocabulary_creator.cpp
+#)
+#
+#target_link_libraries(
+#	vocabulary_creator
+#		${catkin_LIBRARIES}
+#		${vision_core_LIBRARIES}
+#		${OpenCV_LIBS}
+#)
+#
+#install(
+#	TARGETS vocabulary_creator
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 
 add_executable(
 	index_creator
 		nodes/index_creator.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	index_creator
+		vmml_mapper
 		${common_libs}
 )
 
@@ -200,11 +204,11 @@ install(
 add_executable(
 	imagedb_mapper
 		nodes/imagedb_mapper.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	imagedb_mapper
+		vmml_mapper
 		${common_libs}
 )
 
@@ -224,11 +228,11 @@ install(
 add_executable(
 	test_program_options
 		nodes/test_program_options.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	test_program_options
+		vmml_mapper
 		${common_libs}
 )
 
@@ -240,11 +244,11 @@ install(
 add_executable(
 	place_recognizer_srv
 		nodes/place_recognizer_srv.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	place_recognizer_srv
+		vmml_mapper
 		${common_libs}
 )
 
@@ -271,11 +275,22 @@ install(
 add_executable(
 	test_rgb_filters
 		nodes/test_rgb_filters.cpp
-		${common_class}
 )
 
 target_link_libraries(
 	test_rgb_filters
+		vmml_mapper
+		${common_libs}
+)
+
+add_executable(
+	testbag
+		nodes/testbag.cpp
+)
+
+target_link_libraries(
+	testbag
+		vmml_mapper
 		${common_libs}
 )
 
