@@ -76,13 +76,21 @@ int main(int argc, char *argv[])
 	string
 		segnetModelPath,
 		segnetWeightsPath,
-		imageTopic;
+		imageTopic,
+		imageMask;
+	float resized;
 	progOpts.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
 	progOpts.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
+	progOpts.addSimpleOptions("image-mask", "Path to Dashboard Mask", imageMask);
 	progOpts.parseCommandLineArgs(argc, argv);
 	imageTopic = progOpts.getImageTopic();
 
-	imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+	imgPipe.setResizeFactor(progOpts.getImageResizeFactor());
+
+	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
+		imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+	if (imageMask.empty()==false)
+		imgPipe.setFixedFeatureMask(imageMask);
 
 	image_transport::ImageTransport iTrans(mNode);
 	imagePub1 = iTrans.advertise(imageTopic+"/preprocess", 1);

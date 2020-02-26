@@ -17,8 +17,7 @@
 #include "vmml/Matcher.h"
 #include "vmml/ImageDatabase.h"
 #include "vmml/utilities.h"
-#include "vmml/ImagePreprocessor.h"
-#include "Segmentation.h"
+#include "ImagePipeline.h"
 #include "ProgramOptions.h"
 #include "RVizConnector.h"
 

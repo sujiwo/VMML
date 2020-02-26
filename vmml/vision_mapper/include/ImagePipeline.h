@@ -34,6 +34,12 @@ public:
 	 */
 	void setFixedFeatureMask(const std::string &imageMaskPath);
 
+	inline void setResizeFactor(const float f)
+	{ resizeFactor=f; }
+
+	inline float getResizeFactor() const
+	{ return resizeFactor; }
+
 	// XXX: Unstable
 	void setRetinex();
 
@@ -50,6 +56,8 @@ protected:
 	std::shared_ptr<Segmentation> gSegment=NULL;
 
 	cv::Mat stdMask;
+
+	float resizeFactor=1.0;
 };
 
 } /* namespace Mapper */

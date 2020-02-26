@@ -7,10 +7,11 @@
 
 #include <exception>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <sensor_msgs/image_encodings.h>
-#include "vmml/ImagePreprocessor.h"
 #include <cv_bridge/cv_bridge.h>
-#include <ImagePipeline.h>
+#include "vmml/ImagePreprocessor.h"
+#include "ImagePipeline.h"
 
 using namespace std;
 
@@ -49,6 +50,8 @@ void
 ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 {
 	imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageRgb);
+	if (resizeFactor!=1.0)
+		cv::resize(imageOut, imageOut, cv::Size(), resizeFactor, resizeFactor);
 
 	if (gSegment==NULL)
 		mask = stdMask.clone();
@@ -57,6 +60,8 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 		if (stdMask.empty()==false)
 			mask = stdMask & ssMask;
 		else mask = ssMask;
+		if (resizeFactor!=1.0 and mask.empty()==false)
+			cv::resize(mask, mask, cv::Size(), resizeFactor, resizeFactor, cv::INTER_NEAREST);
 	}
 }
 
