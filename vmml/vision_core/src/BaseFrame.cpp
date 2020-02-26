@@ -137,7 +137,10 @@ BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &addM
 
 	cv::Mat featureMask;
 	if (addMask.empty()==false) {
-		featureMask = cameraParam.mask & addMask;
+		if (cameraParam.mask.empty()==false)
+			featureMask = cameraParam.mask & addMask;
+		else
+			featureMask = addMask;
 	}
 	else featureMask = cameraParam.mask;
 

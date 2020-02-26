@@ -34,7 +34,7 @@ linearIdleThreshold = 10.0,
 imageSameThrScore = 0.15;
 
 const uint
-numberOfFeatures = 3000;
+numberOfFeatures = 6000;
 
 
 cv::Ptr<cv::DescriptorMatcher> bMatcher = cv::BFMatcher::create();
@@ -142,6 +142,10 @@ int main(int argc, char *argv[])
 	progOptions.addSimpleOptions("map-name", "Resulting map file name in working directory", mapFilename);
 	progOptions.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
 	progOptions.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
+
+	string segnetModelPath, segnetWeightsPath;
+	progOptions.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
+	progOptions.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
 	progOptions.parseCommandLineArgs(argc, argv);
 
 	Vmml::Mapper::RVizConnector rosConn(argc, argv, "index_creator");
@@ -171,6 +175,14 @@ int main(int argc, char *argv[])
 	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
 	trackGnss.dump((progOptions.getWorkDir()/"gnss.csv").string());
 
+	// Setup image pipeline
+	Mapper::ImagePipeline imgPipe;
+	imgPipe.setResizeFactor(progOptions.getImageResizeFactor());
+	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
+		imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+	if (progOptions.getFeatureMask().empty()==false)
+		imgPipe.setFixedFeatureMask(progOptions.getFeatureMask());
+
 	Trajectory trackImage;
 	kfid curKf = 0;
 
@@ -181,14 +193,12 @@ int main(int argc, char *argv[])
 		cout << imageBagId+1 << " / " << maxLim;
 
 		auto curImage = images.at(imageBagId);
-		cv::Vec3f
-			weights(0.3333, 0.3333, 0.3333),
-			sigmas(10, 10, 10);
-		curImage = ImagePreprocessor::retinaHdr(curImage, weights, sigmas, 128, 128, 1.0, 10);
+		cv::Mat mask, preImage;
+		imgPipe.run(curImage, preImage, mask);
 
-		auto curFrame = BaseFrame::create(curImage, camera0);
+		auto curFrame = BaseFrame::create(preImage, camera0);
 		ptime imageTimestamp = images.timeAt(imageBagId).toBoost();
-		curFrame->computeFeatures(bFeats);
+		curFrame->computeFeatures(bFeats, mask);
 
 		auto t1 = getCurrentTime();
 		if (keyframeId==0) {

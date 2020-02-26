@@ -40,6 +40,11 @@ ImagePipeline::setFixedFeatureMask(const string &imageMaskPath)
 
 
 void
+ImagePipeline::setFixedFeatureMask(const cv::Mat &fmask)
+{ stdMask = fmask.clone(); }
+
+
+void
 ImagePipeline::setSemanticSegmentation(const std::string &modelPath, const std::string &weights)
 {
 	gSegment.reset(new Vmml::Mapper::Segmentation(modelPath, weights));

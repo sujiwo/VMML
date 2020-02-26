@@ -34,6 +34,8 @@ public:
 	 */
 	void setFixedFeatureMask(const std::string &imageMaskPath);
 
+	void setFixedFeatureMask(const cv::Mat &fmask);
+
 	inline void setResizeFactor(const float f)
 	{ resizeFactor=f; }
 

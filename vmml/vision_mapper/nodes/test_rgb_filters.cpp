@@ -26,7 +26,7 @@ using namespace std;
 image_transport::Publisher imagePub1, imagePub2;
 auto detector2 = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE, 256, 3, 0.03f, 8);
 auto detector = cv::ORB::create(
-		3000,
+		6000,
 		1.2,
 		8,
 		31,
@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
 		segnetWeightsPath,
 		imageTopic,
 		imageMask;
-	float resized;
 	progOpts.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
 	progOpts.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
 	progOpts.addSimpleOptions("image-mask", "Path to Dashboard Mask", imageMask);
