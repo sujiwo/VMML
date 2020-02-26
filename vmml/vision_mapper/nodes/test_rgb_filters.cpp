@@ -16,7 +16,8 @@
 #include <opencv2/features2d.hpp>
 #include "vmml/ImagePreprocessor.h"
 #include "vmml/utilities.h"
-#include "Segmentation.h"
+#include "ImagePipeline.h"
+#include "ProgramOptions.h"
 
 
 using namespace std;
@@ -36,141 +37,33 @@ auto detector = cv::ORB::create(
 		10);
 const float alpha = 0.3975;
 
-shared_ptr<Vmml::Mapper::Segmentation> gSegment=NULL;
-
-
-void imageHandlerAutoGamma(const sensor_msgs::Image::ConstPtr &imgMsg)
-{
-	auto imgBgr = cv_bridge::toCvShare(imgMsg, "bgr8");
-	auto mask = gSegment->buildMask(imgBgr->image);
-
-	auto imagePrep = ImagePreprocessor::autoAdjustGammaRGB(imgBgr->image);
-
-	// ORB Test
-	std::vector<cv::KeyPoint> kpList;
-	cv::Mat descriptors, drawFrameKeypts;
-	detector->detectAndCompute(
-		imagePrep,
-		mask,
-		kpList,
-		descriptors);
-	cv::drawKeypoints(imagePrep, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
-//	cerr << "# features: " << kpList.size() << endl;
-
-	cv_bridge::CvImage cvImg;
-	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
-	cvImg.image = drawFrameKeypts;
-	cvImg.header.stamp = ros::Time::now();
-
-	imagePub1.publish(cvImg.toImageMsg());
-}
-
-
-void imageHandlerIlluminatiInvariant(const sensor_msgs::Image::ConstPtr &imgMsg)
-{
-	auto imgRaw = cv_bridge::toCvShare(imgMsg);
-	auto imagePrep = ImagePreprocessor::toIlluminatiInvariant(imgRaw->image, alpha);
-
-	// ORB Test
-	std::vector<cv::KeyPoint> kpList;
-	cv::Mat descriptors, drawFrameKeypts;
-	detector->detectAndCompute(
-		imagePrep,
-		cv::Mat(),
-		kpList,
-		descriptors);
-	cv::drawKeypoints(imagePrep, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
-//	cerr << "# features: " << kpList.size() << endl;
-
-	cv_bridge::CvImage cvImg;
-	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
-	cvImg.image = drawFrameKeypts;
-	cvImg.header.stamp = ros::Time::now();
-
-	imagePub2.publish(cvImg.toImageMsg());
-}
-
-
-void imageHandlerRetinex(const sensor_msgs::Image::ConstPtr &imgMsg)
-{
-	auto imgRaw = cv_bridge::toCvShare(imgMsg, "bgr8");
-	cv::Vec3f
-		weights(0.3333, 0.3333, 0.3333),
-		sigmas(10, 10, 10);
-	auto imagePrep = ImagePreprocessor::retinaHdr(imgRaw->image, weights, sigmas, 128, 128, 1.0, 10);
-
-	// ORB Test
-	std::vector<cv::KeyPoint> kpList;
-	cv::Mat descriptors, drawFrameKeypts;
-	detector->detectAndCompute(
-		imagePrep,
-		cv::Mat(),
-		kpList,
-		descriptors);
-	cv::drawKeypoints(imagePrep, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
-//	cerr << "# features: " << kpList.size() << endl;
-
-	cv_bridge::CvImage cvImg;
-	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
-	cvImg.image = drawFrameKeypts;
-	cvImg.header.stamp = ros::Time::now();
-
-	imagePub2.publish(cvImg.toImageMsg());
-}
-
-
-void imageHandlerGrayWorld(const sensor_msgs::Image::ConstPtr &imgMsg)
-{
-	auto imgBgr = cv_bridge::toCvShare(imgMsg, "bgr8");
-	auto imagePrep = ImagePreprocessor::GrayWorld(imgBgr->image);
-
-	// ORB Test
-	std::vector<cv::KeyPoint> kpList;
-	cv::Mat descriptors, drawFrameKeypts;
-	detector->detectAndCompute(
-		imagePrep,
-		cv::Mat(),
-		kpList,
-		descriptors);
-	cv::drawKeypoints(imagePrep, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
-//	cerr << "# features: " << kpList.size() << endl;
-
-	cv_bridge::CvImage cvImg;
-	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
-	cvImg.image = drawFrameKeypts;
-	cvImg.header.stamp = ros::Time::now();
-
-	imagePub1.publish(cvImg.toImageMsg());
-
-}
-
-
-void imageHandlerSSMask(const sensor_msgs::Image::ConstPtr &imgMsg)
-{
-	auto imgBgr = cv_bridge::toCvCopy(imgMsg, "bgr8");
-	auto mask = gSegment->buildMask(imgBgr->image);
-
-	cv_bridge::CvImage cvImg;
-	cvImg.encoding = sensor_msgs::image_encodings::MONO8;
-	cvImg.image = mask;
-	cvImg.header.stamp = ros::Time::now();
-
-	imagePub2.publish(cvImg.toImageMsg());
-}
+Vmml::Mapper::ImagePipeline imgPipe;
 
 
 void imageHandler(const sensor_msgs::Image::ConstPtr &imgMsg)
 {
-	thread handler1([&] {
-		imageHandlerAutoGamma(imgMsg);
-	});
+	auto imgBgr = cv_bridge::toCvShare(imgMsg, "bgr8");
+	cv::Mat mask, imageReady;
 
-//	thread handler2([&] {
-//		imageHandlerSSMask(imgMsg);
-//	});
+	imgPipe.run(imgMsg, imageReady, mask);
 
-	handler1.join();
-//	handler2.join();
+	// ORB Test
+	std::vector<cv::KeyPoint> kpList;
+	cv::Mat descriptors, drawFrameKeypts;
+	detector->detectAndCompute(
+		imageReady,
+		mask,
+		kpList,
+		descriptors);
+	cv::drawKeypoints(imageReady, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
+//	cerr << "# features: " << kpList.size() << endl;
+
+	cv_bridge::CvImage cvImg;
+	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
+	cvImg.image = drawFrameKeypts;
+	cvImg.header.stamp = ros::Time::now();
+
+	imagePub1.publish(cvImg.toImageMsg());
 }
 
 
@@ -179,13 +72,22 @@ int main(int argc, char *argv[])
 	ros::init(argc, argv, "test_rgb_filters");
 	ros::NodeHandle mNode;
 
-	gSegment.reset(new Vmml::Mapper::Segmentation("/home/sujiwo/caffe-segnet/segnet_model_driving_webdemo.prototxt", "/home/sujiwo/caffe-segnet/segnet_weights_driving_webdemo.caffemodel"));
+	Vmml::Mapper::ProgramOptions progOpts;
+	string
+		segnetModelPath,
+		segnetWeightsPath,
+		imageTopic;
+	progOpts.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
+	progOpts.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
+	progOpts.parseCommandLineArgs(argc, argv);
+	imageTopic = progOpts.getImageTopic();
+
+	imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
 
 	image_transport::ImageTransport iTrans(mNode);
-	imagePub1 = iTrans.advertise("/front_rgb/auto_gamma", 1);
-	imagePub2 = iTrans.advertise("/front_rgb/retinex", 1);
+	imagePub1 = iTrans.advertise(imageTopic+"/preprocess", 1);
 
-	ros::Subscriber imgSub = mNode.subscribe("/front_rgb/image_raw", 1, imageHandler);
+	ros::Subscriber imgSub = mNode.subscribe(imageTopic, 1, imageHandler);
 	ros::spin();
 
 	return 0;

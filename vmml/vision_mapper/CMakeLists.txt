@@ -79,6 +79,7 @@ include_directories(
 set(common_class 
 	src/RVizConnector.cpp
 	src/ProgramOptions.cpp
+	src/ImagePipeline.cpp
 )
 if (SEGNET_FOUND)
 	list(APPEND common_class src/Segmentation.cpp)

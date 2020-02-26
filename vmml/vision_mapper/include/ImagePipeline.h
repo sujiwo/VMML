@@ -18,7 +18,7 @@
 
 #include <memory>
 #include <string>
-#include "vmml/ImagePreprocessor.h"
+#include <sensor_msgs/Image.h>
 #include "Segmentation.h"
 
 
@@ -41,10 +41,15 @@ public:
 
 	virtual ~ImagePipeline();
 
-	void run(const cv::Mat &imageSource, cv::Mat &imageOut, cv::Mat &mask);
+	void run(const cv::Mat &imageRgbSource, cv::Mat &imageOut, cv::Mat &mask);
+
+	void run(const sensor_msgs::Image::ConstPtr &imageBg, cv::Mat &imageOut, cv::Mat &mask);
 
 protected:
-	std::shared_ptr<Segmentation> gSegment;
+
+	std::shared_ptr<Segmentation> gSegment=NULL;
+
+	cv::Mat stdMask;
 };
 
 } /* namespace Mapper */

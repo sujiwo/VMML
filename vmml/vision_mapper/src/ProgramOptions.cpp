@@ -82,7 +82,7 @@ ProgramOptions::ProgramOptions() :
 
 	addSimpleOptions("bag-file", "Bag file input", inputBagPath);
 	addSimpleOptions("resize", "Resize all masks and images from bags with a scalar value (0-1.0)", imageResizeFactor);
-	addSimpleOptions("image-topic", "Image topic contained in bag", imageTopic);
+	addSimpleOptions("image-topic", "Image topic to be used", imageTopic);
 	addSimpleOptions("lidar-topic", "Point cloud topic contained in bag", lidarTopic);
 	addSimpleOptions("gnss-topic", "GNSS topic contained in bag", gnssTopic);
 }
@@ -222,6 +222,9 @@ ProgramOptions::getLidarScanBag()
 void
 ProgramOptions::openInputs()
 {
+	if (inputBagPath.empty()==true)
+		return;
+
 	// Open Bag
 	cout << "Opening bag... ";
 	inputBag.open(inputBagPath.string(), rosbag::bagmode::Read);
