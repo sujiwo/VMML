@@ -3,6 +3,8 @@
  *
  *  Created on: Feb 10, 2020
  *      Author: sujiwo
+ *
+ *  XXX: This class is not functional
  */
 
 #include <src/Retinex.h>
