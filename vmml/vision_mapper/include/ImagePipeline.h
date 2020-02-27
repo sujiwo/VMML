@@ -51,7 +51,10 @@ public:
 
 	void run(const cv::Mat &imageRgbSource, cv::Mat &imageOut, cv::Mat &mask);
 
-	void run(const sensor_msgs::Image::ConstPtr &imageBg, cv::Mat &imageOut, cv::Mat &mask);
+	void run(const sensor_msgs::Image &imageBg, cv::Mat &imageOut, cv::Mat &mask);
+
+	inline void run(const sensor_msgs::Image::ConstPtr &imageBg, cv::Mat &imageOut, cv::Mat &mask)
+	{ run(*imageBg, imageOut, mask); }
 
 protected:
 

@@ -173,7 +173,7 @@ BinaryTree::buildNode(BinaryDescriptor::Set dset, BinaryTreeNode::Ptr root)
 		vector<BinaryDescriptor::Ptr> new_centers;
 		vector<BinaryDescriptor::Set> assoc_descs(k_);
 
-		for (unsigned i = 0; i < k_; i++) {
+		for (uint i = 0; i < k_; i++) {
 			// Selecting a new center
 			BinaryDescriptor::Ptr desc = *std::next(dset.begin(),
 											  rand() % dset.size());
@@ -574,14 +574,16 @@ void ImageDatabase::addImage2(const unsigned image_id,
 {
 	vector<vector<cv::DMatch>> matches_feats;
 	vector<cv::DMatch> realMatches;
+
+	// XXX: Parallelize this
 	searchDescriptors(descs, matches_feats, 2, 64);
+
 	for (uint m=0; m<matches_feats.size(); ++m) {
 		if (matches_feats[m][0].distance < matches_feats[m][1].distance * 0.8)
 			realMatches.push_back(matches_feats[m][0]);
 	}
 	addImage(image_id, kps, descs, realMatches);
 }
-
 
 
 void ImageDatabase::addImage(

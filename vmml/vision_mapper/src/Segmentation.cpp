@@ -93,7 +93,7 @@ Segmentation::segment(const cv::Mat &sourceImage)
 	auto t1=getCurrentTime();
 	mNet->Forward();
 	auto t2=getCurrentTime();
-	cout << "Forward time: " << toSeconds(t2-t1) << " seconds" << endl;
+//	cout << "Forward time: " << toSeconds(t2-t1) << " seconds" << endl;
 
 	auto output_layer = mNet->output_blobs()[0];
 	cv::Mat merged_output_image (output_layer->height(), output_layer->width(), CV_32F, const_cast<float *>(output_layer->cpu_data())),

@@ -72,10 +72,10 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 
 
 void
-ImagePipeline::run(const sensor_msgs::Image::ConstPtr &imageInBg, cv::Mat &imageOut, cv::Mat &mask)
+ImagePipeline::run(const sensor_msgs::Image &imageBg, cv::Mat &imageOut, cv::Mat &mask)
 {
 	// XXX: Need better demosaicing algorithm
-	auto imageRgb = cv_bridge::toCvCopy(imageInBg, "bgr8");
+	auto imageRgb = cv_bridge::toCvCopy(imageBg, "bgr8");
 	return run(imageRgb->image, imageOut, mask);
 }
 

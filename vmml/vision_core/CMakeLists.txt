@@ -180,10 +180,10 @@ target_link_libraries(test_blob ${OpenCV_LIBS} Boost::serialization Boost::syste
 #	COMMENT "Extracting vocabulary... "
 #)
 
-install(
-	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+#install(
+#	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
+#	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#)
 
 #install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/samples/car_mask_meter.png
 #	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

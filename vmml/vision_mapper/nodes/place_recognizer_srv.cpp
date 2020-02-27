@@ -12,10 +12,12 @@
 
 #include <iostream>
 #include <ros/ros.h>
+#include <sensor_msgs/Image.h>
 #include <cv_bridge/cv_bridge.h>
 #include "vmml/ImageDatabase.h"
 #include "vmml/BaseFrame.h"
-#include "vmml/ImagePreprocessor.h"
+#include "ImagePipeline.h"
+#include "ProgramOptions.h"
 #include "vision_mapper/place_recognizer.h"
 
 
@@ -25,7 +27,7 @@ using namespace std;
 
 ImageDatabase imageDb;
 cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
-		3000,
+		6000,
 		1.2,
 		8,
 		31,
@@ -34,23 +36,28 @@ cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
 		cv::ORB::HARRIS_SCORE,
 		31,
 		10);
+Mapper::ImagePipeline imagePipe;
 
 
 bool PlaceRecognizerService(
 	vision_mapper::place_recognizer::Request &request,
 	vision_mapper::place_recognizer::Response &response)
 {
+/*
 	cv_bridge::CvImagePtr imageReq = cv_bridge::toCvCopy(request.input, sensor_msgs::image_encodings::BGR8);
 
 	cv::Vec3f
 		weights(0.3333, 0.3333, 0.3333),
 		sigmas(10, 10, 10);
 	cv::Mat workImg = ImagePreprocessor::retinaHdr(imageReq->image, weights, sigmas, 128, 128, 1.0, 10);
+*/
+	cv::Mat workImg, mask;
+	imagePipe.run(request.input, workImg, mask);
 //	cv::resize(workImg, workImg, cv::Size(), 0.6666666667, 0.6666666666667);
 //	workImg = ImagePreprocessor::autoAdjustGammaRGB(workImg);
 
 	auto queryFrame = BaseFrame::create(workImg);
-	queryFrame->computeFeatures(bFeats);
+	queryFrame->computeFeatures(bFeats, mask);
 
 	vector<vector<cv::DMatch>> featureMatches;
 	imageDb.searchDescriptors(queryFrame->allDescriptors(), featureMatches, 2, 32);
@@ -79,7 +86,21 @@ int main(int argc, char *argv[])
 	ros::init(argc, argv, "place_recognizer");
 	ros::NodeHandle rosNode;
 
-	imageDb.loadFromDisk(argv[1]);
+	Vmml::Mapper::ProgramOptions progOptions;
+	string segnetModelPath, segnetWeightsPath, mapPath;
+	progOptions.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
+	progOptions.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
+	progOptions.addSimpleOptions("map-path", "Path to Map File", mapPath);
+	progOptions.parseCommandLineArgs(argc, argv);
+
+	imagePipe.setResizeFactor(progOptions.getImageResizeFactor());
+	imagePipe.setFixedFeatureMask(progOptions.getFeatureMask());
+	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
+		imagePipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+	if (progOptions.getFeatureMask().empty()==false)
+		imagePipe.setFixedFeatureMask(progOptions.getFeatureMask());
+
+	imageDb.loadFromDisk(mapPath);
 
 	ros::ServiceServer placeRecognSrv = rosNode.advertiseService("place_recognizer", PlaceRecognizerService);
 	cout << "Ready\n";
