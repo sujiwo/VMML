@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <set>
+#include <mutex>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -234,18 +235,20 @@ void BinaryTree::deleteTree()
 unsigned BinaryTree::traverseFromRoot(BinaryDescriptor::Ptr q,
                                   NodeQueue::Ptr pq,
                                   DescriptorQueue::Ptr r)
+const
 {
-	nvisited_nodes_ = 0;
+//	nvisited_nodes_ = 0;
 	traverseFromNode(q, root_, pq, r);
-	return nvisited_nodes_;
+//	return nvisited_nodes_;
 }
 
 void BinaryTree::traverseFromNode(BinaryDescriptor::Ptr q,
                                   BinaryTreeNode::Ptr n,
                                   NodeQueue::Ptr pq,
                                   DescriptorQueue::Ptr r)
+const
 {
-	nvisited_nodes_++;
+//	nvisited_nodes_++;
 	// If its a leaf node, the search ends
 	if (n->isLeaf()) {
 		// Adding points to R
@@ -576,7 +579,10 @@ void ImageDatabase::addImage2(const unsigned image_id,
 	vector<cv::DMatch> realMatches;
 
 	// XXX: Parallelize this
+	auto t1=getCurrentTime();
 	searchDescriptors(descs, matches_feats, 2, 64);
+	auto t2=getCurrentTime();
+	cerr << "SearchDescriptor: " << toSeconds(t2-t1) << " s\n";
 
 	for (uint m=0; m<matches_feats.size(); ++m) {
 		if (matches_feats[m][0].distance < matches_feats[m][1].distance * 0.8)
@@ -736,7 +742,10 @@ void ImageDatabase::searchDescriptors(
 	const unsigned checks)
 const
 {
+	mutex matchResultMtx;
 	matches.clear();
+
+#pragma omp parallel for
 	for (int i = 0; i < descs.rows; i++) {
 		// Creating the corresponding descriptor
 		cv::Mat desc = descs.row(i);
@@ -757,7 +766,10 @@ const
 			match.distance = dists[j];
 			des_match.push_back(match);
 		}
+
+		matchResultMtx.lock();
 		matches.push_back(des_match);
+		matchResultMtx.unlock();
 	}
 }
 
@@ -794,7 +806,7 @@ const
 	}
 
 	// Searching in the trees
-	#pragma omp parallel for
+//	#pragma omp parallel for
 		for (uint i = 0; i < trees_.size(); i++) {
 			trees_[i]->traverseFromRoot(q, pqs[i], rs[i]);
 		}

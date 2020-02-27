@@ -351,11 +351,11 @@ public:
 	void deleteTree();
 	unsigned traverseFromRoot(BinaryDescriptor::Ptr q,
 							NodeQueue::Ptr pq,
-							DescriptorQueue::Ptr r) ;
+							DescriptorQueue::Ptr r) const;
 	void traverseFromNode(BinaryDescriptor::Ptr q,
 						BinaryTreeNode::Ptr n,
 						NodeQueue::Ptr pq,
-						DescriptorQueue::Ptr r) ;
+						DescriptorQueue::Ptr r) const;
 	BinaryTreeNode::Ptr searchFromRoot(BinaryDescriptor::Ptr q) const;
 	BinaryTreeNode::Ptr searchFromNode(BinaryDescriptor::Ptr q, BinaryTreeNode::Ptr n) const;
 	void addDescriptor(BinaryDescriptor::Ptr q);
