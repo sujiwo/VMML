@@ -26,6 +26,54 @@ inline int int2smallint(int x) { return (x >> INT_PREC_BITS); }
 inline int int2bigint(int x) { return (x << INT_PREC_BITS); }
 
 
+
+/*
+ * Implementation of Multi-Scale Retinex with Color Preservation
+ */
+class RealRetinex
+{
+public:
+	RealRetinex(const double _ss[3], const float _lowClip, const float _highClip):
+		sigma(_ss),
+		low_clip(_lowClip),
+		high_clip(_highClip)
+	{}
+
+
+	static cv::Mat singleScaleRetinex(const cv::Mat &inp, double sigma)
+	{
+//		auto R=cv::log
+	}
+
+
+	static cv::Mat multiScaleRetinex(const cv::Mat &inp, const double _sigmaList[3])
+	{
+
+	}
+
+
+	static cv::Mat simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip)
+	{
+
+	}
+
+
+	cv::Mat run(const cv::Mat &input)
+	{
+		cv::Mat imgf;
+		input.convertTo(imgf, CV_64F, 1.0, 1.0);
+
+//		float intensity=
+	}
+
+
+protected:
+	double sigma[3];
+	float low_clip, high_clip;
+};
+
+
+
 std::vector<double> CreateKernel(double sigma)
 {
 	int i, x, filter_size;
