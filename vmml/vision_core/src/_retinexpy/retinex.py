@@ -96,10 +96,12 @@ def MSRCP(img, sigma_list, low_clip, high_clip):
 
     img = np.float64(img) + 1.0
 
+    # Averaging level of each color component (RGB)
     intensity = np.sum(img, axis=2) / img.shape[2]    
 
     retinex = multiScaleRetinex(intensity, sigma_list)
 
+    # Expand values as array
     intensity = np.expand_dims(intensity, 2)
     retinex = np.expand_dims(retinex, 2)
 

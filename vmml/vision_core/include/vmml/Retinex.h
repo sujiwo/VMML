@@ -33,25 +33,40 @@ Adapted by Adi Sujiwo
 #define VMML_CORE_RETINEX_H_
 
 #include <vector>
+#include <array>
 #include <opencv2/core.hpp>
 
 namespace Vmml {
 
-std::vector<double> CreateKernel(double sigma);
-std::vector<int> CreateFastKernel(double sigma);
+/*
+ * Implementation of Multi-Scale Retinex with Color Preservation
+ */
+class Retinex
+{
+public:
+	Retinex(const double _ss[3], const float _lowClip, const float _highClip):
+		sigma({_ss[0], _ss[1], _ss[2]}),
+		low_clip(_lowClip),
+		high_clip(_highClip)
+	{}
 
-cv::Mat FilterGaussian(const cv::Mat &img, double sigma);
-cv::Mat FastFilter(const cv::Mat &img, double sigma);
+	cv::Mat
+	run(const cv::Mat &input);
 
-cv::Mat Retinex
-(const cv::Mat &img, double sigma, int gain = 128, int offset = 128);
+protected:
+	const std::array<double,3> sigma;
+	float low_clip, high_clip;
 
-cv::Mat MultiScaleRetinex
-(const cv::Mat &img, int scales, const std::vector<double> &weights, double *sigmas, int gain = 128, int offset = 128);
+	static cv::Mat
+	singleScaleRetinex(const cv::Mat &inp, double sigma);
 
-cv::Mat MultiScaleRetinexCR
-(const cv::Mat &img, int scales, const std::vector<double> &weights, double *sigmas, int gain = 128, int offset = 128,
- double restoration_factor = 6, double color_gain = 2);
+	static cv::Mat
+	multiScaleRetinex(const cv::Mat &inp, const std::array<double,3> _sigmaList);
+
+	static cv::Mat
+	simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip);
+
+};
 
 }	// namespace Vmml
 

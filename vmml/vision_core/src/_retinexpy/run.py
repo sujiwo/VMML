@@ -21,21 +21,21 @@ for img_name in img_list:
     
     img = cv2.imread(os.path.join(data_path, img_name))
 
-    img_msrcr = retinex.MSRCR(
-        img,
-        config['sigma_list'],
-        config['G'],
-        config['b'],
-        config['alpha'],
-        config['beta'],
-        config['low_clip'],
-        config['high_clip']
-    )
-   
-    img_amsrcr = retinex.automatedMSRCR(
-        img,
-        config['sigma_list']
-    )
+#     img_msrcr = retinex.MSRCR(
+#         img,
+#         config['sigma_list'],
+#         config['G'],
+#         config['b'],
+#         config['alpha'],
+#         config['beta'],
+#         config['low_clip'],
+#         config['high_clip']
+#     )
+#    
+#     img_amsrcr = retinex.automatedMSRCR(
+#         img,
+#         config['sigma_list']
+#     )
 
     img_msrcp = retinex.MSRCP(
         img,

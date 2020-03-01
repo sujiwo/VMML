@@ -11,6 +11,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include "vmml/ImagePreprocessor.h"
+#include "vmml/Retinex.h"
 #include "ImagePipeline.h"
 
 using namespace std;

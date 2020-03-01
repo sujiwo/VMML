@@ -112,6 +112,7 @@ add_library(
 		src/TrajectoryGNSS.cpp
 		src/ImagePreprocessor.cpp
 		src/ImageDatabase.cpp
+		src/Retinex.cpp
 )
 
 target_link_libraries(

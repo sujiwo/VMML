@@ -7,7 +7,8 @@
  *  XXX: This class is not functional
  */
 
-#include <src/Retinex.h>
+#include <opencv2/imgproc.hpp>
+#include "vmml/Retinex.h"
 
 
 using namespace std;
@@ -16,229 +17,118 @@ using namespace std;
 namespace Vmml {
 
 
-#define INT_PREC 1024.0
-#define INT_PREC_BITS 10
-
-inline double int2double(int x) { return (double)x / INT_PREC; }
-inline int double2int(double x) { return (int)(x * INT_PREC + 0.5); }
-
-inline int int2smallint(int x) { return (x >> INT_PREC_BITS); }
-inline int int2bigint(int x) { return (x << INT_PREC_BITS); }
-
-
-
-/*
- * Implementation of Multi-Scale Retinex with Color Preservation
- */
-class RealRetinex
+cv::Mat
+Retinex::singleScaleRetinex(const cv::Mat &inp, double sigma)
 {
-public:
-	RealRetinex(const double _ss[3], const float _lowClip, const float _highClip):
-		sigma(_ss),
-		low_clip(_lowClip),
-		high_clip(_highClip)
-	{}
+	assert(inp.type()==CV_64F);
 
+	// XXX: log_e or log_10 ?
+	cv::Mat inpLog;
+	cv::log(inp, inpLog);
 
-	static cv::Mat singleScaleRetinex(const cv::Mat &inp, double sigma)
-	{
-//		auto R=cv::log
-	}
+	cv::Mat gaussBlur;
+	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
+	cv::log(gaussBlur, gaussBlur);
 
-
-	static cv::Mat multiScaleRetinex(const cv::Mat &inp, const double _sigmaList[3])
-	{
-
-	}
-
-
-	static cv::Mat simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip)
-	{
-
-	}
-
-
-	cv::Mat run(const cv::Mat &input)
-	{
-		cv::Mat imgf;
-		input.convertTo(imgf, CV_64F, 1.0, 1.0);
-
-//		float intensity=
-	}
-
-
-protected:
-	double sigma[3];
-	float low_clip, high_clip;
-};
-
-
-
-std::vector<double> CreateKernel(double sigma)
-{
-	int i, x, filter_size;
-	vector<double> filter;
-	double sum;
-
-	// Reject unreasonable demands
-	if (sigma > 200)
-		sigma = 200;
-
-	// get needed filter size (enforce oddness)
-	filter_size = (int)floor(sigma*6) / 2;
-	filter_size = filter_size * 2 + 1;
-
-	// Allocate kernel space
-	filter.resize(filter_size);
-
-	// Calculate exponential
-	sum = 0;
-	for (i = 0; i < filter_size; i++) {
-		x = i - (filter_size / 2);
-		filter[i] = exp( -(x*x) / (2*sigma*sigma) );
-
-		sum += filter[i];
-	}
-
-	// Normalize
-	for (i = 0, x; i < filter_size; i++)
-		filter[i] /= sum;
-
-	return filter;
-}
-
-
-std::vector<int> CreateFastKernel(double sigma)
-{
-	vector<int> kernel;
-	int i, filter_size;
-
-	// Reject unreasonable demands
-	if ( sigma > 200 ) sigma = 200;
-
-	// get needed filter size (enforce oddness)
-	filter_size = (int)floor(sigma*6) / 2;
-	filter_size = filter_size * 2 + 1;
-
-	// Allocate kernel space
-	kernel.resize(filter_size);
-
-	auto fp_kernel = CreateKernel(sigma);
-
-	for (i = 0; i < filter_size; i++)
-		kernel[i] = double2int(fp_kernel[i]);
-
-	return kernel;
-}
-
-
-cv::Mat FilterGaussian(const cv::Mat &img, double sigma)
-{
-	int i, j, k, source, filter_size;
-	cv::Mat temp(img.size(), img.type());
-	int v1, v2, v3;
-
-	// Reject unreasonable demands
-	if ( sigma > 200 ) sigma = 200;
-
-	// get needed filter size (enforce oddness)
-	filter_size = (int)floor(sigma*6) / 2;
-	filter_size = filter_size * 2 + 1;
-
-	auto kernel = CreateFastKernel(sigma);
-
-	// filter x axis
-	for (j = 0; j < temp.rows; j++)
-		for (i = 0; i < temp.cols; i++) {
-
-			// inner loop has been unrolled
-
-			v1 = v2 = v3 = 0;
-			for (k = 0; k < filter_size; k++) {
-
-				source = i + filter_size / 2 - k;
-
-				if (source < 0) source *= -1;
-				if (source > img.cols - 1) source = 2*(img.cols - 1) - source;
-
-				v1 += kernel[k] * (unsigned char)pc(img, source, j, 0);
-				if (img.channels() == 1) continue;
-				v2 += kernel[k] * (unsigned char)pc(img, source, j, 1);
-				v3 += kernel[k] * (unsigned char)pc(img, source, j, 2);
-
-			}
-
-			// set value and move on
-			pc(temp, i, j, 0) = (char)int2smallint(v1);
-			if (img->nChannels == 1) continue;
-			pc(temp, i, j, 1) = (char)int2smallint(v2);
-			pc(temp, i, j, 2) = (char)int2smallint(v3);
-
-		}
-
-	// filter y axis
-	for (j = 0; j < img->height; j++)
-		for (i = 0; i < img->width; i++) {
-
-			v1 = v2 = v3 = 0;
-			for (k = 0; k < filter_size; k++) {
-
-				source = j + filter_size / 2 - k;
-
-				if (source < 0) source *= -1;
-				if (source > temp->height - 1) source = 2*(temp->height - 1) - source;
-
-				v1 += kernel[k] * (unsigned char)pc(temp, i, source, 0);
-				if (img->nChannels == 1) continue;
-				v2 += kernel[k] * (unsigned char)pc(temp, i, source, 1);
-				v3 += kernel[k] * (unsigned char)pc(temp, i, source, 2);
-
-			}
-
-			// set value and move on
-			pc(img, i, j, 0) = (char)int2smallint(v1);
-			if (img->nChannels == 1) continue;
-			pc(img, i, j, 1) = (char)int2smallint(v2);
-			pc(img, i, j, 2) = (char)int2smallint(v3);
-
-		}
-}
-
-
-cv::Mat FastFilter(cv::Mat &img, double sigma)
-{
-
+	auto R=inpLog - gaussBlur;
+	return R;
 }
 
 
 cv::Mat
-Retinex (const cv::Mat &img, double sigma, int gain, int offset)
+Retinex::multiScaleRetinex(const cv::Mat &inp, const std::array<double,3> _sigmaList)
 {
-	// Initialize temp images
-	cv::Mat
-		A,
-		fA(img.size(), CV_32FC(img.channels())),
-		fB(img.size(), CV_32FC(img.channels())),
-		fC(img.size(), CV_32FC(img.channels()));
+	auto msrex = cv::Mat::zeros(inp.size(), inp.type());
 
-	// Compute log image
-	cvConvert( img, fA );
-	cvLog( fA, fB );
+	for (auto &s: _sigmaList) {
+		msrex += singleScaleRetinex(inp, s);
+	}
 
-	// Compute log of blured image
-	A = cvCloneImage( img );
-	FastFilter( A, sigma );
-	cvConvert( A, fA );
-	cvLog( fA, fC );
-
-	// Compute difference
-	cvSub( fB, fC, fA );
-
-	// Restore
-	cvConvertScale( fA, img, gain, offset);
-
-	return A;
+	msrex /= 3;
+	return msrex;
 }
+
+
+cv::Mat
+Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip)
+{
+	assert(inp.type()==CV_64F);
+
+	const uint total = inp.total();
+	double current = 0, low_val, high_val;
+
+/*
+	for (uint i=0; i<total; ++i) {
+		const double &u = inp[i];
+		if (current/float(total) < lowClip)
+			low_val = u;
+		if (current/float(total) < highClip)
+			high_val = u;
+		current += 1.0;
+	}
+*/
+	for (auto it=inp.begin<double>(); it!=inp.end<double>(); ++it) {
+		auto &u = *it;
+		if (current/float(total) < lowClip)
+			low_val = u;
+		if (current/float(total) < highClip)
+			high_val = u;
+		current += 1.0;
+	}
+
+	cv::Mat minImg, maxImg;
+	cv::min(inp, high_val, minImg);
+	cv::max(minImg, low_val, maxImg);
+
+	return maxImg;
+}
+
+
+cv::Mat
+Retinex::run(const cv::Mat &input)
+{
+	cv::Mat imgf;
+	input.convertTo(imgf, CV_64F, 1.0, 1.0);
+
+	cv::Mat intensity (imgf.size(), CV_64F);
+	for (uint r=0; r<imgf.rows; ++r)
+		for (uint c=0; c<imgf.cols; ++c) {
+			auto color = imgf.at<cv::Vec3d>(r,c);
+			intensity.at<double>(r,c) = (color[0]+color[1]+color[2])/3;
+		}
+
+	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma);
+
+	cv::Mat intensity1 = simpleColorBalance(firstRetinex, low_clip, high_clip);
+
+	double intensMin, intensMax;
+	cv::minMaxIdx(intensity1, &intensMin, &intensMax);
+	intensity = ((intensity1 - intensMin) / (intensMax - intensMin))*255.0 + 1.0;
+	// XXX: unfinished
+
+	cv::Mat imgMsrcp (imgf.size(), imgf.type());
+	for (uint r=0; r<imgf.rows; ++r)
+		for (uint c=0; c<imgf.cols; ++c) {
+			auto _B = imgf.at<cv::Vec3d>(r, c);
+			auto B = max({_B[0], _B[1], _B[2]});
+			auto A = min(256.0/B, intensity1.at<double>(r,c) / intensity.at<double>(r,c));
+			cv::Vec3d color;
+			color[0] = A * imgf.at<cv::Vec3d>(r,c)[0];
+			color[1] = A * imgf.at<cv::Vec3d>(r,c)[1];
+			color[2] = A * imgf.at<cv::Vec3d>(r,c)[2];
+			imgMsrcp.at<cv::Vec3d>(r,c) = color;
+		}
+
+	cv::Mat imgMsrcpInt8;
+	imgMsrcp.convertTo(imgMsrcpInt8, CV_8UC3, -1);
+	return imgMsrcpInt8;
+}
+
+
+
+
+
+
 
 
 }	// namespace Vmml
