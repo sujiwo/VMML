@@ -101,10 +101,12 @@ Retinex::run(const cv::Mat &input)
 
 	cv::Mat intensity1 = simpleColorBalance(firstRetinex, low_clip, high_clip);
 
+	// XXX: intensMin & max produces zero values. There may be errors in multiScaleRetinex(),
+	// need to dump matrix values to numpy and analyze them using python by imshow(),
+	// because their values are in log domain
 	double intensMin, intensMax;
 	cv::minMaxIdx(intensity1, &intensMin, &intensMax);
 	intensity = ((intensity1 - intensMin) / (intensMax - intensMin))*255.0 + 1.0;
-	// XXX: unfinished
 
 	cv::Mat imgMsrcp (imgf.size(), imgf.type());
 	for (uint r=0; r<imgf.rows; ++r)

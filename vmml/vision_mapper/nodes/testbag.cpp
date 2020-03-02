@@ -13,6 +13,7 @@
 #include "vmml/LidarScanBag.h"
 #include "vmml/ImageBag.h"
 #include "vmml/ImagePreprocessor.h"
+#include "vmml/Retinex.h"
 #include "Segmentation.h"
 #include <opencv2/highgui.hpp>
 
@@ -34,12 +35,19 @@ int main(int argc, char *argv[])
 	auto img0 = ost.at(frameNum),
 		imgRaw = ost.at(frameNum, true);
 
+/*
 	Mapper::Segmentation
 		gSegment("/home/sujiwo/caffe-segnet/segnet_model_driving_webdemo.prototxt",
 			"/home/sujiwo/caffe-segnet/segnet_weights_driving_webdemo.caffemodel");
 
 	auto mask = gSegment.buildMask(img0);
-	cv::imwrite("/tmp/mask.png", mask);
+*/
+	const double retinexSigma[3] = {15.0, 80.0, 250.0};
+	Retinex retinex(retinexSigma, 0.01, 0.999999999);
+	auto rtRex = retinex.run(img0);
+
+	cv::imwrite("/tmp/original.png", img0);
+	cv::imwrite("/tmp/retinex.png", rtRex);
 
 	return 0;
 }

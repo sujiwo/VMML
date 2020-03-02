@@ -44,6 +44,14 @@ namespace Vmml {
 class Retinex
 {
 public:
+
+	/*
+	 * Suggested values:
+	 * Sigmas = { 15, 80, 250 }
+	 * low clip = 0.01
+	 * high clip = 0.9999999
+	 */
+
 	Retinex(const double _ss[3], const float _lowClip, const float _highClip):
 		sigma({_ss[0], _ss[1], _ss[2]}),
 		low_clip(_lowClip),
