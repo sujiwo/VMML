@@ -44,8 +44,8 @@ for img_name in img_list:
         config['high_clip']        
     )    
 
-    cv2.imwrite('retinex.png', img_msrcr)
-    cv2.imwrite('auto_retinex.png', img_amsrcr)
+#     cv2.imwrite('retinex.png', img_msrcr)
+#     cv2.imwrite('auto_retinex.png', img_amsrcr)
     cv2.imwrite('msrcp.png', img_msrcp)
 
 #    shape = img.shape

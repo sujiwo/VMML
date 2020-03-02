@@ -25,21 +25,36 @@ def colorRestoration(img, alpha, beta):
 
     return color_restoration
 
-def simplestColorBalance(img, low_clip, high_clip):    
-
+def simplestColorBalance(img, low_clip, high_clip):
+#     total = img.shape[0] * img.shape[1]
+#     for i in range(img.shape[2]):
+#         current = 0
+#         for r in range(img.shape[0]):
+#             for c in range(img.shape[1]):
+#                 element = img[r,c,i]
+#                 if float(current) / float(total) < low_clip:
+#                     low_val = element
+#                 if float(current) / float(total) < high_clip:
+#                     high_val = element
+#                 current += 1
+#         img[:, :, i] = np.maximum(np.minimum(img[:, :, i], high_val), low_val)
+#         print("Color Balance Z: High={}, Low={}".format(high_val, low_val))
+#     return img
+    
     total = img.shape[0] * img.shape[1]
     for i in range(img.shape[2]):
         unique, counts = np.unique(img[:, :, i], return_counts=True)
         current = 0
         for u, c in zip(unique, counts):            
-            if float(current) / total < low_clip:
+            if float(current) / float(total) < low_clip:
                 low_val = u
-            if float(current) / total < high_clip:
+            if float(current) / float(total) < high_clip:
                 high_val = u
             current += c
-                
+                    
         img[:, :, i] = np.maximum(np.minimum(img[:, :, i], high_val), low_val)
-
+        print("Color Balance: High={}, Low={}".format(high_val, low_val))
+    
     return img    
 
 def MSRCR(img, sigma_list, G, b, alpha, beta, low_clip, high_clip):
@@ -106,6 +121,7 @@ def MSRCP(img, sigma_list, low_clip, high_clip):
     retinex = np.expand_dims(retinex, 2)
 
     intensity1 = simplestColorBalance(retinex, low_clip, high_clip)
+#     np.save('/tmp/intensity1.npy', intensity1)
 
     intensity1 = (intensity1 - np.min(intensity1)) / \
                  (np.max(intensity1) - np.min(intensity1)) * \

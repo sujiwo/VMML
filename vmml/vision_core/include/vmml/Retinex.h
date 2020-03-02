@@ -66,13 +66,13 @@ protected:
 	float low_clip, high_clip;
 
 	static cv::Mat
-	singleScaleRetinex(const cv::Mat &inp, double sigma);
+	singleScaleRetinex(const cv::Mat &inp, const double sigma);
 
 	static cv::Mat
 	multiScaleRetinex(const cv::Mat &inp, const std::array<double,3> _sigmaList);
 
 	static cv::Mat
-	simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip);
+	simpleColorBalance(const cv::Mat &inp, const double lowClip, const double highClip);
 
 };
 

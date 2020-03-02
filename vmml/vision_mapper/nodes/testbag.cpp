@@ -25,6 +25,7 @@ float alpha = 0.3975;
 
 int main(int argc, char *argv[])
 {
+/*
 	Path mybagPath(argv[1]);
 	rosbag::Bag mybag(mybagPath.string());
 
@@ -34,6 +35,8 @@ int main(int argc, char *argv[])
 
 	auto img0 = ost.at(frameNum),
 		imgRaw = ost.at(frameNum, true);
+*/
+	cv::Mat img0 = cv::imread(argv[1]);
 
 /*
 	Mapper::Segmentation
@@ -43,7 +46,7 @@ int main(int argc, char *argv[])
 	auto mask = gSegment.buildMask(img0);
 */
 	const double retinexSigma[3] = {15.0, 80.0, 250.0};
-	Retinex retinex(retinexSigma, 0.01, 0.999999999);
+	Retinex retinex(retinexSigma, 0.01, 0.99);
 	auto rtRex = retinex.run(img0);
 
 	cv::imwrite("/tmp/original.png", img0);
