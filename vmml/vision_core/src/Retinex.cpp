@@ -12,6 +12,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/hdf.hpp>
 #include "vmml/Retinex.h"
+#include "vmml/utilities.h"
 
 
 using namespace std;
@@ -103,17 +104,26 @@ Retinex::run(const cv::Mat &input)
 	cv::Mat imgf;
 	input.convertTo(imgf, CV_64FC3, 1.0, 1.0);
 
+	auto t1=Vmml::getCurrentTime();
 	cv::Mat intensity (imgf.size(), CV_64F);
 	for (uint r=0; r<imgf.rows; ++r)
 		for (uint c=0; c<imgf.cols; ++c) {
 			auto color = imgf.at<cv::Vec3d>(r,c);
 			intensity.at<double>(r,c) = (color[0]+color[1]+color[2])/3;
 		}
+	auto t2=Vmml::getCurrentTime();
+	cerr << "Time 1: " << Vmml::toSeconds(t2-t1) << endl;
 
+
+	t1=Vmml::getCurrentTime();
 	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma);
+	t2=Vmml::getCurrentTime();
+	cerr << "Time 2: " << Vmml::toSeconds(t2-t1) << endl;
 
-	// C++ & Python version do not match
+	t1=Vmml::getCurrentTime();
 	cv::Mat intensity1 = simpleColorBalance(firstRetinex, low_clip, high_clip);
+	t2=Vmml::getCurrentTime();
+	cerr << "Time 3: " << Vmml::toSeconds(t2-t1) << endl;
 
 	// XXX: intensMin & max produces zero values. There may be errors in multiScaleRetinex(),
 	// need to dump matrix values to numpy and analyze them using python by imshow(),
@@ -122,6 +132,7 @@ Retinex::run(const cv::Mat &input)
 	cv::minMaxIdx(intensity1, &intensMin, &intensMax);
 	intensity1 = (intensity1 - intensMin) / (intensMax - intensMin) * 255.0 + 1.0;
 
+	t1=Vmml::getCurrentTime();
 	cv::Mat imgMsrcp (imgf.size(), imgf.type());
 	for (uint r=0; r<imgf.rows; ++r)
 		for (uint c=0; c<imgf.cols; ++c) {
@@ -134,6 +145,8 @@ Retinex::run(const cv::Mat &input)
 			color[2] = A * imgf.at<cv::Vec3d>(r,c)[2];
 			imgMsrcp.at<cv::Vec3d>(r,c) = color;
 		}
+	t2=Vmml::getCurrentTime();
+	cerr << "Time 4: " << Vmml::toSeconds(t2-t1) << endl;
 
 	cv::Mat imgMsrcpInt8;
 	imgMsrcp = imgMsrcp-1;
