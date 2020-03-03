@@ -4,7 +4,6 @@
  *  Created on: Feb 10, 2020
  *      Author: sujiwo
  *
- *  XXX: This class is not functional
  */
 
 #include <set>
@@ -22,9 +21,9 @@ namespace Vmml {
 
 
 cv::Mat
-Retinex::singleScaleRetinex(const cv::Mat &inp, const double sigma)
+Retinex::singleScaleRetinex(const cv::Mat &inp, const float sigma)
 {
-	assert(inp.type()==CV_64FC1);
+	assert(inp.type()==CV_32FC1);
 
 	// XXX: log_e or log_10 ?
 	cv::Mat inpLog;
@@ -42,9 +41,9 @@ Retinex::singleScaleRetinex(const cv::Mat &inp, const double sigma)
 
 
 cv::Mat
-Retinex::multiScaleRetinex(const cv::Mat &inp, const std::array<double,3> _sigmaList)
+Retinex::multiScaleRetinex(const cv::Mat &inp, const std::array<float,3> _sigmaList)
 {
-	cv::Mat msrex = cv::Mat::zeros(inp.size(), CV_64FC1);
+	cv::Mat msrex = cv::Mat::zeros(inp.size(), CV_32FC1);
 	double mmin, mmax;
 
 	for (auto &s: _sigmaList) {
@@ -58,17 +57,17 @@ Retinex::multiScaleRetinex(const cv::Mat &inp, const std::array<double,3> _sigma
 
 
 cv::Mat
-Retinex::simpleColorBalance(const cv::Mat &inp, const double lowClip, const double highClip)
+Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip)
 {
-	assert(inp.type()==CV_64F);
+	assert(inp.type()==CV_32F);
 
 	const uint total = inp.total();
 	uint current = 0;
 	double low_val, high_val;
 
-	std::set<double> unique;
-	std::map<double, uint> counter;
-	for (auto it=inp.begin<double>(); it!=inp.end<double>(); ++it) {
+	std::set<float> unique;
+	std::map<float, uint> counter;
+	for (auto it=inp.begin<float>(); it!=inp.end<float>(); ++it) {
 		auto &u = *it;
 		auto rt = unique.emplace(u);
 		if (rt.second==true)
@@ -82,9 +81,9 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const double lowClip, const doub
 	for (auto it=unique.begin(); it!=unique.end(); ++it) {
 		auto &u = *it;
 		auto c = counter[u];
-		if (double(current)/double(total) < lowClip)
+		if (float(current)/float(total) < lowClip)
 			low_val = u;
-		if (double(current)/double(total) < highClip)
+		if (float(current)/float(total) < highClip)
 			high_val = u;
 		current += c;
 		++i;
@@ -102,18 +101,21 @@ cv::Mat
 Retinex::run(const cv::Mat &input)
 {
 	cv::Mat imgf;
-	input.convertTo(imgf, CV_64FC3, 1.0, 1.0);
+	input.convertTo(imgf, CV_32FC3, 1.0, 1.0);
 
 	auto t1=Vmml::getCurrentTime();
-	cv::Mat intensity (imgf.size(), CV_64F);
+	cv::Mat intensity (imgf.size(), CV_32FC1);
 	for (uint r=0; r<imgf.rows; ++r)
 		for (uint c=0; c<imgf.cols; ++c) {
-			auto color = imgf.at<cv::Vec3d>(r,c);
-			intensity.at<double>(r,c) = (color[0]+color[1]+color[2])/3;
+			auto color = imgf.at<cv::Vec3f>(r,c);
+			intensity.at<float>(r,c) = (color[0]+color[1]+color[2])/3;
 		}
 	auto t2=Vmml::getCurrentTime();
 	cerr << "Time 1: " << Vmml::toSeconds(t2-t1) << endl;
 
+	/*
+	 * Timer 2 & 3 are slowest
+	 */
 
 	t1=Vmml::getCurrentTime();
 	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma);
@@ -136,14 +138,14 @@ Retinex::run(const cv::Mat &input)
 	cv::Mat imgMsrcp (imgf.size(), imgf.type());
 	for (uint r=0; r<imgf.rows; ++r)
 		for (uint c=0; c<imgf.cols; ++c) {
-			auto _B = imgf.at<cv::Vec3d>(r, c);
+			auto _B = imgf.at<cv::Vec3f>(r, c);
 			auto B = max({_B[0], _B[1], _B[2]});
-			auto A = min(256.0/B, intensity1.at<double>(r,c) / intensity.at<double>(r,c));
-			cv::Vec3d color;
-			color[0] = A * imgf.at<cv::Vec3d>(r,c)[0];
-			color[1] = A * imgf.at<cv::Vec3d>(r,c)[1];
-			color[2] = A * imgf.at<cv::Vec3d>(r,c)[2];
-			imgMsrcp.at<cv::Vec3d>(r,c) = color;
+			auto A = min(float(256.0)/B, intensity1.at<float>(r,c) / intensity.at<float>(r,c));
+			cv::Vec3f color;
+			color[0] = A * imgf.at<cv::Vec3f>(r,c)[0];
+			color[1] = A * imgf.at<cv::Vec3f>(r,c)[1];
+			color[2] = A * imgf.at<cv::Vec3f>(r,c)[2];
+			imgMsrcp.at<cv::Vec3f>(r,c) = color;
 		}
 	t2=Vmml::getCurrentTime();
 	cerr << "Time 4: " << Vmml::toSeconds(t2-t1) << endl;

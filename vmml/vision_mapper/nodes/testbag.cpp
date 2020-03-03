@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
 	auto mask = gSegment.buildMask(img0);
 */
-	const double retinexSigma[3] = {15.0, 80.0, 250.0};
+	const float retinexSigma[3] = {15.0, 80.0, 250.0};
 	Retinex retinex(retinexSigma, 0.01, 0.99);
 	auto rtRex = retinex.run(img0);
 

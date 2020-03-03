@@ -52,7 +52,7 @@ public:
 	 * high clip = 0.9999999
 	 */
 
-	Retinex(const double _ss[3], const float _lowClip, const float _highClip):
+	Retinex(const float _ss[3], const float _lowClip, const float _highClip):
 		sigma({_ss[0], _ss[1], _ss[2]}),
 		low_clip(_lowClip),
 		high_clip(_highClip)
@@ -62,17 +62,17 @@ public:
 	run(const cv::Mat &input);
 
 protected:
-	const std::array<double,3> sigma;
+	const std::array<float,3> sigma;
 	float low_clip, high_clip;
 
 	static cv::Mat
-	singleScaleRetinex(const cv::Mat &inp, const double sigma);
+	singleScaleRetinex(const cv::Mat &inp, const float sigma);
 
 	static cv::Mat
-	multiScaleRetinex(const cv::Mat &inp, const std::array<double,3> _sigmaList);
+	multiScaleRetinex(const cv::Mat &inp, const std::array<float,3> _sigmaList);
 
 	static cv::Mat
-	simpleColorBalance(const cv::Mat &inp, const double lowClip, const double highClip);
+	simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip);
 
 };
 
