@@ -65,6 +65,7 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float
 	uint current = 0;
 	double low_val, high_val;
 
+	// This part is hotspot
 	std::set<float> unique;
 	std::map<float, uint> counter;
 	for (auto it=inp.begin<float>(); it!=inp.end<float>(); ++it) {
@@ -77,7 +78,6 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float
 	}
 	assert(unique.size()==counter.size());
 
-	uint i=0;
 	for (auto it=unique.begin(); it!=unique.end(); ++it) {
 		auto &u = *it;
 		auto c = counter[u];
@@ -86,7 +86,6 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float
 		if (float(current)/float(total) < highClip)
 			high_val = u;
 		current += c;
-		++i;
 	}
 
 	cv::Mat minImg, maxImg;
