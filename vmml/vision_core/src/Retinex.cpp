@@ -53,8 +53,6 @@ Retinex::multiScaleRetinex(const cv::Mat &inp, const std::array<float,3> _sigmaL
 	cv::Mat msrex = cv::Mat::zeros(inp.size(), CV_32FC1);
 	double mmin, mmax;
 
-	array<cv::Mat, _sigmaList.max_size()> retinexSingleRes;
-
 	for (auto &s: _sigmaList) {
 		cv::Mat ssRetx = singleScaleRetinex(inp, s);
 		msrex = msrex + ssRetx;
@@ -106,8 +104,6 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float
 		current += c;
 	}
 */
-
-	cout << high_val << " " << low_val << endl;
 
 	cv::Mat minImg, maxImg;
 	cv::min(inp, high_val, minImg);
