@@ -9,7 +9,7 @@ import retinex
 data_path = 'data'
 img_list = os.listdir(data_path)
 if len(img_list) == 0:
-    print 'Data directory is empty.'
+    print ('Data directory is empty.')
     exit()
 
 with open('config.json', 'r') as f:

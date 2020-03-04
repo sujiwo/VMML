@@ -21,7 +21,8 @@ namespace Vmml {
 namespace Mapper {
 
 
-ImagePipeline::ImagePipeline()
+ImagePipeline::ImagePipeline() :
+	outputSize(cv::Size(640,480))
 {
 }
 

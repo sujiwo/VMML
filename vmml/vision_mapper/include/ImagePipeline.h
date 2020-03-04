@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <sensor_msgs/Image.h>
+#include <opencv2/core.hpp>
 #include "Segmentation.h"
 
 
@@ -42,6 +43,12 @@ public:
 	inline float getResizeFactor() const
 	{ return resizeFactor; }
 
+	const cv::Size getOutputSize() const
+	{ return outputSize; }
+
+	void setOutputSize(const cv::Size &sz)
+	{ outputSize = sz; }
+
 	// XXX: Unstable
 	void setRetinex();
 
@@ -63,6 +70,8 @@ protected:
 	cv::Mat stdMask;
 
 	float resizeFactor=1.0;
+
+	cv::Size outputSize;
 };
 
 } /* namespace Mapper */

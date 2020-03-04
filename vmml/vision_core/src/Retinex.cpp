@@ -8,8 +8,10 @@
 
 #include <set>
 #include <map>
+#include <algorithm>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/hdf.hpp>
+#include <opencv2/core/ocl.hpp>
 #include "vmml/Retinex.h"
 #include "vmml/utilities.h"
 
@@ -30,8 +32,13 @@ Retinex::singleScaleRetinex(const cv::Mat &inp, const float sigma)
 	cv::log(inp, inpLog);
 	inpLog /= log(10);
 
+	// GaussianBlur() is also a hotspot for large sigma
 	cv::Mat gaussBlur;
+//	auto t1=Vmml::getCurrentTime();
 	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
+//	auto t2=Vmml::getCurrentTime();
+//	cerr << "Time 1s: " << Vmml::toSeconds(t2-t1) << endl;
+
 	cv::log(gaussBlur, gaussBlur);
 	gaussBlur /= log(10);
 
@@ -46,12 +53,15 @@ Retinex::multiScaleRetinex(const cv::Mat &inp, const std::array<float,3> _sigmaL
 	cv::Mat msrex = cv::Mat::zeros(inp.size(), CV_32FC1);
 	double mmin, mmax;
 
+	array<cv::Mat, _sigmaList.max_size()> retinexSingleRes;
+
 	for (auto &s: _sigmaList) {
 		cv::Mat ssRetx = singleScaleRetinex(inp, s);
 		msrex = msrex + ssRetx;
 	}
 
 	msrex /= 3;
+
 	return msrex;
 }
 
@@ -66,6 +76,14 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float
 	double low_val, high_val;
 
 	// This part is hotspot
+	std::vector<float> uniquez(inp.begin<float>(), inp.end<float>());
+	std::sort(uniquez.begin(), uniquez.end());
+	int clow = floor(float(lowClip) * float(total));
+	int chigh = floor(float(highClip) * float(total));
+	low_val = uniquez[clow];
+	high_val = uniquez[chigh];
+
+/*
 	std::set<float> unique;
 	std::map<float, uint> counter;
 	for (auto it=inp.begin<float>(); it!=inp.end<float>(); ++it) {
@@ -87,6 +105,9 @@ Retinex::simpleColorBalance(const cv::Mat &inp, const float lowClip, const float
 			high_val = u;
 		current += c;
 	}
+*/
+
+	cout << high_val << " " << low_val << endl;
 
 	cv::Mat minImg, maxImg;
 	cv::min(inp, high_val, minImg);
