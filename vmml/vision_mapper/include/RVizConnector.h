@@ -44,8 +44,16 @@ public:
 
 	void publishPointcloud();
 
+	void publishImage(const cv::Mat &img, const ros::Time &t=ros::Time(0));
+
 	inline bool isRosUsed() const
 	{ return !rosDisabled; }
+
+	std::shared_ptr<ros::NodeHandle>
+	getNodeHandle()
+	{ return hdl; }
+
+	void setImageTopicName(const std::string &s);
 
 protected:
 	std::shared_ptr<ros::NodeHandle> hdl;
@@ -77,6 +85,8 @@ protected:
 	TTransform lidarToCamera;
 
 	ptime currentTime;
+
+	string imageTopicName = "imageframe";
 };
 
 } /* namespace Mapper */

@@ -10,6 +10,7 @@
 
 #include <string>
 #include <opencv2/core.hpp>
+#include <sensor_msgs/Image.h>
 #include "RandomAccessBag.h"
 #include "ImagePreprocessor.h"
 #include "utilities.h"
@@ -48,6 +49,9 @@ public:
 	void desample(const float hz, std::vector<uint64> &desamplePos) const;
 
 	bool doPreprocess = true;
+
+	inline sensor_msgs::ImageConstPtr getMessage(uint position)
+	{ return RandomAccessBag::at<sensor_msgs::Image>(position); }
 
 protected:
 	float zoomRatio;

@@ -84,10 +84,24 @@ public:
 		);
 	}
 
+	inline int getArgc() const
+	{ return rArgc; }
+
+	inline char** getArgv() const
+	{ return rArgv; }
+
+	template<typename T>
+	const T& getOptionValue(const std::string &key)
+	{ return _optionValues.at(key).as<T>(); }
+
 protected:
 	boost::program_options::options_description _options;
 	boost::program_options::variables_map _optionValues;
 	Path _vmPackagePath;
+
+	// Raw arguments
+	int rArgc;
+	char **rArgv;
 
 	void openInputs();
 

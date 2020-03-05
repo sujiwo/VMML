@@ -22,7 +22,6 @@ using namespace Eigen;
 
 
 const string originFrame = "world";
-const string imageTopicName = "imageframe";
 const string lidarScanTopicName = "lidarframe";
 const string visionMapPcTopicName = "visionpcl";
 
@@ -198,19 +197,34 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 
 
 void
-RVizConnector::publishPlainBaseFrame(const Vmml::BaseFrame &frame)
+RVizConnector::setImageTopicName(const std::string &s)
+{
+	imageTopicName = s;
+	if (rosDisabled==false)
+		imagePub = imagePubTr->advertise(imageTopicName, 1);
+}
+
+
+void
+RVizConnector::publishImage(const cv::Mat &img, const ros::Time &t)
 {
 	if (rosDisabled==true)
 		return;
 
-	currentTime = Vmml::getCurrentTime();
-
 	cv_bridge::CvImage cvImg;
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
 
-	cvImg.image = frame.getImage().clone();
-	cvImg.header.stamp = ros::Time::fromBoost(currentTime);
+	cvImg.image = img;
+	cvImg.header.stamp = t;
 	imagePub.publish(cvImg.toImageMsg());
+}
+
+
+void
+RVizConnector::publishPlainBaseFrame(const Vmml::BaseFrame &frame)
+{
+	currentTime = Vmml::getCurrentTime();
+	return publishImage(frame.getImage(), ros::Time::fromBoost(currentTime));
 }
 
 

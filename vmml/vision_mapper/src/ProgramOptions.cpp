@@ -103,6 +103,9 @@ ProgramOptions::~ProgramOptions()
 void
 ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
 {
+	rArgc = argc;
+	rArgv = argv;
+
 	po::store(po::parse_command_line(argc, argv, _options), _optionValues);
 	po::notify(_optionValues);
 
