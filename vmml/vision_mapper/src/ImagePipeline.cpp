@@ -56,19 +56,23 @@ ImagePipeline::setSemanticSegmentation(const std::string &modelPath, const std::
 void
 ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 {
-	imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageRgb);
+	cv::Mat imageInput;
+
 	if (resizeFactor!=1.0)
-		cv::resize(imageOut, imageOut, cv::Size(), resizeFactor, resizeFactor);
+		cv::resize(imageRgb, imageInput, cv::Size(), resizeFactor, resizeFactor);
+	else
+		imageInput = imageRgb;
+
+	imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput);
 
 	if (gSegment==NULL)
 		mask = stdMask.clone();
 	else {
-		cv::Mat ssMask = gSegment->buildMask(imageRgb);
+		cv::Mat ssMask = gSegment->buildMask(imageInput);
 		if (stdMask.empty()==false)
 			mask = stdMask & ssMask;
 		else mask = ssMask;
-		if (resizeFactor!=1.0 and mask.empty()==false)
-			cv::resize(mask, mask, cv::Size(), resizeFactor, resizeFactor, cv::INTER_NEAREST);
+		cv::resize(mask, mask, imageOut.size(), 0, 0, cv::INTER_NEAREST);
 	}
 }
 
