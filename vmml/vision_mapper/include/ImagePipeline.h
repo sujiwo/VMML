@@ -20,11 +20,15 @@
 #include <string>
 #include <sensor_msgs/Image.h>
 #include <opencv2/core.hpp>
+#include "vmml/Retinex.h"
 #include "Segmentation.h"
 
 
 namespace Vmml {
 namespace Mapper {
+
+const float retinexSigmaDefault[] = { 15, 80, 250 };
+
 
 class ImagePipeline {
 public:
@@ -50,7 +54,10 @@ public:
 	{ outputSize = sz; }
 
 	// XXX: Unstable
-	void setRetinex();
+	void setRetinex(
+		const float _ss[3] = retinexSigmaDefault,
+		const float _lowClip = 0.01,
+		const float _highClip = 0.999);
 
 	void setSemanticSegmentation(const std::string &modelPath, const std::string &weights);
 
@@ -72,6 +79,8 @@ protected:
 	float resizeFactor=1.0;
 
 	cv::Size outputSize;
+
+	std::shared_ptr<Retinex> retinexPrc;
 };
 
 } /* namespace Mapper */

@@ -6,6 +6,7 @@
  */
 
 #include <exception>
+#include <thread>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <sensor_msgs/image_encodings.h>
@@ -24,6 +25,7 @@ namespace Mapper {
 ImagePipeline::ImagePipeline() :
 	outputSize(cv::Size(640,480))
 {
+	setRetinex();
 }
 
 
@@ -63,7 +65,10 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 	else
 		imageInput = imageRgb;
 
-	imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput);
+	if (retinexPrc!=nullptr)
+		imageOut = retinexPrc->run(imageInput);
+	else
+		imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput);
 
 	if (gSegment==NULL)
 		mask = stdMask.clone();
@@ -83,6 +88,16 @@ ImagePipeline::run(const sensor_msgs::Image &imageBg, cv::Mat &imageOut, cv::Mat
 	// XXX: Need better demosaicing algorithm
 	auto imageRgb = cv_bridge::toCvCopy(imageBg, "bgr8");
 	return run(imageRgb->image, imageOut, mask);
+}
+
+
+void
+ImagePipeline::setRetinex(
+	const float _ss[3],
+	const float _lowClip,
+	const float _highClip)
+{
+	retinexPrc.reset(new Retinex(_ss, _lowClip, _highClip));
 }
 
 
