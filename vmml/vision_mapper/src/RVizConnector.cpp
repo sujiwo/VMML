@@ -274,6 +274,19 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::Pai
 
 
 void
+RVizConnector::publishKeyPointsInFrame(const Vmml::BaseFrame &frame)
+{
+	if (rosDisabled)
+		return;
+
+	cv::Mat frameWithKeypoints;
+	cv::drawKeypoints(frame.getImage(), frame.allKeypoints(), frameWithKeypoints, cv::Scalar(0,255,0));
+
+	publishImage(frameWithKeypoints, ros::Time::now());
+}
+
+
+void
 RVizConnector::publishPointCloudMap()
 {
 	auto triangulationPoints = mMap->dumpPointCloudFromMapPoints();

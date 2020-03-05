@@ -46,6 +46,8 @@ public:
 
 	void publishImage(const cv::Mat &img, const ros::Time &t=ros::Time(0));
 
+	void publishKeyPointsInFrame(const Vmml::BaseFrame &frame);
+
 	inline bool isRosUsed() const
 	{ return !rosDisabled; }
 

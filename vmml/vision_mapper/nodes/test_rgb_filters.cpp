@@ -192,6 +192,7 @@ int main(int argc, char *argv[])
 	progOpts.parseCommandLineArgs(argc, argv);
 	imageTopic = progOpts.getImageTopic();
 
+	imgPipe.setRetinex();
 	imgPipe.setResizeFactor(progOpts.getImageResizeFactor());
 
 	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)

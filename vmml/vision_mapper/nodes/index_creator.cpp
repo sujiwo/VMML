@@ -177,6 +177,7 @@ int main(int argc, char *argv[])
 
 	// Setup image pipeline
 	Mapper::ImagePipeline imgPipe;
+	imgPipe.setRetinex();
 	imgPipe.setResizeFactor(progOptions.getImageResizeFactor());
 	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
 		imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
@@ -210,7 +211,8 @@ int main(int argc, char *argv[])
 			imageDb.addImage2(keyframeId, curFrame->allKeypoints(), curFrame->allDescriptors());
 		auto t2 = getCurrentTime();
 
-		rosConn.publishPlainBaseFrame(*curFrame);
+		rosConn.publishKeyPointsInFrame(*curFrame);
+
 		cout << ", " << toSeconds(t2-t1) << endl;
 		imageDb.keyframeIdToBag[keyframeId] = images.getOriginalZeroIndex()+imageBagId;
 		keyframeId += 1;

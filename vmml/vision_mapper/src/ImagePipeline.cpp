@@ -25,7 +25,6 @@ namespace Mapper {
 ImagePipeline::ImagePipeline() :
 	outputSize(cv::Size(640,480))
 {
-	setRetinex();
 }
 
 
@@ -65,20 +64,27 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 	else
 		imageInput = imageRgb;
 
-	if (retinexPrc!=nullptr)
-		imageOut = retinexPrc->run(imageInput);
-	else
-		imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput);
+	thread imageBrightnessThread ([&,this](){
+		if (retinexPrc!=nullptr)
+			imageOut = retinexPrc->run(imageInput);
+		else
+			imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput);
+	});
 
-	if (gSegment==NULL)
-		mask = stdMask.clone();
-	else {
-		cv::Mat ssMask = gSegment->buildMask(imageInput);
-		if (stdMask.empty()==false)
-			mask = stdMask & ssMask;
-		else mask = ssMask;
-		cv::resize(mask, mask, imageOut.size(), 0, 0, cv::INTER_NEAREST);
-	}
+	thread semanticSegmentThread ([&,this](){
+		if (gSegment==NULL)
+			mask = stdMask.clone();
+		else {
+			cv::Mat ssMask = gSegment->buildMask(imageInput);
+			if (stdMask.empty()==false)
+				mask = stdMask & ssMask;
+			else mask = ssMask;
+			cv::resize(mask, mask, imageInput.size(), 0, 0, cv::INTER_NEAREST);
+		}
+	});
+
+	imageBrightnessThread.join();
+	semanticSegmentThread.join();
 }
 
 

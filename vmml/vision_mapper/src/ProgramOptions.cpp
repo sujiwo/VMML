@@ -200,7 +200,7 @@ ProgramOptions::getImageBag()
 		if (imageTopic.empty())
 			throw runtime_error("Image topic is not set using --image-topic");
 
-		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic, imageResizeFactor));
+		imageBag = ImageBag::Ptr(new ImageBag(inputBag, imageTopic));
 		cout << "Using `" << imageTopic << "' as image topic\n";
 	}
 
