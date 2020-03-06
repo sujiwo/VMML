@@ -40,12 +40,15 @@ public:
 	/*
 	 * Setup functions
 	 */
+
+	/*
+	 * Input feature mask must be full size
+	 */
 	void setFixedFeatureMask(const std::string &imageMaskPath);
 
 	void setFixedFeatureMask(const cv::Mat &fmask);
 
-	inline void setResizeFactor(const float f)
-	{ resizeFactor=f; }
+	void setResizeFactor(const float f);
 
 	inline float getResizeFactor() const
 	{ return resizeFactor; }
@@ -88,7 +91,7 @@ protected:
 
 	std::shared_ptr<Segmentation> gSegment=NULL;
 
-	cv::Mat stdMask;
+	cv::Mat stdMask, stdMaskResized;
 
 	cv::Mat gammaMeteringMask;
 

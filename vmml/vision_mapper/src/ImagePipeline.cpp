@@ -35,17 +35,31 @@ ImagePipeline::~ImagePipeline()
 
 
 void
+ImagePipeline::setResizeFactor(const float f)
+{
+	resizeFactor=f;
+	outputSize = cv::Size(intentInputSize.width*f, intentInputSize.height*f);
+	setFixedFeatureMask(stdMask);
+}
+
+
+void
 ImagePipeline::setFixedFeatureMask(const string &imageMaskPath)
 {
-	stdMask = cv::imread(imageMaskPath, cv::IMREAD_GRAYSCALE);
+	cv::Mat mmask = cv::imread(imageMaskPath, cv::IMREAD_GRAYSCALE);
 	if (stdMask.empty()==true)
 		throw runtime_error("Unable to open image ");
+	return setFixedFeatureMask(mmask);
 }
 
 
 void
 ImagePipeline::setFixedFeatureMask(const cv::Mat &fmask)
-{ stdMask = fmask.clone(); }
+{
+	stdMask = fmask.clone();
+	if (resizeFactor!=1.0 and stdMask.empty()==false)
+		cv::resize(stdMask, stdMaskResized, cv::Size(), resizeFactor, resizeFactor);
+}
 
 
 void
@@ -74,11 +88,11 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 
 	thread semanticSegmentThread ([&,this](){
 		if (gSegment==NULL)
-			mask = stdMask.clone();
+			mask = stdMaskResized.clone();
 		else {
 			cv::Mat ssMask = gSegment->buildMask(imageInput);
-			if (stdMask.empty()==false)
-				mask = stdMask & ssMask;
+			if (stdMaskResized.empty()==false)
+				mask = stdMaskResized & ssMask;
 			else mask = ssMask;
 			cv::resize(mask, mask, imageInput.size(), 0, 0, cv::INTER_NEAREST);
 		}

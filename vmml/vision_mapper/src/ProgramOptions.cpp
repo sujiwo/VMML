@@ -281,6 +281,7 @@ ProgramOptions::openInputs()
 	imagePipeline.setRetinex();
 	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
 		imagePipeline.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+	imagePipeline.setFixedFeatureMask(featureMask);
 
 	// Setup image pipeline
 }
