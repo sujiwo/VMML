@@ -116,21 +116,21 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(
-	imagelidar_bag_mapper
-		nodes/imagelidar_bag_mapper.cpp
-)
+#add_executable(
+#	imagelidar_bag_mapper
+#		nodes/imagelidar_bag_mapper.cpp
+#)
 
-target_link_libraries(
-	imagelidar_bag_mapper
-		vmml_mapper
-		${common_libs}
-)
+#target_link_libraries(
+#	imagelidar_bag_mapper
+#		vmml_mapper
+#		${common_libs}
+#)
 
-install(
-	TARGETS imagelidar_bag_mapper
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(
+#	TARGETS imagelidar_bag_mapper
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 add_executable(
 	test_vo
@@ -185,38 +185,38 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(
-	test_imagedb
-		nodes/test_imagedb.cpp
-)
+#add_executable(
+#	test_imagedb
+#		nodes/test_imagedb.cpp
+#)
 
-target_link_libraries(
-	test_imagedb
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
-)
+#target_link_libraries(
+#	test_imagedb
+#		${catkin_LIBRARIES}
+#		${vision_core_LIBRARIES}
+#		${OpenCV_LIBS}
+#)
 
-install(
-	TARGETS test_imagedb
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(
+#	TARGETS test_imagedb
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
-add_executable(
-	imagedb_mapper
-		nodes/imagedb_mapper.cpp
-)
+#add_executable(
+#	imagedb_mapper
+#		nodes/imagedb_mapper.cpp
+#)
 
-target_link_libraries(
-	imagedb_mapper
-		vmml_mapper
-		${common_libs}
-)
+#target_link_libraries(
+#	imagedb_mapper
+#		vmml_mapper
+#		${common_libs}
+#)
 
-install(
-	TARGETS imagedb_mapper
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(
+#	TARGETS imagedb_mapper
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 # Default samples
 install(
@@ -226,21 +226,21 @@ install(
 )
 
 
-add_executable(
-	test_program_options
-		nodes/test_program_options.cpp
-)
+#add_executable(
+#	test_program_options
+#		nodes/test_program_options.cpp
+#)
 
-target_link_libraries(
-	test_program_options
-		vmml_mapper
-		${common_libs}
-)
+#target_link_libraries(
+#	test_program_options
+#		vmml_mapper
+#		${common_libs}
+#)
 
-install(
-	TARGETS test_program_options
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(
+#	TARGETS test_program_options
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 add_executable(
 	place_recognizer_srv
@@ -258,20 +258,20 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(
-	image_trajectory
-		nodes/image_trajectory.cpp
-)
+#add_executable(
+#	image_trajectory
+#		nodes/image_trajectory.cpp
+#)
 
-target_link_libraries(
-	image_trajectory
-		${common_libs}
-)
+#target_link_libraries(
+#	image_trajectory
+#		${common_libs}
+#)
 
-install(
-	TARGETS image_trajectory
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(
+#	TARGETS image_trajectory
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 add_executable(
 	test_rgb_filters

@@ -13,15 +13,14 @@
 #include "RVizConnector.h"
 #include "vmml/ImageBag.h"
 #include "vmml/utilities.h"
+#include "ImagePipeline.h"
 #include "ProgramOptions.h"
 
 
 using namespace std;
 using namespace std::placeholders;
-using Vmml::MapBuilder;
-using Vmml::Mapper::RVizConnector;
-using Vmml::ptime;
-using Vmml::Pose;
+using namespace Vmml;
+using namespace Vmml::Mapper;
 
 
 Vmml::CameraPinholeParams camera0 (
