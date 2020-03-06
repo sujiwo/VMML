@@ -143,9 +143,6 @@ int main(int argc, char *argv[])
 	progOptions.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
 	progOptions.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
 
-	string segnetModelPath, segnetWeightsPath;
-	progOptions.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
-	progOptions.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
 	progOptions.parseCommandLineArgs(argc, argv);
 
 	Vmml::Mapper::RVizConnector rosConn(argc, argv, "index_creator");
@@ -153,7 +150,6 @@ int main(int argc, char *argv[])
 	rosbag::Bag &mybag = progOptions.getInputBag();
 
 	auto &images = *progOptions.getImageBag();
-	images.doPreprocess = false;
 
 	/*
 	 * Need to reduce frame rate of the bag
@@ -175,14 +171,7 @@ int main(int argc, char *argv[])
 	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
 	trackGnss.dump((progOptions.getWorkDir()/"gnss.csv").string());
 
-	// Setup image pipeline
-	Mapper::ImagePipeline imgPipe;
-	imgPipe.setRetinex();
-	imgPipe.setResizeFactor(progOptions.getImageResizeFactor());
-	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
-		imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
-	if (progOptions.getFeatureMask().empty()==false)
-		imgPipe.setFixedFeatureMask(progOptions.getFeatureMask());
+	auto imgPipe = progOptions.getImagePipeline();
 
 	Trajectory trackImage;
 	kfid curKf = 0;

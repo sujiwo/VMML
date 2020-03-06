@@ -42,7 +42,7 @@ auto detector = cv::ORB::create(
 		10);
 const float alpha = 0.3975;
 
-Vmml::Mapper::ImagePipeline imgPipe;
+Vmml::Mapper::ImagePipeline *imgPipe;
 
 bool hasBreak = false;
 
@@ -51,6 +51,7 @@ void breakHandler(int sign)
 {
 	if (sign==SIGINT)
 		hasBreak = true;
+	cout << "Break is pressed\n";
 }
 
 
@@ -58,7 +59,7 @@ cv::Mat imagePipelineRun (const cv::Mat &srcRgb)
 {
 	cv::Mat mask, imageReady;
 
-	imgPipe.run(srcRgb, imageReady, mask);
+	imgPipe->run(srcRgb, imageReady, mask);
 
 	// ORB Test
 	std::vector<cv::KeyPoint> kpList;
@@ -177,28 +178,11 @@ int main(int argc, char *argv[])
 	Vmml::Mapper::RVizConnector rosCtl(argc, argv, "test_rgb_filters");
 
 	Vmml::Mapper::ProgramOptions progOpts;
-	string
-		segnetModelPath,
-		segnetWeightsPath,
-		imageTopic,
-		imageMask,
-		outputBag;
+	string outputBag;
 
-	progOpts.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
-	progOpts.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
-	progOpts.addSimpleOptions("image-mask", "Path to Dashboard Mask", imageMask);
 	progOpts.addSimpleOptions("bag-output", "Bag output", outputBag);
-
 	progOpts.parseCommandLineArgs(argc, argv);
-	imageTopic = progOpts.getImageTopic();
-
-	imgPipe.setRetinex();
-	imgPipe.setResizeFactor(progOpts.getImageResizeFactor());
-
-	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
-		imgPipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
-	if (imageMask.empty()==false)
-		imgPipe.setFixedFeatureMask(imageMask);
+	imgPipe = &progOpts.getImagePipeline();
 
 	signal(SIGINT, breakHandler);
 

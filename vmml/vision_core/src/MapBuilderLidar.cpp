@@ -60,7 +60,7 @@ MapBuilderLidar::run(
 	const std::string &imageTopic,
 	const float imageScale)
 {
-	imageSource.reset(new ImageBag(bagFd, imageTopic, imageScale));
+	imageSource.reset(new ImageBag(bagFd, imageTopic));
 	velScanSource.reset(new LidarScanBag(bagFd, velodyneTopic));
 	assert(velScanSource->messageType()=="sensor_msgs/PointCloud2");
 

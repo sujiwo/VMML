@@ -32,7 +32,10 @@ const float retinexSigmaDefault[] = { 15, 80, 250 };
 
 class ImagePipeline {
 public:
-	ImagePipeline();
+	ImagePipeline(const cv::Size& inputSize=cv::Size());
+
+	inline void setIntendedInputSize(const cv::Size& inSize)
+	{ intentInputSize = inSize; }
 
 	/*
 	 * Setup functions
@@ -50,6 +53,9 @@ public:
 	const cv::Size getOutputSize() const
 	{ return outputSize; }
 
+	inline void setGammaMeteringMask(const cv::Mat mMask)
+	{ gammaMeteringMask = mMask.clone(); }
+
 	void setOutputSize(const cv::Size &sz)
 	{ outputSize = sz; }
 
@@ -63,7 +69,15 @@ public:
 
 	virtual ~ImagePipeline();
 
+	/*
+	 * This pipeline is intended for RGB (or BGR) image
+	 */
 	void run(const cv::Mat &imageRgbSource, cv::Mat &imageOut, cv::Mat &mask);
+
+	/*
+	 * This pipeline is intended for RAW image, that needs demosaicing
+	 */
+	void runRaw(const cv::Mat &imageRawSource, cv::Mat &imageOut, cv::Mat &mask);
 
 	void run(const sensor_msgs::Image &imageBg, cv::Mat &imageOut, cv::Mat &mask);
 
@@ -76,7 +90,11 @@ protected:
 
 	cv::Mat stdMask;
 
+	cv::Mat gammaMeteringMask;
+
 	float resizeFactor=1.0;
+
+	cv::Size intentInputSize;
 
 	cv::Size outputSize;
 

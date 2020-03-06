@@ -127,41 +127,41 @@ install(
 install(DIRECTORY include/vmml DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
 
 # Testing; do not install
-add_executable(
-	image
-		test/image.cpp
-)
-
-target_link_libraries(
-	image
-		vmml
-		${REQUIRED_LIBS}
-)
-
-add_executable(
-	mapload_test
-		test/mapload_test.cpp
-)
-
-target_link_libraries(
-	mapload_test
-		vmml
-		${REQUIRED_LIBS}
-)
-
-add_executable(
-	ndt_odom
-		test/ndt_odom.cpp
-)
-
-target_link_libraries(
-	ndt_odom
-		vmml
-		${REQUIRED_LIBS}
-)
-
-add_executable(test_blob test/test_blob.cc)
-target_link_libraries(test_blob ${OpenCV_LIBS} Boost::serialization Boost::system vmml)
+#add_executable(
+#	image
+#		test/image.cpp
+#)
+#
+#target_link_libraries(
+#	image
+#		vmml
+#		${REQUIRED_LIBS}
+#)
+#
+#add_executable(
+#	mapload_test
+#		test/mapload_test.cpp
+#)
+#
+#target_link_libraries(
+#	mapload_test
+#		vmml
+#		${REQUIRED_LIBS}
+#)
+#
+#add_executable(
+#	ndt_odom
+#		test/ndt_odom.cpp
+#)
+#
+#target_link_libraries(
+#	ndt_odom
+#		vmml
+#		${REQUIRED_LIBS}
+#)
+#
+#add_executable(test_blob test/test_blob.cc)
+#target_link_libraries(test_blob ${OpenCV_LIBS} Boost::serialization Boost::system vmml)
 
 #add_executable(
 #	cv_optflow

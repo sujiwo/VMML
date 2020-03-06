@@ -19,13 +19,9 @@ using namespace std;
 namespace Vmml {
 
 
-ImageBag::ImageBag(const rosbag::Bag &bag, const std::string &imageTopic, float zoom) :
-	RandomAccessBag(bag, imageTopic),
-	zoomRatio(zoom),
-	imgPreps(ImagePreprocessor::ProcessMode::AGC)
-{
-//	setGammaMeteringMask();
-}
+ImageBag::ImageBag(const rosbag::Bag &bag, const std::string &imageTopic) :
+	RandomAccessBag(bag, imageTopic)
+{}
 
 
 ImageBag::~ImageBag()
@@ -37,24 +33,12 @@ ImageBag::at(unsigned int position, bool raw)
 {
 	auto bImageMsg = RandomAccessBag::at<sensor_msgs::Image>(position);
 
-	if (raw==true) {
-		auto enc = bImageMsg->encoding;
-		auto imgPtr = cv_bridge::toCvCopy(bImageMsg);
-		return imgPtr->image;
-	}
-
-	else {
-		auto imgPtr = cv_bridge::toCvCopy(bImageMsg, sensor_msgs::image_encodings::BGR8);
-		cv::Mat imageRes;
-		cv::resize(imgPtr->image, imageRes, cv::Size(), zoomRatio, zoomRatio, cv::INTER_CUBIC);
-
-		/*if (imgPreps.maskIsEmpty()==false)*/
-		// Preprocess is enabled for all condition, even if lighting mask is not supplied
-		if (doPreprocess==true)
-			imgPreps.preprocess(imageRes);
-
-		return imageRes;
-	}
+	cv_bridge::CvImagePtr imgPtr;
+	if (raw==true)
+		imgPtr = cv_bridge::toCvCopy(*bImageMsg);
+	else
+		imgPtr = cv_bridge::toCvCopy(*bImageMsg, sensor_msgs::image_encodings::BGR8);
+	return imgPtr->image;
 }
 
 
@@ -63,9 +47,7 @@ ImageBag::getGrayscale(unsigned int position)
 {
 	auto bImageMsg = RandomAccessBag::at<sensor_msgs::Image>(position);
 	auto imgPtr = cv_bridge::toCvCopy(bImageMsg, sensor_msgs::image_encodings::MONO8);
-	cv::Mat imageRes;
-	cv::resize(imgPtr->image, imageRes, cv::Size(), zoomRatio, zoomRatio, cv::INTER_CUBIC);
-	return imageRes;
+	return imgPtr->image;
 }
 
 
@@ -88,65 +70,25 @@ ImageBag::at(const ros::Time &t)
 bool
 ImageBag::save(unsigned int position, const string &filename, bool raw)
 {
-	auto image = at(position);
+	auto image = at(position, raw);
 	return cv::imwrite(filename, image);
-}
-
-
-void
-ImageBag::setGammaMeteringMask(const cv::Mat &mask)
-{
-	cv::Mat preprocessMeteringMask;
-	cv::resize(mask, preprocessMeteringMask, cv::Size(), zoomRatio, zoomRatio);
-
-	// Test sizes of bag and mask
-	cv::Mat img0 = getGrayscale(0);
-	if (img0.rows!=preprocessMeteringMask.rows or img0.cols!=preprocessMeteringMask.cols)
-		throw length_error("Mask and bag images have mismatched sizes");
-	imgPreps.setMask(preprocessMeteringMask);
-}
-
-
-void
-ImageBag::setGammaMeteringMask(const std::string &p)
-{
-	string realPath;
-
-	if (p.empty()) {
-		Path maskPath(ros::package::getPath("vision_core"));
-		maskPath /= "car_mask_meter.png";
-		realPath = maskPath.string();
-	}
-	else realPath = p;
-
-	cv::Mat mask = cv::imread(realPath, cv::IMREAD_GRAYSCALE);
-	return setGammaMeteringMask(mask);
 }
 
 
 void
 ImageBag::getImageDimensions(uint &width, uint &height)
 {
-	uint origW, origH;
-	getOriginalImageDimensions(origW, origH);
-	width = origW * zoomRatio;
-	height = origH * zoomRatio;
+	auto image0 = at(0, true);
+	width = image0.cols;
+	height = image0.rows;
 }
 
 
-void
-ImageBag::getOriginalImageDimensions(uint &width, uint &height)
+cv::Size
+ImageBag::getImageDimensions()
 {
-	auto image = at(0, true);
-	width = image.cols;
-	height = image.rows;
-}
-
-
-cv::Mat
-ImageBag::equalizeGamma(const cv::Mat &src) const
-{
-
+	uint width, height;
+	return cv::Size(width, height);
 }
 
 

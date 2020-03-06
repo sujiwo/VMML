@@ -22,7 +22,8 @@ namespace Vmml {
 namespace Mapper {
 
 
-ImagePipeline::ImagePipeline() :
+ImagePipeline::ImagePipeline(const cv::Size& inputSize) :
+	intentInputSize(inputSize),
 	outputSize(cv::Size(640,480))
 {
 }
@@ -68,7 +69,7 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 		if (retinexPrc!=nullptr)
 			imageOut = retinexPrc->run(imageInput);
 		else
-			imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput);
+			imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput, gammaMeteringMask);
 	});
 
 	thread semanticSegmentThread ([&,this](){
@@ -89,9 +90,19 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::Mat &mask)
 
 
 void
+ImagePipeline::runRaw(const cv::Mat &imageRawSource, cv::Mat &imageOut, cv::Mat &mask)
+{
+	// XXX: Need to research all options for demosaicing algorithms
+	// See https://docs.opencv.org/master/d8/d01/group__imgproc__color__conversions.html
+	cv::Mat imageRgb;
+	cv::demosaicing(imageRawSource, imageRgb, cv::COLOR_BayerBG2BGR_EA);
+	return run(imageRgb, imageOut, mask);
+}
+
+
+void
 ImagePipeline::run(const sensor_msgs::Image &imageBg, cv::Mat &imageOut, cv::Mat &mask)
 {
-	// XXX: Need better demosaicing algorithm
 	auto imageRgb = cv_bridge::toCvCopy(imageBg, "bgr8");
 	return run(imageRgb->image, imageOut, mask);
 }

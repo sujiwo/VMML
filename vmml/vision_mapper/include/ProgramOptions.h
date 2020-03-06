@@ -8,6 +8,7 @@
 #ifndef VMML_MAPPER_PROGRAMOPTIONS_H_
 #define VMML_MAPPER_PROGRAMOPTIONS_H_
 
+#include <memory>
 #include <opencv2/core.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -16,6 +17,7 @@
 #include "vmml/Pose.h"
 #include "vmml/ImageBag.h"
 #include "vmml/LidarScanBag.h"
+#include "ImagePipeline.h"
 
 
 namespace Vmml {
@@ -94,6 +96,13 @@ public:
 	const T& getOptionValue(const std::string &key)
 	{ return _optionValues.at(key).as<T>(); }
 
+	ImagePipeline& getImagePipeline()
+	{ return imagePipeline; }
+
+	inline Vmml::CameraPinholeParams
+	getWorkingCameraParameter() const
+	{ return camera0 * imageResizeFactor; }
+
 protected:
 	boost::program_options::options_description _options;
 	boost::program_options::variables_map _optionValues;
@@ -107,8 +116,11 @@ protected:
 
 	void showHelp();
 
+/*
 	void openFeatureMask(const std::string &f);
 	void openLightMask(const std::string &f);
+*/
+
 	void openWorkDir(const std::string &);
 
 	// Common input for mapper programs
@@ -122,6 +134,11 @@ protected:
 		lidarTopic,
 		gnssTopic;
 
+	// Segnet-related
+	std::string
+		segnetModelPath,
+		segnetWeightsPath;
+
 	Path workDir;
 
 	Path inputBagPath;
@@ -133,6 +150,8 @@ protected:
 	CameraPinholeParams camera0;
 
 	TTransform lidarToCamera=TTransform::Identity();
+
+	ImagePipeline imagePipeline;
 };
 
 } /* namespace Mapper */

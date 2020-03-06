@@ -85,6 +85,8 @@ ProgramOptions::ProgramOptions() :
 	addSimpleOptions("image-topic", "Image topic to be used", imageTopic);
 	addSimpleOptions("lidar-topic", "Point cloud topic contained in bag", lidarTopic);
 	addSimpleOptions("gnss-topic", "GNSS topic contained in bag", gnssTopic);
+	addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
+	addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
 }
 
 
@@ -115,6 +117,7 @@ ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
 }
 
 
+/*
 void
 ProgramOptions::openFeatureMask(const std::string &f)
 {
@@ -148,6 +151,7 @@ ProgramOptions::openLightMask(const std::string &f)
 		cout << "Resized to " << lightMask.size << endl;
 	}
 }
+*/
 
 
 void
@@ -258,19 +262,27 @@ ProgramOptions::openInputs()
 	else cout << "Failed\n";
 
 	getImageBag();
-	auto imgSz = imageBag->at(0);
-	camera0.height = imgSz.rows * 1/imageResizeFactor;
-	camera0.width = imgSz.cols * 1/imageResizeFactor;
-	camera0 = camera0 * imageResizeFactor;
+	cv::Size imageSize0 = imageBag->getImageDimensions();
+	camera0.height = imageSize0.height;
+	camera0.width = imageSize0.width;
 
 	if (!lidarTopic.empty())
 		getLidarScanBag();
 
-	// masks will be set with size corrected by resize parameter
 	if (boost::filesystem::exists(featureMaskImagePath))
-		openFeatureMask(featureMaskImagePath.string());
+		featureMask = cv::imread(featureMaskImagePath.string(), cv::IMREAD_GRAYSCALE);
 	if (boost::filesystem::exists(lightMaskImagePath))
-		imageBag->setGammaMeteringMask(lightMaskImagePath.string());
+		lightMask = cv::imread(lightMaskImagePath.string(), cv::IMREAD_GRAYSCALE);
+
+	// Setup image pipeline
+	// XXX: Retinex is enabled by default
+	imagePipeline.setIntendedInputSize(imageSize0);
+	imagePipeline.setResizeFactor(imageResizeFactor);
+	imagePipeline.setRetinex();
+	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
+		imagePipeline.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+
+	// Setup image pipeline
 }
 
 } /* namespace Mapper */

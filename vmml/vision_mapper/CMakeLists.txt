@@ -100,21 +100,21 @@ add_library(vmml_mapper STATIC
 	${common_class}
 )
 
-add_executable(
-	simple_bag_mapper
-		nodes/simple_bag_mapper.cpp
-)
-
-target_link_libraries(
-	simple_bag_mapper
-		vmml_mapper
-		${common_libs}
-)
-
-install(
-	TARGETS simple_bag_mapper
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	simple_bag_mapper
+#		nodes/simple_bag_mapper.cpp
+#)
+#
+#target_link_libraries(
+#	simple_bag_mapper
+#		vmml_mapper
+#		${common_libs}
+#)
+#
+#install(
+#	TARGETS simple_bag_mapper
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 #add_executable(
 #	imagelidar_bag_mapper
@@ -132,22 +132,22 @@ install(
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-add_executable(
-	test_vo
-		nodes/test_vo.cpp
-)
-
-target_link_libraries(
-	test_vo
-		${catkin_LIBRARIES}
-		${vision_core_LIBRARIES}
-		${OpenCV_LIBS}
-)
-
-install(
-	TARGETS test_vo
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	test_vo
+#		nodes/test_vo.cpp
+#)
+#
+#target_link_libraries(
+#	test_vo
+#		${catkin_LIBRARIES}
+#		${vision_core_LIBRARIES}
+#		${OpenCV_LIBS}
+#)
+#
+#install(
+#	TARGETS test_vo
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 
 #add_executable(
@@ -169,21 +169,21 @@ install(
 #)
 
 
-add_executable(
-	index_creator
-		nodes/index_creator.cpp
-)
-
-target_link_libraries(
-	index_creator
-		vmml_mapper
-		${common_libs}
-)
-
-install(
-	TARGETS index_creator
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	index_creator
+#		nodes/index_creator.cpp
+#)
+#
+#target_link_libraries(
+#	index_creator
+#		vmml_mapper
+#		${common_libs}
+#)
+#
+#install(
+#	TARGETS index_creator
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 #add_executable(
 #	test_imagedb
@@ -242,21 +242,21 @@ install(
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-add_executable(
-	place_recognizer_srv
-		nodes/place_recognizer_srv.cpp
-)
-
-target_link_libraries(
-	place_recognizer_srv
-		vmml_mapper
-		${common_libs}
-)
-
-install(
-	TARGETS place_recognizer_srv
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	place_recognizer_srv
+#		nodes/place_recognizer_srv.cpp
+#)
+#
+#target_link_libraries(
+#	place_recognizer_srv
+#		vmml_mapper
+#		${common_libs}
+#)
+#
+#install(
+#	TARGETS place_recognizer_srv
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 #add_executable(
 #	image_trajectory

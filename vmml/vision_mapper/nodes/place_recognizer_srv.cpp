@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
 	progOptions.addSimpleOptions("map-path", "Path to Map File", mapPath);
 	progOptions.parseCommandLineArgs(argc, argv);
 
+	imagePipe.setRetinex();
 	imagePipe.setResizeFactor(progOptions.getImageResizeFactor());
 	imagePipe.setFixedFeatureMask(progOptions.getFeatureMask());
 	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
