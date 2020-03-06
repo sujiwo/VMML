@@ -7,48 +7,76 @@
 
 #include <iostream>
 #include <string>
-#include <opencv2/highgui.hpp>
 #include <pcl/io/pcd_io.h>
 #include "vmml/VisualOdometry.h"
 #include "vmml/utilities.h"
-#include "vmml/ImageBag.h"
+#include "ProgramOptions.h"
+#include "RVizConnector.h"
 
 
 using namespace Vmml;
+using namespace Vmml::Mapper;
 using namespace std;
 
 
-Vmml::CameraPinholeParams camera0 (
-	1150.96938467,	// fx
-	1150.96938467,	// fy
-	988.511326762,	// cx
-	692.803953253,	// cy
-	1920, 1440);	// width, height
-const float enlarge = 0.333333333333;
+cv::Mat drawOpticalFlow(const BaseFrame::Ptr &anchor, const BaseFrame::Ptr &current, const Matcher::PairList &matches)
+{
+	if (anchor==nullptr or current==nullptr)
+		return cv::Mat();
+
+	cv::Mat myFrame = current->getImage().clone();
+	for (auto &pair: matches) {
+		auto &kpCurrent = current->keypoint(pair.second);
+		auto &kpAnchor = anchor->keypoint(pair.first);
+		cv::circle(myFrame, kpCurrent.pt, 2, cv::Scalar(0,255,0));
+		cv::circle(myFrame, kpAnchor.pt, 2, cv::Scalar(0,0,255));
+		cv::line(myFrame, kpCurrent.pt, kpAnchor.pt, cv::Scalar(255,0,0));
+	}
+
+	return myFrame;
+}
 
 
 int main(int argc, char *argv[])
 {
+	ProgramOptions voProg;
+	voProg.parseCommandLineArgs(argc, argv);
+
 	VisualOdometry::Parameters voPars;
-	camera0.mask = cv::imread((boost::filesystem::path(ros::package::getPath("vision_mapper")) / "meidai_mask.png").string(), cv::IMREAD_GRAYSCALE);
-	voPars.camera = camera0 * enlarge;
+	voPars.camera = voProg.getWorkingCameraParameter();
+	auto imagePipe = voProg.getImagePipeline();
 
 	VisualOdometry VoRunner(voPars);
+	auto imageBag = voProg.getImageBag();
 
-	rosbag::Bag mybag(argv[1]);
-	Vmml::ImageBag imageBag(mybag, "/camera1/image_raw", enlarge);
+	assert(imagePipe.getOutputSize()==voPars.camera.getImageSize());
 
-	int limit;
-	if (argc>=2)
-		limit = stoi(argv[2]);
-	else limit = imageBag.size();
+	RVizConnector rosConn(argc, argv, "test_vo");
 
-	for (int n=0; n<limit; ++n) {
-		auto imageMsg = imageBag.at(n);
-		ptime timestamp = imageBag.timeAt(n).toBoost();
-		VoRunner.process(imageMsg, timestamp);
+	vector<uint64> targetFrameId;
+	imageBag->desample(5.0, targetFrameId);
+
+	for (int n=0; n<targetFrameId.size(); ++n) {
+
+		auto imageMsg = imageBag->at(targetFrameId[n]);
+		ptime timestamp = imageBag->timeAt(n).toBoost();
+
+		cv::Mat mask;
+		imagePipe.run(imageMsg, imageMsg, mask);
+
+		VoRunner.process(imageMsg, timestamp, mask);
+
+		// Visualization
+		auto anchor = VoRunner.getAnchorFrame();
+		auto current = VoRunner.getCurrentFrame();
+		auto matches = VoRunner.getLastMatch();
+
+		auto drawFrame = drawOpticalFlow(anchor, current, matches);
+		rosConn.publishImage(drawFrame, ros::Time::fromBoost(timestamp));
+
 		cout << n << ": " << VoRunner.getInlier() << endl;
 	}
+
 	cout << "Done\n";
 
 	const auto voTrack = VoRunner.getTrajectory();

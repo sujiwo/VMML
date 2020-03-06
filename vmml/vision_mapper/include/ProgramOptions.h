@@ -43,7 +43,7 @@ public:
 
 	LidarScanBag::Ptr getLidarScanBag();
 
-	const CameraPinholeParams& getCameraParameters() const
+	const CameraPinholeParams& getOriginalCameraParameters() const
 	{ return camera0; }
 
 	const TTransform& getLidarToCameraTransform() const

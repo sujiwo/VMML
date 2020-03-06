@@ -41,7 +41,7 @@ public:
 	VisualOdometry(Parameters par);
 	virtual ~VisualOdometry();
 
-	bool process (cv::Mat img, const ptime &timestamp);
+	bool process (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat());
 
 	inline const Trajectory& getTrajectory() const
 	{ return mVoTrack; }
@@ -51,6 +51,15 @@ public:
 
 	inline uint getInlier() const
 	{ return matcherToAnchor.size(); }
+
+	const BaseFrame::Ptr getAnchorFrame() const
+	{ return mAnchorImage; }
+
+	const BaseFrame::Ptr getCurrentFrame() const
+	{ return mCurrentImage; }
+
+	const Matcher::PairList& getLastMatch() const
+	{ return matcherToAnchor; }
 
 //	bool process (const BaseFrame &newFrame, const Matcher::PairList &matchList);
 

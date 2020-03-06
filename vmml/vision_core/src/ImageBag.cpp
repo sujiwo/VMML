@@ -88,6 +88,7 @@ cv::Size
 ImageBag::getImageDimensions()
 {
 	uint width, height;
+	getImageDimensions(width, height);
 	return cv::Size(width, height);
 }
 

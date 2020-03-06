@@ -42,11 +42,14 @@ VisualOdometry::~VisualOdometry()
 }
 
 
+//cv::Ptr<cv::BFMatcher> featureBfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
+
+
 bool
-VisualOdometry::process(cv::Mat img, const ptime &timestamp)
+VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
 	mCurrentImage = BaseFrame::create(img, param.camera);
-	mCurrentImage->computeFeatures(featureDetector);
+	mCurrentImage->computeFeatures(featureDetector, mask);
 
 	if (mAnchorImage==nullptr) {
 		mAnchorImage = mCurrentImage;

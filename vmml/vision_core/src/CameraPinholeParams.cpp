@@ -91,6 +91,18 @@ CameraPinholeParams::operator* (const float r) const
 }
 
 
+std::ostream &
+operator <<( std::ostream &os, const CameraPinholeParams &cam)
+{
+	os
+		<< "Width: " << cam.width << endl
+		<< "Height: " << cam.height << endl
+		<< "FX: " << cam.fx << endl
+		<< "FY: " << cam.fy << endl;
+	return os;
+}
+
+
 #include <cmath>
 
 float

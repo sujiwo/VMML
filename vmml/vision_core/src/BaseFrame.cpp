@@ -132,19 +132,7 @@ BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask
 void
 BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &addMask)
 {
-	if (image.empty()==true)
-		return;
-
-	cv::Mat featureMask;
-	if (addMask.empty()==false) {
-		if (cameraParam.mask.empty()==false)
-			featureMask = cameraParam.mask & addMask;
-		else
-			featureMask = addMask;
-	}
-	else featureMask = cameraParam.mask;
-
-	computeFeatures(fd, fKeypoints, fDescriptors, featureMask);
+	computeFeatures(fd, fKeypoints, fDescriptors, addMask);
 	assignKeyPointsToGrid();
 }
 

@@ -278,12 +278,10 @@ ProgramOptions::openInputs()
 	// XXX: Retinex is enabled by default
 	imagePipeline.setIntendedInputSize(imageSize0);
 	imagePipeline.setResizeFactor(imageResizeFactor);
-	imagePipeline.setRetinex();
+//	imagePipeline.setRetinex();
 	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
 		imagePipeline.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
 	imagePipeline.setFixedFeatureMask(featureMask);
-
-	// Setup image pipeline
 }
 
 } /* namespace Mapper */

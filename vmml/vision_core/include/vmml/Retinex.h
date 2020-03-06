@@ -52,17 +52,22 @@ public:
 	 * high clip = 0.9999999
 	 */
 
-	Retinex(const float _ss[3], const float _lowClip, const float _highClip):
-		sigma({_ss[0], _ss[1], _ss[2]}),
-		low_clip(_lowClip),
-		high_clip(_highClip)
-	{}
+	Retinex(const float _ss[3], const float _lowClip, const float _highClip)
+	{ reset(_ss, _lowClip, _highClip); }
+
+	inline void
+	reset(const float _ss[3], const float _lowClip, const float _highClip)
+	{
+		sigma = {_ss[0], _ss[1], _ss[2]};
+		low_clip = _lowClip;
+		high_clip = _highClip;
+	}
 
 	cv::Mat
 	run(const cv::Mat &input);
 
 protected:
-	const std::array<float,3> sigma;
+	std::array<float,3> sigma;
 	float low_clip, high_clip;
 
 	static cv::Mat

@@ -163,7 +163,7 @@ public:
 	inline const cv::Mat descriptor(kpid r) const
 	{ return fDescriptors.row(r).clone(); }
 
-	const cv::KeyPoint keypoint(kpid k) const
+	const cv::KeyPoint& keypoint(kpid k) const
 	{ return fKeypoints.at(k); }
 
 	inline Eigen::Vector2d keypointv(kpid k) const

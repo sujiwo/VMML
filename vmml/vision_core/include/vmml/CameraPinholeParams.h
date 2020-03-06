@@ -67,6 +67,8 @@ struct CameraPinholeParams
 		ar & boost::serialization::make_array<double>(distortionCoeffs.data(), 5);
 	}
 
+	friend std::ostream & operator <<( std::ostream &os, const CameraPinholeParams &cam);
+
 /*
 	static CameraPinholeParams
 	loadCameraParamsFromFile(const std::string &f);
@@ -87,7 +89,14 @@ struct CameraPinholeParams
 
 	// XXX: boilerplate
 	cv::Mat undistort(cv::Mat origin) const;
+
+	inline cv::Size getImageSize() const
+	{ return cv::Size(width, height); }
+
 };
+
+
+std::ostream & operator <<( std::ostream &os, const CameraPinholeParams &cam);
 
 } /* namespace Vmml */
 
