@@ -11,12 +11,15 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/video.hpp>
+#include <opencv2/ml.hpp>
 #include <Eigen/Core>
 #include <opencv2/core/eigen.hpp>
 #include "vmml/Matcher.h"
 #include "vmml/VisionMap.h"
 #include "vmml/Triangulation.h"
 #include "vmml/MapPoint.h"
+#include "kdtree.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -280,11 +283,25 @@ Matcher::matchOpticalFlow(
 	vector<uchar> statusOf(F1.numOfKeyPoints());
 	vector<float> errOf(F1.numOfKeyPoints());
 
-	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(), F1.allKeypoints(), F2.allKeypoints(), statusOf, errOf);
+	// Store targets
+	cv::Mat vKeypoints2;
+
+	// Create KD-Tree for Frame 2
+	cv::ml::KDTree searchTree2;
+	searchTree2.build(F2.allKeypointsAsMat());
+
+	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
+
+	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(), vKeypoints1, vKeypoints2, statusOf, errOf);
 	featurePairs.clear();
 
-	for (int i=0; i<F1.numOfKeyPoints(); i++) {
-//		if (F1)
+	for (int i=0; i<vKeypoints2.rows; ++i) {
+
+//		cv::Point2f pointSrc2(vKeypoints2.at<float>(i,0), vKeypoints2.at<float>(i,1));
+		cv::Mat neighs2;
+		searchTree2.findNearest(vKeypoints2.row(i), 3, 3, neighs2);
+
+		// INCOMPLETE
 	}
 
 	return 0;

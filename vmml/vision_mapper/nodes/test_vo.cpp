@@ -29,8 +29,8 @@ cv::Mat drawOpticalFlow(const BaseFrame::Ptr &anchor, const BaseFrame::Ptr &curr
 		auto &kpCurrent = current->keypoint(pair.second);
 		auto &kpAnchor = anchor->keypoint(pair.first);
 		cv::circle(myFrame, kpCurrent.pt, 2, cv::Scalar(0,255,0));
-		cv::circle(myFrame, kpAnchor.pt, 2, cv::Scalar(0,0,255));
-		cv::line(myFrame, kpCurrent.pt, kpAnchor.pt, cv::Scalar(255,0,0));
+//		cv::circle(myFrame, kpAnchor.pt, 2, cv::Scalar(0,0,255));
+//		cv::line(myFrame, kpCurrent.pt, kpAnchor.pt, cv::Scalar(255,0,0));
 	}
 
 	return myFrame;
@@ -58,13 +58,13 @@ int main(int argc, char *argv[])
 
 	for (int n=0; n<targetFrameId.size(); ++n) {
 
-		auto imageMsg = imageBag->at(targetFrameId[n]);
+		auto currentImage = imageBag->at(targetFrameId[n]);
 		ptime timestamp = imageBag->timeAt(n).toBoost();
 
 		cv::Mat mask;
-		imagePipe.run(imageMsg, imageMsg, mask);
+		imagePipe.run(currentImage, currentImage, mask);
 
-		VoRunner.process(imageMsg, timestamp, mask);
+		VoRunner.runMatching(currentImage, timestamp, mask);
 
 		// Visualization
 		auto anchor = VoRunner.getAnchorFrame();
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 		auto drawFrame = drawOpticalFlow(anchor, current, matches);
 		rosConn.publishImage(drawFrame, ros::Time::fromBoost(timestamp));
 
-		cout << n << ": " << VoRunner.getInlier() << endl;
+//		cout << n << ": " << VoRunner.getInlier() << endl;
 	}
 
 	cout << "Done\n";

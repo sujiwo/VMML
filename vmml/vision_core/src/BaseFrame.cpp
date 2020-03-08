@@ -246,6 +246,18 @@ BaseFrame::getKeyPointsInArea (const float x, const float y, const float windowS
 }
 
 
+cv::Mat
+BaseFrame::allKeypointsAsMat() const
+{
+	cv::Mat vKeypoints(numOfKeyPoints(), 2, CV_32F);
+	for (int i=0; i<numOfKeyPoints(); ++i) {
+		vKeypoints.at<float>(i,0) = fKeypoints[i].pt.x;
+		vKeypoints.at<float>(i,1) = fKeypoints[i].pt.y;
+	}
+	return vKeypoints;
+}
+
+
 void
 BaseFrame::perturb (PerturbationMode mode,
 	bool useRandomMotion,

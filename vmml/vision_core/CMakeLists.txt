@@ -113,6 +113,7 @@ add_library(
 		src/ImagePreprocessor.cpp
 		src/ImageDatabase.cpp
 		src/Retinex.cpp
+		src/kdtree.cpp
 )
 
 target_link_libraries(

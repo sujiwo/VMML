@@ -193,6 +193,8 @@ public:
 	const std::vector<cv::KeyPoint>& allKeypoints() const
 	{ return fKeypoints; }
 
+	cv::Mat allKeypointsAsMat() const;
+
 	int numOfKeypoints() const
 	{ return fKeypoints.size(); }
 

@@ -41,6 +41,8 @@ public:
 	VisualOdometry(Parameters par);
 	virtual ~VisualOdometry();
 
+	bool runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat());
+
 	bool process (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat());
 
 	inline const Trajectory& getTrajectory() const

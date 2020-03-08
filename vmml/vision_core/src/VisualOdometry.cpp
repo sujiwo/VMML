@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <opencv2/video/tracking.hpp>
 #include "vmml/VisualOdometry.h"
 #include "vmml/Triangulation.h"
 #include "vmml/utilities.h"
@@ -33,7 +34,6 @@ VisualOdometry::VisualOdometry(Parameters par) :
 		cv::ORB::HARRIS_SCORE,
 		32,
 		10);
-
 }
 
 
@@ -43,6 +43,27 @@ VisualOdometry::~VisualOdometry()
 
 
 //cv::Ptr<cv::BFMatcher> featureBfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
+
+
+bool
+VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
+{
+	mCurrentImage = BaseFrame::create(img, param.camera);
+	mCurrentImage->computeFeatures(featureDetector, mask);
+
+	if (mAnchorImage==nullptr) {
+		mAnchorImage = mCurrentImage;
+		mAnchorImage->setPose(Pose::Identity());
+		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
+		return false;
+	}
+//	Matcher::matchBruteForce(*mAnchorImage, *mCurrentImage, matcherToAnchor);
+	cv::Mat nextPts, status, err;
+	cv::calcOpticalFlowPyrLK(mAnchorImage->getImage(), mCurrentImage->getImage(), mAnchorImage->allKeypointsAsMat(), nextPts, status, err);
+
+	mAnchorImage = mCurrentImage;
+	return true;
+}
 
 
 bool
