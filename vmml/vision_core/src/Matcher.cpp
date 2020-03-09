@@ -8,6 +8,9 @@
 #include <omp.h>
 #include <algorithm>
 #include <limits>
+#include <array>
+#include <pcl/point_cloud.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
@@ -19,7 +22,7 @@
 #include "vmml/VisionMap.h"
 #include "vmml/Triangulation.h"
 #include "vmml/MapPoint.h"
-#include "kdtree.hpp"
+
 
 using namespace std;
 using namespace Eigen;
@@ -287,21 +290,43 @@ Matcher::matchOpticalFlow(
 	cv::Mat vKeypoints2;
 
 	// Create KD-Tree for Frame 2
-	cv::ml::KDTree searchTree2;
-	searchTree2.build(F2.allKeypointsAsMat());
+	// XXX: This search tree may need to be moved to BaseFrame,
+	// if there's use cases for it
+	pcl::PointCloud<pcl::PointXY>::Ptr cloudPlane2(new pcl::PointCloud<pcl::PointXY>);
+	pcl::KdTreeFLANN<pcl::PointXY> searchTree2;
+	for (auto &pt: F2.allKeypoints()) {
+		pcl::PointXY ptc({pt.pt.x, pt.pt.y});
+		cloudPlane2->push_back(ptc);
+	}
+	searchTree2.setInputCloud(cloudPlane2);
 
 	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
 
 	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(), vKeypoints1, vKeypoints2, statusOf, errOf);
 	featurePairs.clear();
 
-	for (int i=0; i<vKeypoints2.rows; ++i) {
+	assert(vKeypoints1.size()==vKeypoints2.size());
 
-//		cv::Point2f pointSrc2(vKeypoints2.at<float>(i,0), vKeypoints2.at<float>(i,1));
-		cv::Mat neighs2;
-		searchTree2.findNearest(vKeypoints2.row(i), 3, 3, neighs2);
+	for (int i=0; i<vKeypoints1.rows; ++i) {
 
-		// INCOMPLETE
+		pcl::PointXY queryPt({vKeypoints2.at<float>(i,0), vKeypoints2.at<float>(i,1)});
+		vector<int> indices2;
+		vector<float> sqrDist;
+		searchTree2.radiusSearch(queryPt, 3.0, indices2, sqrDist);
+		if (indices2.size()==0)
+			continue;
+
+		int bestIdx;
+		uint score=numeric_limits<uint>::max();
+		for (auto &j: indices2) {
+			uint d = cv::hal::normHamming(F1.descriptorc(i), F2.descriptorc(j), F2.descriptorSize());
+			if (d<score) {
+				score = d;
+				bestIdx = j;
+			}
+		}
+		featurePairs.push_back(make_pair(i,bestIdx));
+
 	}
 
 	return 0;

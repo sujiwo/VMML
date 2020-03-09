@@ -48,20 +48,23 @@ VisualOdometry::~VisualOdometry()
 bool
 VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
-	mCurrentImage = BaseFrame::create(img, param.camera);
-	mCurrentImage->computeFeatures(featureDetector, mask);
-
-	if (mAnchorImage==nullptr) {
-		mAnchorImage = mCurrentImage;
+	if (mAnchorImage==nullptr and mCurrentImage==nullptr) {
+		mAnchorImage = BaseFrame::create(img, param.camera);
+		mAnchorImage->computeFeatures(featureDetector, mask);
 		mAnchorImage->setPose(Pose::Identity());
 		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
 		return false;
 	}
-//	Matcher::matchBruteForce(*mAnchorImage, *mCurrentImage, matcherToAnchor);
-	cv::Mat nextPts, status, err;
-	cv::calcOpticalFlowPyrLK(mAnchorImage->getImage(), mCurrentImage->getImage(), mAnchorImage->allKeypointsAsMat(), nextPts, status, err);
 
-	mAnchorImage = mCurrentImage;
+	if (mCurrentImage!=nullptr)
+		mAnchorImage = mCurrentImage;
+
+	mCurrentImage = BaseFrame::create(img, param.camera);
+	mCurrentImage->computeFeatures(featureDetector, mask);
+
+//	Matcher::matchBruteForce(*mAnchorImage, *mCurrentImage, matcherToAnchor);
+	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, matcherToAnchor);
+
 	return true;
 }
 
@@ -69,16 +72,8 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 bool
 VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
-	mCurrentImage = BaseFrame::create(img, param.camera);
-	mCurrentImage->computeFeatures(featureDetector, mask);
-
-	if (mAnchorImage==nullptr) {
-		mAnchorImage = mCurrentImage;
-		mAnchorImage->setPose(Pose::Identity());
-		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
+	if (runMatching(img, timestamp, mask)==false)
 		return false;
-	}
-	Matcher::matchBruteForce(*mAnchorImage, *mCurrentImage, matcherToAnchor);
 
 	// Get transformation, and inliers
 	TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, matcherToAnchor);
@@ -96,8 +91,6 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		points3d->push_back(PointType(pt3dPr.second.x(), pt3dPr.second.y(), pt3dPr.second.z()));
 	}
 	cout << "Found " << mapPoints.size() << " points" << endl;
-
-	mAnchorImage = mCurrentImage;
 
 	return true;
 }

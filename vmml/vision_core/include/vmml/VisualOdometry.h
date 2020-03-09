@@ -79,6 +79,7 @@ protected:
 	Matcher::PairList matcherToAnchor;
 
 	TTransform estimateMotion();
+
 };
 
 } /* namespace Vmml */

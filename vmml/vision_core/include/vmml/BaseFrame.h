@@ -163,6 +163,12 @@ public:
 	inline const cv::Mat descriptor(kpid r) const
 	{ return fDescriptors.row(r).clone(); }
 
+	inline const uchar* descriptorc(const kpid &r) const
+	{ return fDescriptors.row(r).data; }
+
+	inline const size_t descriptorSize() const
+	{ return fDescriptors.cols; }
+
 	const cv::KeyPoint& keypoint(kpid k) const
 	{ return fKeypoints.at(k); }
 
