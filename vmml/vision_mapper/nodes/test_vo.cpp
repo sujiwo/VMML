@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 	VisualOdometry::Parameters voPars;
 	voPars.camera = voProg.getWorkingCameraParameter();
 	auto imagePipe = voProg.getImagePipeline();
+	imagePipe.setRetinex();
 
 	VisualOdometry VoRunner(voPars);
 	auto imageBag = voProg.getImageBag();

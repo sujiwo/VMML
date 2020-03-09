@@ -302,12 +302,20 @@ Matcher::matchOpticalFlow(
 
 	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
 
-	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(), vKeypoints1, vKeypoints2, statusOf, errOf);
+	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(),
+		vKeypoints1, vKeypoints2,
+		statusOf, errOf,
+		cv::Size(25,25), 3,
+		cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
+		0.1);
 	featurePairs.clear();
 
 	assert(vKeypoints1.size()==vKeypoints2.size());
 
 	for (int i=0; i<vKeypoints1.rows; ++i) {
+
+		if (statusOf[i]!=1)
+			continue;
 
 		pcl::PointXY queryPt({vKeypoints2.at<float>(i,0), vKeypoints2.at<float>(i,1)});
 		vector<int> indices2;
