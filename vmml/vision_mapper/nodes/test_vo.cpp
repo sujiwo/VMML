@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	RVizConnector rosConn(argc, argv, "test_vo");
 
 	vector<uint64> targetFrameId;
-	imageBag->desample(5.0, targetFrameId);
+	imageBag->desample(10.0, targetFrameId);
 
 	for (int n=0; n<targetFrameId.size(); ++n) {
 

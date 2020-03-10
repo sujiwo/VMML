@@ -8,6 +8,8 @@
 #ifndef VMML_CORE_VISUALODOMETRY_H_
 #define VMML_CORE_VISUALODOMETRY_H_
 
+#include <vector>
+#include <set>
 #include <memory>
 #include <opencv2/features2d.hpp>
 #include "utilities.h"
@@ -16,6 +18,7 @@
 #include "Matcher.h"
 #include "Trajectory.h"
 #include "MapBuilderLidar.h"
+#include "FeatureTrack.h"
 
 
 namespace Vmml {
@@ -68,7 +71,7 @@ public:
 protected:
 
 	Parameters param;
-	cv::Ptr<cv::FeatureDetector> featureDetector;
+	cv::Ptr<cv::ORB> featureDetector;
 	Grid<std::vector<cv::KeyPoint>> featureGrid;
 	Trajectory mVoTrack;
 	LocalLidarMapper::CloudType::Ptr points3d;
@@ -80,6 +83,12 @@ protected:
 
 	TTransform estimateMotion();
 
+	const uint maxNumberFeatures = 6000;
+	const uint featureDetectionInterval = 5;
+
+	FeatureTrackList voFeatureTracker;
+
+	uint frameCounter = 0;
 };
 
 } /* namespace Vmml */

@@ -25,7 +25,7 @@ VisualOdometry::VisualOdometry(Parameters par) :
 {
 	// XXX: Temporary
 	featureDetector=cv::ORB::create(
-		6000,
+		maxNumberFeatures,
 		1.2,
 		8,
 		32,
@@ -45,6 +45,7 @@ VisualOdometry::~VisualOdometry()
 //cv::Ptr<cv::BFMatcher> featureBfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
 
+/*
 bool
 VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
@@ -67,13 +68,79 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 
 	return true;
 }
+*/
+
+const cv::Size optFlowWindowSize(15, 15);
+const int maxLevel = 2;
+const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteria::COUNT, 10, 0.03);
+
+
+bool
+VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
+{
+	mCurrentImage = BaseFrame::create(img, param.camera);
+	if (frameCounter==0)
+		mCurrentImage->setPose(Pose::Identity());
+
+	if (voFeatureTracker.size()>0) {
+		auto trackedFeatsPoints = voFeatureTracker.trackedFeaturesAtFrame(frameCounter);
+		auto &_featureTrackIds = voFeatureTracker.getFeatureTrackIdsAtFrame(frameCounter);
+		assert(trackedFeatsPoints.rows==_featureTrackIds.size());
+		vector<FeatureTrackList::TrackId> featureTrackIds(_featureTrackIds.begin(), _featureTrackIds.end());
+		uint nextFrameCounter = frameCounter+1;
+		cv::Mat p1, p0r, status, errOf;
+
+		cv::calcOpticalFlowPyrLK(mAnchorImage->getImage(), mCurrentImage->getImage(), trackedFeatsPoints, p1, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
+		cv::calcOpticalFlowPyrLK(mCurrentImage->getImage(), mAnchorImage->getImage(), p1, p0r, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
+
+		cv::Mat absDiff(cv::abs(trackedFeatsPoints-p0r));
+
+		for (int r=0; r<trackedFeatsPoints.rows; ++r) {
+
+			if (absDiff.at<float>(r,0)>=1 or absDiff.at<float>(r,1)>=1)
+				continue;
+			cv::Point2f pt(p1.row(r));
+
+			// Add tracked point
+			auto trackId = featureTrackIds[r];
+			voFeatureTracker.addTrackedPoint(nextFrameCounter, trackId, pt);
+		}
+	}
+
+	if (frameCounter % featureDetectionInterval==0) {
+		cv::Mat fMask;
+		int prevFrameNumber = frameCounter-1;
+		int numOfFeaturesToDetect = maxNumberFeatures;
+
+		// Get feature tracks from previous frame
+		if (prevFrameNumber==-1)
+			fMask = mask;
+		else {
+			fMask = voFeatureTracker.createFeatureMask(mask, prevFrameNumber);
+			numOfFeaturesToDetect -= voFeatureTracker.getNumberOfFeatureTracksAt(prevFrameNumber);
+		}
+
+		mCurrentImage->computeFeatures(featureDetector, fMask);
+		// Add all features as new track
+		for (int i=0; i<mCurrentImage->numOfKeyPoints(); ++i) {
+			FeatureTrack ftNew(frameCounter, mCurrentImage->keypoint(i).pt);
+			voFeatureTracker.add(ftNew);
+		}
+	}
+
+	frameCounter+=1;
+	mAnchorImage = mCurrentImage;
+	return true;
+}
 
 
 bool
 VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
-	if (runMatching(img, timestamp, mask)==false)
-		return false;
+	bool bMatch = runMatching(img, timestamp, mask);
+	frameCounter +=1;
+
+	if (bMatch==false) return false;
 
 	// Get transformation, and inliers
 	TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, matcherToAnchor);
