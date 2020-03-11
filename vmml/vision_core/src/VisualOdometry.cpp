@@ -83,11 +83,11 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		mCurrentImage->setPose(Pose::Identity());
 
 	if (voFeatureTracker.size()>0) {
-		auto trackedFeatsPoints = voFeatureTracker.trackedFeaturesAtFrame(frameCounter);
-		auto &_featureTrackIds = voFeatureTracker.getFeatureTrackIdsAtFrame(frameCounter);
+		uint nextFrameCounter = frameCounter+1, prevFrameCounter = frameCounter-1;
+		auto trackedFeatsPoints = voFeatureTracker.trackedFeaturesAtFrame(prevFrameCounter);
+		auto &_featureTrackIds = voFeatureTracker.getFeatureTrackIdsAtFrame(prevFrameCounter);
 		assert(trackedFeatsPoints.rows==_featureTrackIds.size());
 		vector<FeatureTrackList::TrackId> featureTrackIds(_featureTrackIds.begin(), _featureTrackIds.end());
-		uint nextFrameCounter = frameCounter+1;
 		cv::Mat p1, p0r, status, errOf;
 
 		cv::calcOpticalFlowPyrLK(mAnchorImage->getImage(), mCurrentImage->getImage(), trackedFeatsPoints, p1, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
@@ -103,7 +103,7 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 
 			// Add tracked point
 			auto trackId = featureTrackIds[r];
-			voFeatureTracker.addTrackedPoint(nextFrameCounter, trackId, pt);
+			voFeatureTracker.addTrackedPoint(frameCounter, trackId, pt);
 		}
 	}
 
@@ -119,6 +119,7 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 			fMask = voFeatureTracker.createFeatureMask(mask, prevFrameNumber);
 			numOfFeaturesToDetect -= voFeatureTracker.getNumberOfFeatureTracksAt(prevFrameNumber);
 		}
+		featureDetector->setMaxFeatures(numOfFeaturesToDetect);
 
 		mCurrentImage->computeFeatures(featureDetector, fMask);
 		// Add all features as new track
@@ -128,8 +129,8 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		}
 	}
 
-	frameCounter+=1;
 	drawFlow(img);
+	frameCounter+=1;
 	mAnchorImage = mCurrentImage;
 	return true;
 }
@@ -168,6 +169,10 @@ void
 VisualOdometry::drawFlow(cv::Mat canvas)
 {
 	_flowCanvas = canvas.clone();
+
+	for (auto tr: voFeatureTracker.getFeatureTracksAt(frameCounter)) {
+		cv::polylines(_flowCanvas, tr->getPointsAsMat(), false, cv::Scalar(0,255,0));
+	}
 }
 
 

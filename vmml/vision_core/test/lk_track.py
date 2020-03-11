@@ -52,7 +52,7 @@ class App:
 
     def run(self):
         
-        for topic, msg, t in self.bag.read_messages(topics=['/front_rgb/image_raw']):
+        for topic, msg, t in self.bag.read_messages(topics=['/camera1/image_raw']):
 
             frame = self.cv_conv.imgmsg_to_cv2(msg, "bgr8")
             frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -76,6 +76,7 @@ class App:
                     cv2.circle(vis, (x, y), 2, (0, 255, 0), -1)
                 self.tracks = new_tracks
                 cv2.polylines(vis, [np.int32(tr) for tr in self.tracks], False, (0, 255, 0))
+                print("Track count: {}".format(len(self.tracks)))
 #                 draw_str(vis, (20, 20), 'track count: %d' % len(self.tracks))
 
             if self.frame_idx % self.detect_interval == 0:

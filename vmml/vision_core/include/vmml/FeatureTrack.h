@@ -35,6 +35,7 @@ public:
 
 	// for visualization
 	std::vector<cv::Point2f> getPoints() const;
+	cv::Mat getPointsAsMat() const;
 
 protected:
 	std::set<uint> frameNumbers;

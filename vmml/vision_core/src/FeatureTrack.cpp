@@ -36,6 +36,20 @@ FeatureTrack::getPoints() const
 }
 
 
+cv::Mat
+FeatureTrack::getPointsAsMat() const
+{
+	auto vpt = getPoints();
+	cv::Mat ptMat(vpt.size(), 2, CV_32S);
+	for (uint r=0; r<vpt.size(); ++r) {
+		ptMat.at<int>(r,0) = int(vpt[r].x);
+		ptMat.at<int>(r,1) = int(vpt[r].y);
+	}
+
+	return ptMat;
+}
+
+
 void
 FeatureTrackList::add (const FeatureTrack& ft)
 {
