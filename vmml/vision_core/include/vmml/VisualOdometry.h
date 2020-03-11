@@ -66,6 +66,10 @@ public:
 	const Matcher::PairList& getLastMatch() const
 	{ return matcherToAnchor; }
 
+	// XXX: Temporary
+	cv::Mat _flowCanvas;
+	void drawFlow(cv::Mat canvas);
+
 //	bool process (const BaseFrame &newFrame, const Matcher::PairList &matchList);
 
 protected:

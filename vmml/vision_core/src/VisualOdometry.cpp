@@ -129,6 +129,7 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 	}
 
 	frameCounter+=1;
+	drawFlow(img);
 	mAnchorImage = mCurrentImage;
 	return true;
 }
@@ -160,6 +161,13 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask)
 	cout << "Found " << mapPoints.size() << " points" << endl;
 
 	return true;
+}
+
+
+void
+VisualOdometry::drawFlow(cv::Mat canvas)
+{
+	_flowCanvas = canvas.clone();
 }
 
 
