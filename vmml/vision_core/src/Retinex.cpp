@@ -127,7 +127,7 @@ Retinex::run(const cv::Mat &input)
 			intensity.at<float>(r,c) = (color[0]+color[1]+color[2])/3;
 		}
 	auto t2=Vmml::getCurrentTime();
-	cerr << "Time 1: " << Vmml::toSeconds(t2-t1) << endl;
+//	cerr << "Time 1: " << Vmml::toSeconds(t2-t1) << endl;
 
 	/*
 	 * Timer 2 & 3 are slowest
@@ -136,12 +136,12 @@ Retinex::run(const cv::Mat &input)
 	t1=Vmml::getCurrentTime();
 	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma);
 	t2=Vmml::getCurrentTime();
-	cerr << "Time 2: " << Vmml::toSeconds(t2-t1) << endl;
+//	cerr << "Time 2: " << Vmml::toSeconds(t2-t1) << endl;
 
 	t1=Vmml::getCurrentTime();
 	cv::Mat intensity1 = simpleColorBalance(firstRetinex, low_clip, high_clip);
 	t2=Vmml::getCurrentTime();
-	cerr << "Time 3: " << Vmml::toSeconds(t2-t1) << endl;
+//	cerr << "Time 3: " << Vmml::toSeconds(t2-t1) << endl;
 
 	// XXX: intensMin & max produces zero values. There may be errors in multiScaleRetinex(),
 	// need to dump matrix values to numpy and analyze them using python by imshow(),
@@ -164,7 +164,7 @@ Retinex::run(const cv::Mat &input)
 			imgMsrcp.at<cv::Vec3f>(r,c) = color;
 		}
 	t2=Vmml::getCurrentTime();
-	cerr << "Time 4: " << Vmml::toSeconds(t2-t1) << endl;
+//	cerr << "Time 4: " << Vmml::toSeconds(t2-t1) << endl;
 
 	cv::Mat imgMsrcpInt8;
 	imgMsrcp = imgMsrcp-1;

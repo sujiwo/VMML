@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	VisualOdometry::Parameters voPars;
 	voPars.camera = voProg.getWorkingCameraParameter();
 	auto imagePipe = voProg.getImagePipeline();
-	imagePipe.setRetinex();
+//	imagePipe.setRetinex();
 
 	signal(SIGINT, breakHandler);
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 		cv::Mat mask;
 		imagePipe.run(currentImage, currentImage, mask);
 
-		VoRunner.runMatching(currentImage, timestamp, mask);
+		VoRunner.process(currentImage, timestamp, mask, true);
 
 		// Visualization
 		auto anchor = VoRunner.getAnchorFrame();

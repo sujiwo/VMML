@@ -17,6 +17,10 @@ namespace Vmml {
 typedef LocalLidarMapper::PointType PointType;
 typedef LocalLidarMapper::CloudType CloudType;
 
+const cv::Size optFlowWindowSize(15, 15);
+const int maxLevel = 2;
+const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteria::COUNT, 10, 0.03);
+
 
 VisualOdometry::VisualOdometry(Parameters par) :
 	param(par),
@@ -45,34 +49,74 @@ VisualOdometry::~VisualOdometry()
 //cv::Ptr<cv::BFMatcher> featureBfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
 
-/*
 bool
-VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
+VisualOdometry::runMatching2 (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
-	if (mAnchorImage==nullptr and mCurrentImage==nullptr) {
-		mAnchorImage = BaseFrame::create(img, param.camera);
-		mAnchorImage->computeFeatures(featureDetector, mask);
-		mAnchorImage->setPose(Pose::Identity());
-		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
-		return false;
+	mCurrentImage = BaseFrame::create(img, param.camera);
+	if (frameCounter==0)
+		mCurrentImage->setPose(Pose::Identity());
+
+	if (voFeatureTracker.size()>0) {
+		uint nextFrameCounter = frameCounter+1, prevFrameCounter = frameCounter-1;
+		auto trackedFeatsPoints = voFeatureTracker.trackedFeaturesAtFrame(prevFrameCounter);
+		auto &_featureTrackIds = voFeatureTracker.getFeatureTrackIdsAtFrame(prevFrameCounter);
+		assert(trackedFeatsPoints.rows==_featureTrackIds.size());
+		vector<FeatureTrackList::TrackId> featureTrackIds(_featureTrackIds.begin(), _featureTrackIds.end());
+		cv::Mat p1, p0r, status, errOf;
+
+		cv::calcOpticalFlowPyrLK(mAnchorImage->getImage(), mCurrentImage->getImage(), trackedFeatsPoints, p1, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
+		cv::calcOpticalFlowPyrLK(mCurrentImage->getImage(), mAnchorImage->getImage(), p1, p0r, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
+
+		cv::Mat absDiff(cv::abs(trackedFeatsPoints-p0r));
+
+		for (int r=0; r<trackedFeatsPoints.rows; ++r) {
+			cv::Point2f pt(p1.row(r));
+
+			if (absDiff.at<float>(r,0)>=1 or absDiff.at<float>(r,1)>=1)
+				continue;
+			if (pt.x<0 or pt.x>=mCurrentImage->width() or pt.y<0 or pt.y>=mCurrentImage->height())
+				continue;
+
+			// Add tracked point
+			auto trackId = featureTrackIds[r];
+			voFeatureTracker.addTrackedPoint(frameCounter, trackId, pt);
+		}
+
+		// Limit feature detection
+		cv::Mat pointMask (~voFeatureTracker.createFeatureMask(cv::Mat(mCurrentImage->size(), CV_8UC1, 0xff), frameCounter));
+		int numOfPointsToDetect = voFeatureTracker.getNumberOfFeatureTracksAt(frameCounter);
+		featureDetector->setMaxFeatures(std::min(int(maxNumberFeatures), numOfPointsToDetect));
+
+		vector<cv::KeyPoint> keys0;
+		cv::Mat desc0;
+		featureDetector->detectAndCompute(mCurrentImage->getImage(), pointMask, keys0, desc0);
+
+		pointMask = (~pointMask & mask);
+		featureDetector->setMaxFeatures(maxNumberFeatures-featureDetector->getMaxFeatures());
+		vector<cv::KeyPoint> keys1;
+		cv::Mat desc1;
+		featureDetector->detectAndCompute(mCurrentImage->getImage(), pointMask, keys1, desc1);
+
+		// Combine
+		keys0.insert(keys0.end(), keys1.begin(), keys1.end());
+		cv::vconcat(desc0, desc1, desc0);
+
+		mCurrentImage->setKeyPointsAndFeatures(keys0, desc0);
 	}
 
-	if (mCurrentImage!=nullptr)
-		mAnchorImage = mCurrentImage;
+	// First frame only
+	else {
+		mCurrentImage->computeFeatures(featureDetector, mask);
+		// Add all features as new track
+		for (int i=0; i<mCurrentImage->numOfKeyPoints(); ++i) {
+			FeatureTrack ftNew(frameCounter, mCurrentImage->keypoint(i).pt);
+			voFeatureTracker.add(ftNew);
+		}
+	}
 
-	mCurrentImage = BaseFrame::create(img, param.camera);
-	mCurrentImage->computeFeatures(featureDetector, mask);
-
-//	Matcher::matchBruteForce(*mAnchorImage, *mCurrentImage, matcherToAnchor);
-	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, matcherToAnchor);
-
+	drawFlow(img);
 	return true;
 }
-*/
-
-const cv::Size optFlowWindowSize(15, 15);
-const int maxLevel = 2;
-const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteria::COUNT, 10, 0.03);
 
 
 bool
@@ -96,12 +140,13 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		cv::Mat absDiff(cv::abs(trackedFeatsPoints-p0r));
 
 		for (int r=0; r<trackedFeatsPoints.rows; ++r) {
+			cv::Point2f pt(p1.row(r));
 
 			// Do track/feature filtering here
 			if (absDiff.at<float>(r,0)>=1 or absDiff.at<float>(r,1)>=1)
 				continue;
-
-			cv::Point2f pt(p1.row(r));
+			if (pt.x<0 or pt.x>=mCurrentImage->width() or pt.y<0 or pt.y>=mCurrentImage->height())
+				continue;
 
 			// Add tracked point
 			auto trackId = featureTrackIds[r];
@@ -132,36 +177,36 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 	}
 
 	drawFlow(img);
-	frameCounter+=1;
-	mAnchorImage = mCurrentImage;
 	return true;
 }
 
 
 bool
-VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask)
+VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool matchOnly)
 {
-	bool bMatch = runMatching(img, timestamp, mask);
-	frameCounter +=1;
+	bool bMatch = runMatching2(img, timestamp, mask);
 
-	if (bMatch==false) return false;
+	if (matchOnly==false) {
+		// Get transformation, and inliers
+		TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, matcherToAnchor);
+		if (matcherToAnchor.size()<=10)
+			return false;
 
-	// Get transformation, and inliers
-	TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, matcherToAnchor);
-	if (matcherToAnchor.size()<=10)
-		return false;
+		Pose pCurrent = mAnchorImage->pose() * motion;
+		mCurrentImage->setPose(pCurrent);
+		mVoTrack.push_back(PoseStamped(mCurrentImage->pose(), timestamp));
 
-	Pose pCurrent = mAnchorImage->pose() * motion;
-	mCurrentImage->setPose(pCurrent);
-	mVoTrack.push_back(PoseStamped(mCurrentImage->pose(), timestamp));
-
-	map<uint, Vector3d> mapPoints;
-	float parallax;
-	TriangulateCV(*mAnchorImage, *mCurrentImage, matcherToAnchor, mapPoints, &parallax);
-	for (auto &pt3dPr: mapPoints) {
-		points3d->push_back(PointType(pt3dPr.second.x(), pt3dPr.second.y(), pt3dPr.second.z()));
+		map<uint, Vector3d> mapPoints;
+		float parallax;
+		TriangulateCV(*mAnchorImage, *mCurrentImage, matcherToAnchor, mapPoints, &parallax);
+		for (auto &pt3dPr: mapPoints) {
+			points3d->push_back(PointType(pt3dPr.second.x(), pt3dPr.second.y(), pt3dPr.second.z()));
+		}
+		cout << "Found " << mapPoints.size() << " points" << endl;
 	}
-	cout << "Found " << mapPoints.size() << " points" << endl;
+
+	frameCounter+=1;
+	mAnchorImage = mCurrentImage;
 
 	return true;
 }
@@ -173,7 +218,7 @@ VisualOdometry::drawFlow(cv::Mat canvas)
 	_flowCanvas = canvas.clone();
 
 	for (auto tr: voFeatureTracker.getFeatureTracksAt(frameCounter)) {
-		cv::Mat ptMat = tr->getPointsAsMat();
+		cv::Mat ptMat = tr->getPointsAsMat(10);
 		cv::circle(_flowCanvas, cv::Point2i(ptMat.row(ptMat.rows-1)), 1, cv::Scalar(0,0,255), -1);
 		cv::polylines(_flowCanvas, ptMat, false, cv::Scalar(0,255,0));
 	}

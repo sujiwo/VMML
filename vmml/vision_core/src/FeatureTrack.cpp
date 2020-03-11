@@ -24,11 +24,17 @@ FeatureTrack::add(const uint& frameNum, const cv::Point2f &pt)
 
 
 vector<cv::Point2f>
-FeatureTrack::getPoints() const
+FeatureTrack::getPoints(int smax) const
 {
 	vector<cv::Point2f> points;
 
-	for (auto &pr: frameNumbers) {
+	if (smax==0)
+		smax=size();
+
+	vector<FrameId> tg(frameNumbers.begin(), frameNumbers.end());
+	vector<FrameId> tgSubs(tg.begin()+(tg.size()-smax), tg.end());
+
+	for (auto &pr: tg) {
 		points.push_back(mPoints.at(pr));
 	}
 
@@ -37,9 +43,9 @@ FeatureTrack::getPoints() const
 
 
 cv::Mat
-FeatureTrack::getPointsAsMat() const
+FeatureTrack::getPointsAsMat(int smax) const
 {
-	auto vpt = getPoints();
+	auto vpt = getPoints(smax);
 	cv::Mat ptMat(vpt.size(), 2, CV_32S);
 	for (uint r=0; r<vpt.size(); ++r) {
 		ptMat.at<int>(r,0) = int(vpt[r].x);
@@ -127,6 +133,14 @@ FeatureTrackList::addTrackedPoint(const FrameId &fr, const TrackId &tr, const cv
 	else {
 		frameToFeatureTracks.at(fr).insert(tr);
 	}
+}
+
+
+void
+FeatureTrackList::reset()
+{
+	frameToFeatureTracks.clear();
+	mFeatTracks.clear();
 }
 
 

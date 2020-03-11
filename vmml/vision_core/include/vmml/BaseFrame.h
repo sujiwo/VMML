@@ -17,6 +17,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/kdtree/kdtree_flann.h>
 
 #include <g2o/types/sba/types_sba.h>
 #include <g2o/types/slam3d/se3quat.h>
@@ -65,6 +66,10 @@ public:
 	BaseFrame(cv::Mat img, const CameraPinholeParams &cam, const Pose &p=Pose::Identity());
 	BaseFrame(const BaseFrame &copy);
 	virtual ~BaseFrame();
+
+	inline cv::Size
+	size() const
+	{ return image.size(); }
 
 	inline static Ptr create(cv::Mat img)
 	{ return Ptr(new BaseFrame(img)); }
@@ -146,6 +151,8 @@ public:
 	 * Normal vector; Or, Z-Axis of this frame
 	 */
 	Eigen::Vector3d normal() const;
+
+	void setKeyPointsAndFeatures(const std::vector<cv::KeyPoint> &srKeypts, const cv::Mat &srDescs);
 
 	void computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &addMask=cv::Mat());
 

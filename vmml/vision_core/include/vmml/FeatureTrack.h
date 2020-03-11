@@ -36,14 +36,14 @@ public:
 	void add(const uint& frameNum, const cv::Point2f &pt);
 
 	// for visualization
-	std::vector<cv::Point2f> getPoints() const;
-	cv::Mat getPointsAsMat() const;
+	std::vector<cv::Point2f> getPoints(int max=0) const;
+	cv::Mat getPointsAsMat(int max=0) const;
 
 	inline size_t size() const
 	{ return frameNumbers.size(); }
 
 protected:
-	std::set<uint> frameNumbers;
+	std::set<FrameId> frameNumbers;
 
 	// Map Frame number to feature number at that particular frame
 	// (and its position)
@@ -70,6 +70,11 @@ public:
 	std::vector<const FeatureTrack*> getFeatureTracksAt(const FrameId& frId) const;
 //	vector<FeatureTrack*> getFeatureTracksAt(const FrameId& frId);
 
+	/*
+	 * Create mask based on baseMask on current frame,
+	 * such that the tracked points does not show up in feature detection
+	 * when applying resulting mask
+	 */
 	cv::Mat createFeatureMask(const cv::Mat& baseMask, const FrameId &f) const;
 
 	cv::Mat trackedFeaturesAtFrame(const FrameId& fr) const;
@@ -81,6 +86,8 @@ public:
 
 	// Clear FeatureTrack that has less than 3 frames
 	void cleanup();
+
+	void reset();
 
 protected:
 	std::vector<FeatureTrack> mFeatTracks;

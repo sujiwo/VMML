@@ -122,6 +122,15 @@ BaseFrame::normal() const
 }
 
 
+void
+BaseFrame::setKeyPointsAndFeatures(const std::vector<cv::KeyPoint> &srKeypts, const cv::Mat &srDescs)
+{
+	assert (srKeypts.size()==srDescs.rows);
+	fKeypoints = srKeypts;
+	fDescriptors = srDescs.clone();
+}
+
+
 /*
 void
 BaseFrame::computeFeatures (cv::Ptr<cv::FeatureDetector> fd, const cv::Mat &mask)
