@@ -13,7 +13,9 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <mutex>
 #include <opencv2/core.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 
 namespace Vmml {
@@ -36,6 +38,9 @@ public:
 	// for visualization
 	std::vector<cv::Point2f> getPoints() const;
 	cv::Mat getPointsAsMat() const;
+
+	inline size_t size() const
+	{ return frameNumbers.size(); }
 
 protected:
 	std::set<uint> frameNumbers;
@@ -74,9 +79,17 @@ public:
 
 	void addTrackedPoint(const FrameId &fr, const TrackId &tr, const cv::Point2f &pt);
 
+	// Clear FeatureTrack that has less than 3 frames
+	void cleanup();
+
 protected:
 	std::vector<FeatureTrack> mFeatTracks;
 	std::map<FrameId,std::set<TrackId>> frameToFeatureTracks;
+
+	// XXX: check if we have C++17, then move to std::shared_mutex
+	boost::shared_mutex ftLock;
+
+	static const size_t minTrackSize = 3;
 };
 
 

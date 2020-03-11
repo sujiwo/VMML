@@ -37,6 +37,15 @@ cv::Mat drawOpticalFlow(const BaseFrame::Ptr &anchor, const BaseFrame::Ptr &curr
 }
 
 
+bool hasBreak = false;
+void breakHandler(int sign)
+{
+	if (sign==SIGINT)
+		hasBreak = true;
+	cout << "Break is pressed\n";
+}
+
+
 int main(int argc, char *argv[])
 {
 	ProgramOptions voProg;
@@ -45,7 +54,9 @@ int main(int argc, char *argv[])
 	VisualOdometry::Parameters voPars;
 	voPars.camera = voProg.getWorkingCameraParameter();
 	auto imagePipe = voProg.getImagePipeline();
-//	imagePipe.setRetinex();
+	imagePipe.setRetinex();
+
+	signal(SIGINT, breakHandler);
 
 	VisualOdometry VoRunner(voPars);
 	auto imageBag = voProg.getImageBag();
@@ -76,6 +87,9 @@ int main(int argc, char *argv[])
 		rosConn.publishImage(VoRunner._flowCanvas, ros::Time::fromBoost(timestamp));
 
 		cout << n << ": " << VoRunner.getInlier() << endl;
+
+		if (hasBreak==true)
+			break;
 	}
 
 	cout << "Done\n";

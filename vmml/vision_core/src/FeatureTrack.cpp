@@ -130,4 +130,27 @@ FeatureTrackList::addTrackedPoint(const FrameId &fr, const TrackId &tr, const cv
 }
 
 
+void
+FeatureTrackList::cleanup()
+{
+	ftLock.lock();
+
+	set<TrackId> toBeRemoved;
+	for (TrackId i=0; i<mFeatTracks.size(); ++i) {
+		if (mFeatTracks[i].frameNumbers.size() < minTrackSize)
+			toBeRemoved.insert(i);
+	}
+
+	for (auto &pr: frameToFeatureTracks) {
+//		if (pr.second.)
+		for (auto &t: toBeRemoved) {
+			if (pr.second.find(t)!=pr.second.end())
+				pr.second.erase(t);
+		}
+	}
+
+	// XXX: unfinished
+	ftLock.unlock();
+}
+
 } /* namespace Vmml */

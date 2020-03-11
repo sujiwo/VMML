@@ -97,8 +97,10 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 
 		for (int r=0; r<trackedFeatsPoints.rows; ++r) {
 
+			// Do track/feature filtering here
 			if (absDiff.at<float>(r,0)>=1 or absDiff.at<float>(r,1)>=1)
 				continue;
+
 			cv::Point2f pt(p1.row(r));
 
 			// Add tracked point
@@ -171,7 +173,9 @@ VisualOdometry::drawFlow(cv::Mat canvas)
 	_flowCanvas = canvas.clone();
 
 	for (auto tr: voFeatureTracker.getFeatureTracksAt(frameCounter)) {
-		cv::polylines(_flowCanvas, tr->getPointsAsMat(), false, cv::Scalar(0,255,0));
+		cv::Mat ptMat = tr->getPointsAsMat();
+		cv::circle(_flowCanvas, cv::Point2i(ptMat.row(ptMat.rows-1)), 1, cv::Scalar(0,0,255), -1);
+		cv::polylines(_flowCanvas, ptMat, false, cv::Scalar(0,255,0));
 	}
 }
 
