@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
 		auto current = VoRunner.getCurrentFrame();
 		auto matches = VoRunner.getLastMatch();
 
-//		auto drawFrame = drawOpticalFlow(anchor, current, matches);
-		rosConn.publishImage(VoRunner._flowCanvas, ros::Time::fromBoost(timestamp));
+		auto drawFrame = drawOpticalFlow(anchor, current, matches);
+		rosConn.publishImage(drawFrame, ros::Time::fromBoost(timestamp));
 
 		cout << n << ": " << VoRunner.getInlier() << endl;
 

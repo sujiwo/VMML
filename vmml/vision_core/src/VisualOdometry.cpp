@@ -52,69 +52,18 @@ VisualOdometry::~VisualOdometry()
 bool
 VisualOdometry::runMatching2 (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
+	if (mAnchorImage==nullptr and mCurrentImage==nullptr) {
+		mAnchorImage = BaseFrame::create(img, param.camera);
+		mAnchorImage->computeFeatures(featureDetector, mask);
+		mAnchorImage->setPose(Pose::Identity());
+		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
+		return false;
+	}
+	if (mCurrentImage!=nullptr)
+		mAnchorImage = mCurrentImage;
 	mCurrentImage = BaseFrame::create(img, param.camera);
-	if (frameCounter==0)
-		mCurrentImage->setPose(Pose::Identity());
-
-	if (voFeatureTracker.size()>0) {
-		uint nextFrameCounter = frameCounter+1, prevFrameCounter = frameCounter-1;
-		auto trackedFeatsPoints = voFeatureTracker.trackedFeaturesAtFrame(prevFrameCounter);
-		auto &_featureTrackIds = voFeatureTracker.getFeatureTrackIdsAtFrame(prevFrameCounter);
-		assert(trackedFeatsPoints.rows==_featureTrackIds.size());
-		vector<FeatureTrackList::TrackId> featureTrackIds(_featureTrackIds.begin(), _featureTrackIds.end());
-		cv::Mat p1, p0r, status, errOf;
-
-		cv::calcOpticalFlowPyrLK(mAnchorImage->getImage(), mCurrentImage->getImage(), trackedFeatsPoints, p1, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
-		cv::calcOpticalFlowPyrLK(mCurrentImage->getImage(), mAnchorImage->getImage(), p1, p0r, status, errOf, optFlowWindowSize, maxLevel, optFlowStopCriteria);
-
-		cv::Mat absDiff(cv::abs(trackedFeatsPoints-p0r));
-
-		for (int r=0; r<trackedFeatsPoints.rows; ++r) {
-			cv::Point2f pt(p1.row(r));
-
-			if (absDiff.at<float>(r,0)>=1 or absDiff.at<float>(r,1)>=1)
-				continue;
-			if (pt.x<0 or pt.x>=mCurrentImage->width() or pt.y<0 or pt.y>=mCurrentImage->height())
-				continue;
-
-			// Add tracked point
-			auto trackId = featureTrackIds[r];
-			voFeatureTracker.addTrackedPoint(frameCounter, trackId, pt);
-		}
-
-		// Limit feature detection
-		cv::Mat pointMask (~voFeatureTracker.createFeatureMask(cv::Mat(mCurrentImage->size(), CV_8UC1, 0xff), frameCounter));
-		int numOfPointsToDetect = voFeatureTracker.getNumberOfFeatureTracksAt(frameCounter);
-		featureDetector->setMaxFeatures(std::min(int(maxNumberFeatures), numOfPointsToDetect));
-
-		vector<cv::KeyPoint> keys0;
-		cv::Mat desc0;
-		featureDetector->detectAndCompute(mCurrentImage->getImage(), pointMask, keys0, desc0);
-
-		pointMask = (~pointMask & mask);
-		featureDetector->setMaxFeatures(maxNumberFeatures-featureDetector->getMaxFeatures());
-		vector<cv::KeyPoint> keys1;
-		cv::Mat desc1;
-		featureDetector->detectAndCompute(mCurrentImage->getImage(), pointMask, keys1, desc1);
-
-		// Combine
-		keys0.insert(keys0.end(), keys1.begin(), keys1.end());
-		cv::vconcat(desc0, desc1, desc0);
-
-		mCurrentImage->setKeyPointsAndFeatures(keys0, desc0);
-	}
-
-	// First frame only
-	else {
-		mCurrentImage->computeFeatures(featureDetector, mask);
-		// Add all features as new track
-		for (int i=0; i<mCurrentImage->numOfKeyPoints(); ++i) {
-			FeatureTrack ftNew(frameCounter, mCurrentImage->keypoint(i).pt);
-			voFeatureTracker.add(ftNew);
-		}
-	}
-
-	drawFlow(img);
+	mCurrentImage->computeFeatures(featureDetector, mask);
+	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, matcherToAnchor);
 	return true;
 }
 
@@ -185,6 +134,8 @@ bool
 VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool matchOnly)
 {
 	bool bMatch = runMatching2(img, timestamp, mask);
+	if (bMatch==false)
+		return false;
 
 	if (matchOnly==false) {
 		// Get transformation, and inliers
@@ -206,7 +157,6 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 	}
 
 	frameCounter+=1;
-	mAnchorImage = mCurrentImage;
 
 	return true;
 }

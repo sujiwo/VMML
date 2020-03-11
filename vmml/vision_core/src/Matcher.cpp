@@ -287,7 +287,7 @@ Matcher::matchOpticalFlow(
 	vector<float> errOf(F1.numOfKeyPoints());
 
 	// Store targets
-	cv::Mat vKeypoints2;
+	cv::Mat vKeypoints2, p1;
 
 	// Create KD-Tree for Frame 2
 	// XXX: This search tree may need to be moved to BaseFrame,
@@ -308,13 +308,23 @@ Matcher::matchOpticalFlow(
 		cv::Size(25,25), 3,
 		cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
 		0.1);
+	cv::calcOpticalFlowPyrLK(F2.getImage(), F1.getImage(),
+		vKeypoints2, p1,
+		statusOf, errOf,
+		cv::Size(25,25), 3,
+		cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
+		0.1);
 	featurePairs.clear();
 
 	assert(vKeypoints1.size()==vKeypoints2.size());
+	cv::Mat absDiff(cv::abs(vKeypoints1-p1));
 
 	for (int i=0; i<vKeypoints1.rows; ++i) {
 
 		if (statusOf[i]!=1)
+			continue;
+		cv::Point2f pt(vKeypoints2.row(i));
+		if (pt.x<0 or pt.x>=F2.width() or pt.y<0 or pt.y>=F2.height())
 			continue;
 
 		pcl::PointXY queryPt({vKeypoints2.at<float>(i,0), vKeypoints2.at<float>(i,1)});
