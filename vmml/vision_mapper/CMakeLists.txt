@@ -168,21 +168,21 @@ install(
 #)
 
 
-#add_executable(
-#	index_creator
-#		nodes/index_creator.cpp
-#)
-#
-#target_link_libraries(
-#	index_creator
-#		vmml_mapper
-#		${common_libs}
-#)
-#
-#install(
-#	TARGETS index_creator
-#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+add_executable(
+	index_creator
+		nodes/index_creator.cpp
+)
+
+target_link_libraries(
+	index_creator
+		vmml_mapper
+		${common_libs}
+)
+
+install(
+	TARGETS index_creator
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 #add_executable(
 #	test_imagedb

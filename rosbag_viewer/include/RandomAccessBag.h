@@ -79,7 +79,7 @@ public:
    * A note about seconds in this function:
    * These parameters are time (in seconds) from start of the bag
    */
-  void setTimeConstraint(const double seconds1FromOffset=-1, const double seconds2FromOffset=-1);
+  void setTimeConstraint(double seconds1FromOffset=-1, double seconds2FromOffset=-1);
 
   /*
    * Getter

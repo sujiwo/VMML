@@ -48,18 +48,24 @@ void breakHandler(int sign)
 
 int main(int argc, char *argv[])
 {
+	float startTimeSeconds=0;
+	float maxSecondsFromStart=-1;
+
 	ProgramOptions voProg;
+	voProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
+	voProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
 	voProg.parseCommandLineArgs(argc, argv);
 
 	VisualOdometry::Parameters voPars;
 	voPars.camera = voProg.getWorkingCameraParameter();
 	auto imagePipe = voProg.getImagePipeline();
-//	imagePipe.setRetinex();
+	imagePipe.setRetinex();
 
 	signal(SIGINT, breakHandler);
 
 	VisualOdometry VoRunner(voPars);
 	auto imageBag = voProg.getImageBag();
+	imageBag->setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
 
 	assert(imagePipe.getOutputSize()==voPars.camera.getImageSize());
 
@@ -76,7 +82,7 @@ int main(int argc, char *argv[])
 		cv::Mat mask;
 		imagePipe.run(currentImage, currentImage, mask);
 
-		VoRunner.process(currentImage, timestamp, mask, true);
+		VoRunner.process(currentImage, timestamp, mask);
 
 		// Visualization
 		auto anchor = VoRunner.getAnchorFrame();

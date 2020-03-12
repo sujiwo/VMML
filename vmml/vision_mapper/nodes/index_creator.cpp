@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 	cout << "Frequency after desampled: " << float(imageRedSamples.size()) / tLen << endl;
 	cout << "# of target frames: " << imageRedSamples.size() << endl;
 
-	auto camera0 = progOptions.getCameraParameters();
+	auto camera0 = progOptions.getWorkingCameraParameter();
 
 	auto gnssTopic = selectTopicForGnssLocalization(mybag);
 	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);

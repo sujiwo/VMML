@@ -128,12 +128,21 @@ void RandomAccessBag::createCache() {
 }
 
 
-void RandomAccessBag::setTimeConstraint(const double seconds1, const double seconds2)
+void RandomAccessBag::setTimeConstraint(double seconds1, double seconds2)
 {
-	assert(seconds1 <= seconds2);
-	ros::Duration td1(seconds1), td2(seconds2);
-	assert(bagStartTime + td2 <= bagStopTime);
-	ros::Time t1 = bagStartTime + td1, t2 = bagStartTime + td2;
+	ros::Time t1, t2;
+	if (seconds1==-1)
+		seconds1=0;
+	ros::Duration td1(seconds1);
+	t1 = bagStartTime + td1;
+	if (seconds2==-1)
+		t2 = bagStopTime;
+	else {
+		ros::Duration td2(seconds2);
+		t2 = bagStartTime+td2;
+	}
+	assert(t1 < t2);
+
 	setTimeConstraint(t1, t2);
 }
 
