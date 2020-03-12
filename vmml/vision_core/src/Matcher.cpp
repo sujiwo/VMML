@@ -283,6 +283,10 @@ Matcher::matchOpticalFlow(
 	const BaseFrame &F2,
 	PairList &featurePairs)
 {
+	const cv::Size optFlowWindowSize(15, 15);
+	const int maxLevel = 2;
+	const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteria::COUNT, 10, 0.03);
+
 	vector<uchar> statusOf(F1.numOfKeyPoints());
 	vector<float> errOf(F1.numOfKeyPoints());
 
@@ -305,15 +309,13 @@ Matcher::matchOpticalFlow(
 	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(),
 		vKeypoints1, vKeypoints2,
 		statusOf, errOf,
-		cv::Size(25,25), 3,
-		cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
-		0.1);
+		optFlowWindowSize, maxLevel,
+		optFlowStopCriteria);
 	cv::calcOpticalFlowPyrLK(F2.getImage(), F1.getImage(),
 		vKeypoints2, p1,
 		statusOf, errOf,
-		cv::Size(25,25), 3,
-		cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
-		0.1);
+		optFlowWindowSize, maxLevel,
+		optFlowStopCriteria);
 	featurePairs.clear();
 
 	assert(vKeypoints1.size()==vKeypoints2.size());
