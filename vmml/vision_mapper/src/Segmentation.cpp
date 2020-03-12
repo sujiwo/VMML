@@ -99,8 +99,8 @@ Segmentation::segment(const cv::Mat &sourceImage)
 	cv::Mat merged_output_image (output_layer->height(), output_layer->width(), CV_32F, const_cast<float *>(output_layer->cpu_data())),
 		merged_gray;
 	merged_output_image.convertTo(merged_gray, CV_8U);
-	cv::resize(merged_gray, merged_gray, origin_size, 0, 0, cv::INTER_NEAREST);
-	return merged_gray;
+	cv::resize(merged_gray, lastSegnResult, origin_size, 0, 0, cv::INTER_NEAREST);
+	return lastSegnResult;
 }
 
 

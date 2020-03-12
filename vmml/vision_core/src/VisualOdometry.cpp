@@ -63,7 +63,7 @@ VisualOdometry::runMatching2 (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		mAnchorImage = mCurrentImage;
 	mCurrentImage = BaseFrame::create(img, param.camera);
 	mCurrentImage->computeFeatures(featureDetector, mask);
-	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, matcherToAnchor);
+	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor);
 	return true;
 }
 
@@ -138,9 +138,12 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 		return false;
 
 	if (matchOnly==false) {
+		// Epipolar geometry constraints tend to reduce number of feature matches,
+		// to the point that when camera is stationary there is no matching detected
+
 		// Get transformation, and inliers
-		TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, matcherToAnchor, matcherToAnchor);
-		if (matcherToAnchor.size()<=10)
+		TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor, voMatcherToAnchor);
+		if (voMatcherToAnchor.size()<=10)
 			return false;
 
 		Pose pCurrent = mAnchorImage->pose() * motion;
@@ -149,11 +152,15 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 
 		map<uint, Vector3d> mapPoints;
 		float parallax;
-		TriangulateCV(*mAnchorImage, *mCurrentImage, matcherToAnchor, mapPoints, &parallax);
+		TriangulateCV(*mAnchorImage, *mCurrentImage, voMatcherToAnchor, mapPoints, &parallax);
 		for (auto &pt3dPr: mapPoints) {
 			points3d->push_back(PointType(pt3dPr.second.x(), pt3dPr.second.y(), pt3dPr.second.z()));
 		}
 		cout << "Found " << mapPoints.size() << " points" << endl;
+	}
+
+	else {
+		voMatcherToAnchor = flowMatcherToAnchor;
 	}
 
 	frameCounter+=1;

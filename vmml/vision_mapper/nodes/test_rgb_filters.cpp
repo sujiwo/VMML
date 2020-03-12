@@ -128,8 +128,11 @@ void runFromBagFile (Vmml::Mapper::RVizConnector &rosCtl, Vmml::Mapper::ProgramO
 	auto bagFile = progOpts.getImageBag();
 
 	string outBagPathStr;
-	try { outBagPathStr = progOpts.getOptionValue<string>("bag-output"); }
-	catch (out_of_range &e) {}
+	float bagResample=-1, startTime=-1, stopTime=-1;
+	try { outBagPathStr = progOpts.getOptionValue<string>("bag-output"); } catch (out_of_range &e) {}
+	try { bagResample = progOpts.getOptionValue<float>("resample"); } catch (out_of_range &e) {}
+	try { startTime = progOpts.getOptionValue<float>("start-time"); } catch (out_of_range &e) {}
+	try { stopTime = progOpts.getOptionValue<float>("stop-time"); } catch (out_of_range &e) {}
 
 	shared_ptr<rosbag::Bag> outputBagFd = nullptr;
 	string imageOutTopic = progOpts.getImageTopic() + "/preprocess";
@@ -147,7 +150,18 @@ void runFromBagFile (Vmml::Mapper::RVizConnector &rosCtl, Vmml::Mapper::ProgramO
 		cout << "Output is to ROS\n";
 	}
 
-	for (uint i=0; i<bagFile->size(); ++i) {
+	bagFile->setTimeConstraint(startTime, stopTime);
+	vector<uint64> targetFrame;
+	if (bagResample!=-1) {
+		bagFile->desample(bagResample, targetFrame);
+	}
+	else {
+		targetFrame.resize(bagFile->size());
+		for (uint i=0; i<bagFile->size(); ++i)
+			targetFrame[i] = i;
+	}
+
+	for (uint i: targetFrame) {
 
 		if (hasBreak==true)
 			break;
@@ -168,7 +182,7 @@ void runFromBagFile (Vmml::Mapper::RVizConnector &rosCtl, Vmml::Mapper::ProgramO
 			outputBagFd->write(imageOutTopic, tMsg, cvImg.toImageMsg());
 		}
 
-		cout << i << " / " << bagFile->size() << endl;
+		cout << i+1 << " / " << bagFile->size() << endl;
 	}
 }
 
@@ -179,10 +193,21 @@ int main(int argc, char *argv[])
 
 	Vmml::Mapper::ProgramOptions progOpts;
 	string outputBag;
+	float resample, startTime, stopTime;
+	bool useRetinex=false;
 
 	progOpts.addSimpleOptions("bag-output", "Bag output", outputBag);
+	progOpts.addSimpleOptions("resample", "Rate for playing bag", resample);
+	progOpts.addSimpleOptions("start-time", "Process will start from x seconds", startTime);
+	progOpts.addSimpleOptions("stop-time", "Maximum seconds from start", stopTime);
+	progOpts.addSimpleOptions("retinex", "Maximum seconds from start", useRetinex);
+
 	progOpts.parseCommandLineArgs(argc, argv);
 	imgPipe = &progOpts.getImagePipeline();
+	if (useRetinex==true) {
+		cout << "Retinex enabled\n";
+		imgPipe->setRetinex();
+	}
 
 	signal(SIGINT, breakHandler);
 

@@ -424,7 +424,7 @@ Matcher::matchEpipolar(
 TTransform
 Matcher::calculateMovement (
 	const BaseFrame &F1, const BaseFrame &F2,
-	const std::vector<KpPair> &featurePairs,
+	const PairList &featurePairs,
 	PairList &validPairsByTriangulation)
 {
 	validPairsByTriangulation = featurePairs;

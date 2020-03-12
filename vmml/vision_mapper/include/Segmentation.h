@@ -31,10 +31,18 @@ public:
 
 	virtual ~Segmentation();
 
+	/*
+	 * Return last result
+	 */
+	inline cv::Mat getLastResult() const
+	{ return lastSegnResult.clone(); }
+
 protected:
 	std::shared_ptr<caffe::Net<float>> mNet;
 	cv::Size imgInputSize;
 	uint numChannels;
+
+	cv::Mat lastSegnResult;
 };
 
 } /* namespace Mapper */

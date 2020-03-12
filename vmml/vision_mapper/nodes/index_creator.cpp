@@ -154,8 +154,7 @@ int main(int argc, char *argv[])
 	/*
 	 * Need to reduce frame rate of the bag
 	 */
-	if (maxSecondsFromStart>0)
-		images.setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
+	images.setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
 
 	const int maxLim = images.size();
 

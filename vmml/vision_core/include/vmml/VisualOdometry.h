@@ -57,7 +57,7 @@ public:
 	{ return points3d; }
 
 	inline uint getInlier() const
-	{ return matcherToAnchor.size(); }
+	{ return voMatcherToAnchor.size(); }
 
 	const BaseFrame::Ptr getAnchorFrame() const
 	{ return mAnchorImage; }
@@ -66,7 +66,7 @@ public:
 	{ return mCurrentImage; }
 
 	const Matcher::PairList& getLastMatch() const
-	{ return matcherToAnchor; }
+	{ return voMatcherToAnchor; }
 
 	// XXX: Temporary
 	cv::Mat _flowCanvas;
@@ -85,7 +85,11 @@ protected:
 	BaseFrame::Ptr
 		mAnchorImage=nullptr,
 		mCurrentImage=nullptr;
-	Matcher::PairList matcherToAnchor;
+
+	// Matching results
+	Matcher::PairList
+		flowMatcherToAnchor,
+		voMatcherToAnchor;
 
 	TTransform estimateMotion();
 

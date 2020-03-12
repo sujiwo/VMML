@@ -200,8 +200,10 @@ void
 RVizConnector::setImageTopicName(const std::string &s)
 {
 	imageTopicName = s;
-	if (rosDisabled==false)
+	if (rosDisabled==false) {
+		imagePub.shutdown();
 		imagePub = imagePubTr->advertise(imageTopicName, 1);
+	}
 }
 
 
