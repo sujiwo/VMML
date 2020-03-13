@@ -241,21 +241,21 @@ install(
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-#add_executable(
-#	place_recognizer_srv
-#		nodes/place_recognizer_srv.cpp
-#)
-#
-#target_link_libraries(
-#	place_recognizer_srv
-#		vmml_mapper
-#		${common_libs}
-#)
-#
-#install(
-#	TARGETS place_recognizer_srv
-#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+add_executable(
+	place_recognizer_srv
+		nodes/place_recognizer_srv.cpp
+)
+
+target_link_libraries(
+	place_recognizer_srv
+		vmml_mapper
+		${common_libs}
+)
+
+install(
+	TARGETS place_recognizer_srv
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 #add_executable(
 #	image_trajectory

@@ -229,6 +229,17 @@ ProgramOptions::getLidarScanBag()
 void
 ProgramOptions::openInputs()
 {
+	// Set image pipeline
+	if (boost::filesystem::exists(featureMaskImagePath))
+		featureMask = cv::imread(featureMaskImagePath.string(), cv::IMREAD_GRAYSCALE);
+	if (boost::filesystem::exists(lightMaskImagePath))
+		lightMask = cv::imread(lightMaskImagePath.string(), cv::IMREAD_GRAYSCALE);
+
+	imagePipeline.setResizeFactor(imageResizeFactor);
+	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
+		imagePipeline.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
+	imagePipeline.setFixedFeatureMask(featureMask);
+
 	if (inputBagPath.empty()==true)
 		return;
 
@@ -259,7 +270,7 @@ ProgramOptions::openInputs()
 		}
 	}
 
-	else cout << "Failed\n";
+	else throw runtime_error("Unable to open bag file");
 
 	getImageBag();
 	cv::Size imageSize0 = imageBag->getImageDimensions();
@@ -269,20 +280,9 @@ ProgramOptions::openInputs()
 	if (!lidarTopic.empty())
 		getLidarScanBag();
 
-	if (boost::filesystem::exists(featureMaskImagePath))
-		featureMask = cv::imread(featureMaskImagePath.string(), cv::IMREAD_GRAYSCALE);
-	if (boost::filesystem::exists(lightMaskImagePath))
-		lightMask = cv::imread(lightMaskImagePath.string(), cv::IMREAD_GRAYSCALE);
-
-	// Setup image pipeline
-	// XXX: Retinex is enabled by default
 	imagePipeline.setIntendedInputSize(imageSize0);
-	imagePipeline.setResizeFactor(imageResizeFactor);
-//	imagePipeline.setRetinex();
-	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
-		imagePipeline.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
-	imagePipeline.setFixedFeatureMask(featureMask);
 }
+
 
 } /* namespace Mapper */
 } /* namespace Vmml */

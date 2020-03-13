@@ -115,6 +115,8 @@ protected:
 
 	void openInputs();
 
+	void setupImagePipeline();
+
 	void showHelp();
 
 /*

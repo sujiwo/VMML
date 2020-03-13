@@ -36,7 +36,7 @@ cv::Ptr<cv::FeatureDetector> bFeats = cv::ORB::create(
 		cv::ORB::HARRIS_SCORE,
 		31,
 		10);
-Mapper::ImagePipeline imagePipe;
+Mapper::ImagePipeline *imagePipe;
 
 
 bool PlaceRecognizerService(
@@ -52,7 +52,7 @@ bool PlaceRecognizerService(
 	cv::Mat workImg = ImagePreprocessor::retinaHdr(imageReq->image, weights, sigmas, 128, 128, 1.0, 10);
 */
 	cv::Mat workImg, mask;
-	imagePipe.run(request.input, workImg, mask);
+	imagePipe->run(request.input, workImg, mask);
 //	cv::resize(workImg, workImg, cv::Size(), 0.6666666667, 0.6666666666667);
 //	workImg = ImagePreprocessor::autoAdjustGammaRGB(workImg);
 
@@ -87,21 +87,15 @@ int main(int argc, char *argv[])
 	ros::NodeHandle rosNode;
 
 	Vmml::Mapper::ProgramOptions progOptions;
-	string segnetModelPath, segnetWeightsPath, mapPath;
-	progOptions.addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
-	progOptions.addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
+	string mapPath;
 	progOptions.addSimpleOptions("map-path", "Path to Map File", mapPath);
 	progOptions.parseCommandLineArgs(argc, argv);
+	imagePipe = &progOptions.getImagePipeline();
+	imagePipe->setRetinex();
 
-	imagePipe.setRetinex();
-	imagePipe.setResizeFactor(progOptions.getImageResizeFactor());
-	imagePipe.setFixedFeatureMask(progOptions.getFeatureMask());
-	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
-		imagePipe.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
-	if (progOptions.getFeatureMask().empty()==false)
-		imagePipe.setFixedFeatureMask(progOptions.getFeatureMask());
-
+	cout << "Loading map... " << flush;
 	imageDb.loadFromDisk(mapPath);
+	cout << "Done\n";
 
 	ros::ServiceServer placeRecognSrv = rosNode.advertiseService("place_recognizer", PlaceRecognizerService);
 	cout << "Ready\n";
