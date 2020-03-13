@@ -44,6 +44,14 @@ ImagePipeline::setResizeFactor(const float f)
 
 
 void
+ImagePipeline::setIntendedInputSize(const cv::Size& inSize)
+{
+	intentInputSize = inSize;
+	setResizeFactor(resizeFactor);
+}
+
+
+void
 ImagePipeline::setFixedFeatureMask(const string &imageMaskPath)
 {
 	cv::Mat mmask = cv::imread(imageMaskPath, cv::IMREAD_GRAYSCALE);

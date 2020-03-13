@@ -50,10 +50,12 @@ int main(int argc, char *argv[])
 {
 	float startTimeSeconds=0;
 	float maxSecondsFromStart=-1;
+	int maxFrameNum=-1;
 
 	ProgramOptions voProg;
 	voProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
 	voProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
+	voProg.addSimpleOptions("frames", "Maximum number of frames", maxFrameNum);
 	voProg.parseCommandLineArgs(argc, argv);
 
 	VisualOdometry::Parameters voPars;
@@ -73,8 +75,10 @@ int main(int argc, char *argv[])
 
 	vector<uint64> targetFrameId;
 	imageBag->desample(10.0, targetFrameId);
+	if (maxFrameNum==-1)
+		maxFrameNum = targetFrameId.size();
 
-	for (int n=0; n<targetFrameId.size(); ++n) {
+	for (int n=0; n<maxFrameNum; ++n) {
 
 		auto currentImage = imageBag->at(targetFrameId[n]);
 		ptime timestamp = imageBag->timeAt(n).toBoost();
@@ -82,7 +86,7 @@ int main(int argc, char *argv[])
 		cv::Mat mask;
 		imagePipe.run(currentImage, currentImage, mask);
 
-		VoRunner.process(currentImage, timestamp, mask, true);
+		VoRunner.process(currentImage, timestamp, mask);
 
 		// Visualization
 		auto anchor = VoRunner.getAnchorFrame();
@@ -93,6 +97,8 @@ int main(int argc, char *argv[])
 		rosConn.publishImage(drawFrame, ros::Time::fromBoost(timestamp));
 
 		cout << n << ": " << VoRunner.getInlier() << endl;
+
+		cout << targetFrameId[n-1] << '-' << targetFrameId[n] << endl;
 
 		if (hasBreak==true)
 			break;

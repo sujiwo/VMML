@@ -274,6 +274,17 @@ Matcher::matchBruteForce(
 }
 
 
+int
+Matcher::matchBF2(
+	const BaseFrame &F1,
+	const BaseFrame &F2,
+	PairList &featurePairs)
+{
+	auto matcher = cv::BFMatcher::create(cv::NORM_HAMMING, true);
+//	matcher->match(F2.allDescriptors(), F1.allDescriptors())
+}
+
+
 /*
  * Match features using Sparse Lucas-Kanade Optical Flow
  */
@@ -305,6 +316,13 @@ Matcher::matchOpticalFlow(
 	searchTree2.setInputCloud(cloudPlane2);
 
 	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
+/*
+	if (featurePairs.empty())
+		vKeypoints1=F1.allKeypointsAsMat();
+	else {
+
+	}
+*/
 
 	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(),
 		vKeypoints1, vKeypoints2,
@@ -349,7 +367,7 @@ Matcher::matchOpticalFlow(
 
 	}
 
-	return 0;
+	return featurePairs.size();
 }
 
 
@@ -390,12 +408,14 @@ Matcher::matchEpipolar(
 	cv::Mat Fcv = cv::findFundamentalMat(pointsIn1, pointsIn2, cv::FM_RANSAC, 3.84*Matcher::circleOfConfusionDiameter, 0.99, mask);
 	// Need Eigen Matrix of F
 
+/*
 	for (int i=0; i<initialMatches.size(); ++i) {
 		auto &m = initialMatches[i];
 		if (mask.at<char>(i,0)!=0)
 			featurePairs.push_back(make_pair(m.queryIdx, m.trainIdx));
 	}
 	return;
+*/
 
 	Matrix3d F12;
 	cv2eigen(Fcv, F12);

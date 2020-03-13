@@ -63,6 +63,8 @@ VisualOdometry::runMatching2 (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		mAnchorImage = mCurrentImage;
 	mCurrentImage = BaseFrame::create(img, param.camera);
 	mCurrentImage->computeFeatures(featureDetector, mask);
+
+	auto bfMatch = cv::BFMatcher::create(cv::NORM_HAMMING, true);
 	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor);
 	return true;
 }

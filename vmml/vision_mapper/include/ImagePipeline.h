@@ -34,8 +34,6 @@ class ImagePipeline {
 public:
 	ImagePipeline(const cv::Size& inputSize=cv::Size());
 
-	inline void setIntendedInputSize(const cv::Size& inSize)
-	{ intentInputSize = inSize; }
 
 	/*
 	 * Setup functions
@@ -44,6 +42,8 @@ public:
 	/*
 	 * Input feature mask must be full size
 	 */
+	void setIntendedInputSize(const cv::Size& inSize);
+
 	void setFixedFeatureMask(const std::string &imageMaskPath);
 
 	void setFixedFeatureMask(const cv::Mat &fmask);

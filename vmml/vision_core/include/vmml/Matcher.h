@@ -51,6 +51,12 @@ public:
 		const BaseFrame &F2,
 		PairList &featurePairs);
 
+	static int
+	matchBF2(
+		const BaseFrame &F1,
+		const BaseFrame &F2,
+		PairList &featurePairs);
+
 	static void matchViso(const BaseFrame &F1, const BaseFrame &F2, PairList &featurePairs);
 
 	// Match with epipolar constraints
