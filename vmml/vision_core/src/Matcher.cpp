@@ -48,6 +48,13 @@ const int
 int
 	Matcher::__maxDraw = 1;
 
+/*
+ * Parameters for Optical Flow
+ */
+const cv::Size optFlowWindowSize(15, 15);
+const int maxLevel = 2;
+const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteria::COUNT, 10, 0.03);
+
 
 int countFeaturePairMask(const cv::Mat &M)
 {
@@ -294,9 +301,10 @@ Matcher::matchOpticalFlow(
 	const BaseFrame &F2,
 	PairList &featurePairs)
 {
-	const cv::Size optFlowWindowSize(15, 15);
-	const int maxLevel = 2;
-	const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteria::COUNT, 10, 0.03);
+	vector<cv::DMatch> bfResult1;
+	auto bfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING, true);
+	bfMatcher->match(F2.allDescriptors(), F1.allDescriptors(), bfResult1);
+	// XXX: Unfinished
 
 	vector<uchar> statusOf(F1.numOfKeyPoints());
 	vector<float> errOf(F1.numOfKeyPoints());
@@ -316,13 +324,6 @@ Matcher::matchOpticalFlow(
 	searchTree2.setInputCloud(cloudPlane2);
 
 	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
-/*
-	if (featurePairs.empty())
-		vKeypoints1=F1.allKeypointsAsMat();
-	else {
-
-	}
-*/
 
 	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(),
 		vKeypoints1, vKeypoints2,
@@ -339,6 +340,11 @@ Matcher::matchOpticalFlow(
 	assert(vKeypoints1.size()==vKeypoints2.size());
 	cv::Mat absDiff(cv::abs(vKeypoints1-p1));
 
+	for (int i=0; i<bfResult1.size(); ++i) {
+
+	}
+
+/*
 	for (int i=0; i<vKeypoints1.rows; ++i) {
 
 		if (statusOf[i]!=1)
@@ -366,6 +372,7 @@ Matcher::matchOpticalFlow(
 		featurePairs.push_back(make_pair(i,bestIdx));
 
 	}
+*/
 
 	return featurePairs.size();
 }
