@@ -297,8 +297,8 @@ Matcher::matchBF2(
  */
 int
 Matcher::matchOpticalFlow(
-	const BaseFrame &F1,
-	const BaseFrame &F2,
+	const BaseFrame &F1,			// F1: train
+	const BaseFrame &F2,			// F2: query
 	PairList &featurePairs)
 {
 	vector<cv::DMatch> bfResult1;
@@ -315,6 +315,7 @@ Matcher::matchOpticalFlow(
 	// Create KD-Tree for Frame 2
 	// XXX: This search tree may need to be moved to BaseFrame,
 	// if there's use cases for it
+/*
 	pcl::PointCloud<pcl::PointXY>::Ptr cloudPlane2(new pcl::PointCloud<pcl::PointXY>);
 	pcl::KdTreeFLANN<pcl::PointXY> searchTree2;
 	for (auto &pt: F2.allKeypoints()) {
@@ -322,6 +323,7 @@ Matcher::matchOpticalFlow(
 		cloudPlane2->push_back(ptc);
 	}
 	searchTree2.setInputCloud(cloudPlane2);
+*/
 
 	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
 
@@ -340,39 +342,26 @@ Matcher::matchOpticalFlow(
 	assert(vKeypoints1.size()==vKeypoints2.size());
 	cv::Mat absDiff(cv::abs(vKeypoints1-p1));
 
-	for (int i=0; i<bfResult1.size(); ++i) {
+	for (auto &curMatch: bfResult1) {
 
+		uint keyIdx1 = curMatch.trainIdx,
+			keyIdx2 = curMatch.queryIdx;
+
+		if (statusOf[keyIdx1]!=1)
+			continue;
+
+		cv::Point2f pointCheck(vKeypoints2.row(keyIdx1));
+		if (pointCheck.x<0 or pointCheck.x>=F2.width() or pointCheck.y<0 or pointCheck.y>=F2.height())
+			continue;
+		if (absDiff.at<float>(keyIdx1,0)>=1 or absDiff.at<float>(keyIdx1,1)>=1)
+			continue;
+
+		auto pointTarget = F2.keypoint(keyIdx2).pt;
+		if (cv::norm(pointTarget-pointCheck)>4.0)
+			continue;
+
+		featurePairs.push_back(make_pair(curMatch.trainIdx, curMatch.queryIdx));
 	}
-
-/*
-	for (int i=0; i<vKeypoints1.rows; ++i) {
-
-		if (statusOf[i]!=1)
-			continue;
-		cv::Point2f pt(vKeypoints2.row(i));
-		if (pt.x<0 or pt.x>=F2.width() or pt.y<0 or pt.y>=F2.height())
-			continue;
-
-		pcl::PointXY queryPt({vKeypoints2.at<float>(i,0), vKeypoints2.at<float>(i,1)});
-		vector<int> indices2;
-		vector<float> sqrDist;
-		searchTree2.radiusSearch(queryPt, 3.0, indices2, sqrDist);
-		if (indices2.size()==0)
-			continue;
-
-		int bestIdx;
-		uint score=numeric_limits<uint>::max();
-		for (auto &j: indices2) {
-			uint d = cv::hal::normHamming(F1.descriptorc(i), F2.descriptorc(j), F2.descriptorSize());
-			if (d<score) {
-				score = d;
-				bestIdx = j;
-			}
-		}
-		featurePairs.push_back(make_pair(i,bestIdx));
-
-	}
-*/
 
 	return featurePairs.size();
 }

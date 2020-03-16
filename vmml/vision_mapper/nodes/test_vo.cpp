@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 		cv::Mat mask;
 		imagePipe.run(currentImage, currentImage, mask);
 
-		VoRunner.process(currentImage, timestamp, mask);
+		VoRunner.process(currentImage, timestamp, mask, true);
 
 		// Visualization
 		auto anchor = VoRunner.getAnchorFrame();
@@ -95,10 +95,6 @@ int main(int argc, char *argv[])
 
 		auto drawFrame = drawOpticalFlow(anchor, current, matches);
 		rosConn.publishImage(drawFrame, ros::Time::fromBoost(timestamp));
-
-		cout << n << ": " << VoRunner.getInlier() << endl;
-
-		cout << targetFrameId[n-1] << '-' << targetFrameId[n] << endl;
 
 		if (hasBreak==true)
 			break;
