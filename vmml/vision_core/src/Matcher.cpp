@@ -10,7 +10,6 @@
 #include <limits>
 #include <array>
 #include <pcl/point_cloud.h>
-#include <pcl/kdtree/kdtree_flann.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
@@ -292,6 +291,27 @@ Matcher::matchBF2(
 }
 
 
+bool isMoving(const vector<pair<cv::Point2f,cv::Point2f>> &flows)
+{
+	uint c=0;
+	for (auto &pr: flows) {
+		float dist = cv::norm(pr.first-pr.second);
+		if (dist<=1.0)
+			c+=1;
+	}
+
+	float confidence=float(c)/float(flows.size());
+	if (confidence < 0.5) {
+		cout << "Moving: " << confidence << endl;
+		return true;
+	}
+	else {
+		cout << "Not moving: " << confidence << endl;
+		return false;
+	}
+}
+
+
 /*
  * Match features using Sparse Lucas-Kanade Optical Flow
  */
@@ -311,20 +331,6 @@ Matcher::matchOpticalFlow(
 
 	// Store targets
 	cv::Mat vKeypoints2, p1;
-
-	// Create KD-Tree for Frame 2
-	// XXX: This search tree may need to be moved to BaseFrame,
-	// if there's use cases for it
-/*
-	pcl::PointCloud<pcl::PointXY>::Ptr cloudPlane2(new pcl::PointCloud<pcl::PointXY>);
-	pcl::KdTreeFLANN<pcl::PointXY> searchTree2;
-	for (auto &pt: F2.allKeypoints()) {
-		pcl::PointXY ptc({pt.pt.x, pt.pt.y});
-		cloudPlane2->push_back(ptc);
-	}
-	searchTree2.setInputCloud(cloudPlane2);
-*/
-
 	cv::Mat vKeypoints1 = F1.allKeypointsAsMat();
 
 	cv::calcOpticalFlowPyrLK(F1.getImage(), F2.getImage(),
@@ -341,6 +347,8 @@ Matcher::matchOpticalFlow(
 
 	assert(vKeypoints1.size()==vKeypoints2.size());
 	cv::Mat absDiff(cv::abs(vKeypoints1-p1));
+
+	vector<pair<cv::Point2f,cv::Point2f>> flowChecks;
 
 	for (auto &curMatch: bfResult1) {
 
@@ -361,8 +369,10 @@ Matcher::matchOpticalFlow(
 			continue;
 
 		featurePairs.push_back(make_pair(curMatch.trainIdx, curMatch.queryIdx));
+		flowChecks.push_back(make_pair(F1.keypoint(keyIdx1).pt, F2.keypoint(keyIdx2).pt));
 	}
 
+	isMoving(flowChecks);
 	return featurePairs.size();
 }
 
