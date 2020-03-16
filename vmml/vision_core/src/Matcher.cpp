@@ -280,17 +280,6 @@ Matcher::matchBruteForce(
 }
 
 
-int
-Matcher::matchBF2(
-	const BaseFrame &F1,
-	const BaseFrame &F2,
-	PairList &featurePairs)
-{
-	auto matcher = cv::BFMatcher::create(cv::NORM_HAMMING, true);
-//	matcher->match(F2.allDescriptors(), F1.allDescriptors())
-}
-
-
 bool isMoving(const vector<pair<cv::Point2f,cv::Point2f>> &flows)
 {
 	uint c=0;
@@ -302,11 +291,11 @@ bool isMoving(const vector<pair<cv::Point2f,cv::Point2f>> &flows)
 
 	float confidence=float(c)/float(flows.size());
 	if (confidence < 0.5) {
-		cout << "Moving: " << confidence << endl;
+		cout << "Moving: " << c << '/' << flows.size() << endl;
 		return true;
 	}
 	else {
-		cout << "Not moving: " << confidence << endl;
+		cout << "Not moving: " << c << '/' << flows.size() << endl;
 		return false;
 	}
 }

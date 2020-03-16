@@ -132,9 +132,7 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 	auto bfMatch = cv::BFMatcher::create(cv::NORM_HAMMING, true);
 	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor, &isMoving);
 
-	if (matchOnly==false) {
-		// Epipolar geometry constraints tend to reduce number of feature matches,
-		// to the point that when camera is stationary there is no matching detected
+	if (matchOnly==false and isMoving==true) {
 
 		// Get transformation, and inliers
 		TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor, voMatcherToAnchor);

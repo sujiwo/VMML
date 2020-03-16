@@ -52,12 +52,6 @@ public:
 		PairList &featurePairs,
 		bool *isMoving=nullptr);
 
-	static int
-	matchBF2(
-		const BaseFrame &F1,
-		const BaseFrame &F2,
-		PairList &featurePairs);
-
 	static void matchViso(const BaseFrame &F1, const BaseFrame &F2, PairList &featurePairs);
 
 	// Match with epipolar constraints

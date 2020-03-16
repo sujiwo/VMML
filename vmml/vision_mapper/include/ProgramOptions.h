@@ -160,6 +160,7 @@ protected:
 	TTransform lidarToCamera=TTransform::Identity();
 
 	ImagePipeline imagePipeline;
+	bool useRetinex;
 };
 
 } /* namespace Mapper */

@@ -194,20 +194,14 @@ int main(int argc, char *argv[])
 	Vmml::Mapper::ProgramOptions progOpts;
 	string outputBag;
 	float resample, startTime, stopTime;
-	bool useRetinex=false;
 
 	progOpts.addSimpleOptions("bag-output", "Bag output", outputBag);
 	progOpts.addSimpleOptions("resample", "Rate for playing bag", resample);
 	progOpts.addSimpleOptions("start-time", "Process will start from x seconds", startTime);
 	progOpts.addSimpleOptions("stop-time", "Maximum seconds from start", stopTime);
-	progOpts.addSimpleOptions("retinex", "Maximum seconds from start", useRetinex);
 
 	progOpts.parseCommandLineArgs(argc, argv);
 	imgPipe = &progOpts.getImagePipeline();
-	if (useRetinex==true) {
-		cout << "Retinex enabled\n";
-		imgPipe->setRetinex();
-	}
 
 	signal(SIGINT, breakHandler);
 

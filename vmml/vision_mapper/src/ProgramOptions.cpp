@@ -87,6 +87,7 @@ ProgramOptions::ProgramOptions() :
 	addSimpleOptions("gnss-topic", "GNSS topic contained in bag", gnssTopic);
 	addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
 	addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
+	addSimpleOptions("retinex", "Enable/disable Retinex enhancement", useRetinex);
 }
 
 
@@ -239,6 +240,8 @@ ProgramOptions::openInputs()
 	if (segnetModelPath.empty()==false and segnetWeightsPath.empty()==false)
 		imagePipeline.setSemanticSegmentation(segnetModelPath, segnetWeightsPath);
 	imagePipeline.setFixedFeatureMask(featureMask);
+	if (useRetinex)
+		imagePipeline.setRetinex();
 
 	if (inputBagPath.empty()==true)
 		return;
