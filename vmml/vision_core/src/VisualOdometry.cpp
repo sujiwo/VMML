@@ -50,27 +50,6 @@ VisualOdometry::~VisualOdometry()
 
 
 bool
-VisualOdometry::runMatching2 (cv::Mat img, const ptime &timestamp, cv::Mat mask)
-{
-	if (mAnchorImage==nullptr and mCurrentImage==nullptr) {
-		mAnchorImage = BaseFrame::create(img, param.camera);
-		mAnchorImage->computeFeatures(featureDetector, mask);
-		mAnchorImage->setPose(Pose::Identity());
-		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
-		return false;
-	}
-	if (mCurrentImage!=nullptr)
-		mAnchorImage = mCurrentImage;
-	mCurrentImage = BaseFrame::create(img, param.camera);
-	mCurrentImage->computeFeatures(featureDetector, mask);
-
-	auto bfMatch = cv::BFMatcher::create(cv::NORM_HAMMING, true);
-	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor);
-	return true;
-}
-
-
-bool
 VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
 	mCurrentImage = BaseFrame::create(img, param.camera);
@@ -135,9 +114,23 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 bool
 VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool matchOnly)
 {
-	bool bMatch = runMatching2(img, timestamp, mask);
-	if (bMatch==false)
+	bool isMoving;
+
+	if (mAnchorImage==nullptr and mCurrentImage==nullptr) {
+		mAnchorImage = BaseFrame::create(img, param.camera);
+		mAnchorImage->computeFeatures(featureDetector, mask);
+		mAnchorImage->setPose(Pose::Identity());
+		mVoTrack.push_back(PoseStamped(Pose::Identity(), timestamp));
 		return false;
+	}
+	if (mCurrentImage!=nullptr)
+		mAnchorImage = mCurrentImage;
+	mCurrentImage = BaseFrame::create(img, param.camera);
+	mCurrentImage->computeFeatures(featureDetector, mask);
+
+	// NORM_HAMMING is used for binary descriptor, such as ORB and AKAZE
+	auto bfMatch = cv::BFMatcher::create(cv::NORM_HAMMING, true);
+	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor, &isMoving);
 
 	if (matchOnly==false) {
 		// Epipolar geometry constraints tend to reduce number of feature matches,

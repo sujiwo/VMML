@@ -87,6 +87,11 @@ public:
 		);
 	}
 
+/*
+	template<>
+	void addSimpleOptions<bool>(const std::string &opt, const std::string &description, bool& target);
+*/
+
 	inline int getArgc() const
 	{ return rArgc; }
 
@@ -159,5 +164,10 @@ protected:
 
 } /* namespace Mapper */
 } /* namespace Vmml */
+
+
+template<>
+void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool& target);
+
 
 #endif /* VMML_MAPPER_PROGRAMOPTIONS_H_ */

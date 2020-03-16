@@ -49,7 +49,8 @@ public:
 	matchOpticalFlow(
 		const BaseFrame &F1,
 		const BaseFrame &F2,
-		PairList &featurePairs);
+		PairList &featurePairs,
+		bool *isMoving=nullptr);
 
 	static int
 	matchBF2(

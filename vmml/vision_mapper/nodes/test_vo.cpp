@@ -56,12 +56,16 @@ int main(int argc, char *argv[])
 	voProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
 	voProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
 	voProg.addSimpleOptions("frames", "Maximum number of frames", maxFrameNum);
+
+	bool useRetinex;
+	voProg.addSimpleOptions("retinex", "Enable/disable Retinex enhancement", useRetinex);
+
 	voProg.parseCommandLineArgs(argc, argv);
 
 	VisualOdometry::Parameters voPars;
 	voPars.camera = voProg.getWorkingCameraParameter();
 	auto imagePipe = voProg.getImagePipeline();
-//	imagePipe.setRetinex();
+	if (useRetinex) imagePipe.setRetinex();
 
 	signal(SIGINT, breakHandler);
 

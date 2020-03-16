@@ -46,8 +46,6 @@ public:
 
 	bool runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat());
 
-	bool runMatching2 (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat());
-
 	bool process (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat(), bool matchOnly=false);
 
 	inline const Trajectory& getTrajectory() const

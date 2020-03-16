@@ -284,5 +284,16 @@ ProgramOptions::openInputs()
 }
 
 
+template<>
+void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool& target)
+{
+	_options.add_options()(opt.c_str(), boost::program_options::bool_switch()
+		->default_value(false)->notifier([&](const bool &v) {
+			target = v;
+	}),
+	description.c_str());
+}
+
+
 } /* namespace Mapper */
 } /* namespace Vmml */

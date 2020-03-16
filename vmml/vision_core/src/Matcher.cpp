@@ -319,12 +319,12 @@ int
 Matcher::matchOpticalFlow(
 	const BaseFrame &F1,			// F1: train
 	const BaseFrame &F2,			// F2: query
-	PairList &featurePairs)
+	PairList &featurePairs,
+	bool *moveDec)
 {
 	vector<cv::DMatch> bfResult1;
 	auto bfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING, true);
 	bfMatcher->match(F2.allDescriptors(), F1.allDescriptors(), bfResult1);
-	// XXX: Unfinished
 
 	vector<uchar> statusOf(F1.numOfKeyPoints());
 	vector<float> errOf(F1.numOfKeyPoints());
@@ -372,7 +372,9 @@ Matcher::matchOpticalFlow(
 		flowChecks.push_back(make_pair(F1.keypoint(keyIdx1).pt, F2.keypoint(keyIdx2).pt));
 	}
 
-	isMoving(flowChecks);
+	if (moveDec!=nullptr)
+		*moveDec = isMoving(flowChecks);
+
 	return featurePairs.size();
 }
 

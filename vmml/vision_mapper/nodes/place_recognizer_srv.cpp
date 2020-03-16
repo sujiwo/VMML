@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
 	progOptions.addSimpleOptions("map-path", "Path to Map File", mapPath);
 	progOptions.parseCommandLineArgs(argc, argv);
 	imagePipe = &progOptions.getImagePipeline();
-	imagePipe->setRetinex();
 
 	cout << "Loading map... " << flush;
 	imageDb.loadFromDisk(mapPath);
