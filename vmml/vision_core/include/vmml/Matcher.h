@@ -72,12 +72,13 @@ public:
 		PairList &validPairsByTriangulation);
 
 	/*
-	 * Perform motion estimation with hint from metric odometry
+	 * Perform motion estimation and triangulation
 	 */
-	static TTransform
+	static void
 	calculateMovement2(const BaseFrame &F1, const BaseFrame &F2,
 		const PairList &featurePairs,
-		PairList &validPairsByTriangulation, const TTransform &hint);
+		PairList &validPairsByTriangulation,
+		TTransform &movement, std::vector<Eigen::Vector3d> &points3);
 
 	// Match with homography constraints.
 	// We have to compute new features based on custom mask

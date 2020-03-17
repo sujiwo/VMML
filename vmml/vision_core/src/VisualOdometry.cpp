@@ -135,7 +135,12 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 	if (matchOnly==false and isMoving==true) {
 
 		// Get transformation, and inliers
-		TTransform motion = Matcher::calculateMovement(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor, voMatcherToAnchor);
+		vector<Vector3d> points3;
+		TTransform motion;
+		Matcher::calculateMovement2(
+			*mAnchorImage, *mCurrentImage,
+			flowMatcherToAnchor, voMatcherToAnchor,
+			motion, points3);
 		if (voMatcherToAnchor.size()<=10)
 			return false;
 
@@ -143,13 +148,16 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 		mCurrentImage->setPose(pCurrent);
 		mVoTrack.push_back(PoseStamped(mCurrentImage->pose(), timestamp));
 
+		// XXX: Transform points3
+/*
 		map<uint, Vector3d> mapPoints;
 		float parallax;
 		TriangulateCV(*mAnchorImage, *mCurrentImage, voMatcherToAnchor, mapPoints, &parallax);
 		for (auto &pt3dPr: mapPoints) {
 			points3d->push_back(PointType(pt3dPr.second.x(), pt3dPr.second.y(), pt3dPr.second.z()));
 		}
-		cout << "Found " << mapPoints.size() << " points" << endl;
+*/
+		cout << "Found " << points3.size() << " triangulated points" << endl;
 	}
 
 	else {

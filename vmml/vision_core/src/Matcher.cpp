@@ -291,11 +291,11 @@ bool isMoving(const vector<pair<cv::Point2f,cv::Point2f>> &flows)
 
 	float confidence=float(c)/float(flows.size());
 	if (confidence < 0.5) {
-		cout << "Moving: " << c << '/' << flows.size() << endl;
+//		cout << "Moving: " << c << '/' << flows.size() << endl;
 		return true;
 	}
 	else {
-		cout << "Not moving: " << c << '/' << flows.size() << endl;
+//		cout << "Not moving: " << c << '/' << flows.size() << endl;
 		return false;
 	}
 }
@@ -456,7 +456,7 @@ Matcher::calculateMovement (
 	}
 
 	cv::Mat E12, R12e, te, mask;
-	E12 = cv::findEssentialMat(pointsIn1, pointsIn2, F1.cameraParam.toCvMat(), cv::RANSAC, 0.999, 3.84*Matcher::circleOfConfusionDiameter, mask);
+	E12 = cv::findEssentialMat(pointsIn1, pointsIn2, F1.cameraParam.toCvMat(), cv::RANSAC, 0.9, 4.0, mask);
 
 	int inliers;
 	inliers = cv::recoverPose(E12, pointsIn1, pointsIn2, F1.cameraParam.toCvMat(), R12e, te, mask);
@@ -473,14 +473,187 @@ Matcher::calculateMovement (
 
 
 /*
- * Perform motion estimation with hint from metric odometry
+ * Backport from OpenCV 4
  */
-TTransform
+int MRecoverPose( cv::InputArray E, cv::InputArray _points1, cv::InputArray _points2,
+                            cv::InputArray _cameraMatrix, cv::OutputArray _R, cv::OutputArray _t, double distanceThresh,
+                     cv::InputOutputArray _mask, cv::OutputArray triangulatedPoints)
+{
+	cv::Mat points1, points2, cameraMatrix;
+	_points1.getMat().convertTo(points1, CV_64F);
+	_points2.getMat().convertTo(points2, CV_64F);
+	_cameraMatrix.getMat().convertTo(cameraMatrix, CV_64F);
+
+	int npoints = points1.checkVector(2);
+	CV_Assert( npoints >= 0 && points2.checkVector(2) == npoints &&
+			points1.type() == points2.type());
+
+	CV_Assert(cameraMatrix.rows == 3 && cameraMatrix.cols == 3 && cameraMatrix.channels() == 1);
+
+	if (points1.channels() > 1)
+	{
+		points1 = points1.reshape(1, npoints);
+		points2 = points2.reshape(1, npoints);
+	}
+
+	double fx = cameraMatrix.at<double>(0,0);
+	double fy = cameraMatrix.at<double>(1,1);
+	double cx = cameraMatrix.at<double>(0,2);
+	double cy = cameraMatrix.at<double>(1,2);
+
+	points1.col(0) = (points1.col(0) - cx) / fx;
+	points2.col(0) = (points2.col(0) - cx) / fx;
+	points1.col(1) = (points1.col(1) - cy) / fy;
+	points2.col(1) = (points2.col(1) - cy) / fy;
+
+	points1 = points1.t();
+	points2 = points2.t();
+
+	cv::Mat R1, R2, t;
+	cv::decomposeEssentialMat(E, R1, R2, t);
+	cv::Mat P0 = cv::Mat::eye(3, 4, R1.type());
+	cv::Mat P1(3, 4, R1.type()), P2(3, 4, R1.type()), P3(3, 4, R1.type()), P4(3, 4, R1.type());
+	P1(cv::Range::all(), cv::Range(0, 3)) = R1 * 1.0; P1.col(3) = t * 1.0;
+	P2(cv::Range::all(), cv::Range(0, 3)) = R2 * 1.0; P2.col(3) = t * 1.0;
+	P3(cv::Range::all(), cv::Range(0, 3)) = R1 * 1.0; P3.col(3) = -t * 1.0;
+	P4(cv::Range::all(), cv::Range(0, 3)) = R2 * 1.0; P4.col(3) = -t * 1.0;
+
+	// Do the cheirality check.
+	// Notice here a threshold dist is used to filter
+	// out far away points (i.e. infinite points) since
+	// their depth may vary between positive and negative.
+	std::vector<cv::Mat> allTriangulations(4);
+	cv::Mat Q;
+
+	cv::triangulatePoints(P0, P1, points1, points2, Q);
+	if(triangulatedPoints.needed())
+		Q.copyTo(allTriangulations[0]);
+	cv::Mat mask1 = Q.row(2).mul(Q.row(3)) > 0;
+	Q.row(0) /= Q.row(3);
+	Q.row(1) /= Q.row(3);
+	Q.row(2) /= Q.row(3);
+	Q.row(3) /= Q.row(3);
+	mask1 = (Q.row(2) < distanceThresh) & mask1;
+	Q = P1 * Q;
+	mask1 = (Q.row(2) > 0) & mask1;
+	mask1 = (Q.row(2) < distanceThresh) & mask1;
+
+	cv::triangulatePoints(P0, P2, points1, points2, Q);
+	if(triangulatedPoints.needed())
+		Q.copyTo(allTriangulations[1]);
+	cv::Mat mask2 = Q.row(2).mul(Q.row(3)) > 0;
+	Q.row(0) /= Q.row(3);
+	Q.row(1) /= Q.row(3);
+	Q.row(2) /= Q.row(3);
+	Q.row(3) /= Q.row(3);
+	mask2 = (Q.row(2) < distanceThresh) & mask2;
+	Q = P2 * Q;
+	mask2 = (Q.row(2) > 0) & mask2;
+	mask2 = (Q.row(2) < distanceThresh) & mask2;
+
+	cv::triangulatePoints(P0, P3, points1, points2, Q);
+	if(triangulatedPoints.needed())
+		Q.copyTo(allTriangulations[2]);
+	cv::Mat mask3 = Q.row(2).mul(Q.row(3)) > 0;
+	Q.row(0) /= Q.row(3);
+	Q.row(1) /= Q.row(3);
+	Q.row(2) /= Q.row(3);
+	Q.row(3) /= Q.row(3);
+	mask3 = (Q.row(2) < distanceThresh) & mask3;
+	Q = P3 * Q;
+	mask3 = (Q.row(2) > 0) & mask3;
+	mask3 = (Q.row(2) < distanceThresh) & mask3;
+
+	cv::triangulatePoints(P0, P4, points1, points2, Q);
+	if(triangulatedPoints.needed())
+		Q.copyTo(allTriangulations[3]);
+	cv::Mat mask4 = Q.row(2).mul(Q.row(3)) > 0;
+	Q.row(0) /= Q.row(3);
+	Q.row(1) /= Q.row(3);
+	Q.row(2) /= Q.row(3);
+	Q.row(3) /= Q.row(3);
+	mask4 = (Q.row(2) < distanceThresh) & mask4;
+	Q = P4 * Q;
+	mask4 = (Q.row(2) > 0) & mask4;
+	mask4 = (Q.row(2) < distanceThresh) & mask4;
+
+	mask1 = mask1.t();
+	mask2 = mask2.t();
+	mask3 = mask3.t();
+	mask4 = mask4.t();
+
+	// If _mask is given, then use it to filter outliers.
+	if (!_mask.empty())
+	{
+		cv::Mat mask = _mask.getMat();
+		CV_Assert(npoints == mask.checkVector(1));
+		mask = mask.reshape(1, npoints);
+		cv::bitwise_and(mask, mask1, mask1);
+		cv::bitwise_and(mask, mask2, mask2);
+		cv::bitwise_and(mask, mask3, mask3);
+		cv::bitwise_and(mask, mask4, mask4);
+	}
+	if (_mask.empty() && _mask.needed())
+	{
+		_mask.create(mask1.size(), CV_8U);
+	}
+
+	CV_Assert(_R.needed() && _t.needed());
+	_R.create(3, 3, R1.type());
+	_t.create(3, 1, t.type());
+
+	int good1 = cv::countNonZero(mask1);
+	int good2 = cv::countNonZero(mask2);
+	int good3 = cv::countNonZero(mask3);
+	int good4 = cv::countNonZero(mask4);
+
+	if (good1 >= good2 && good1 >= good3 && good1 >= good4)
+	{
+		if(triangulatedPoints.needed()) allTriangulations[0].copyTo(triangulatedPoints);
+		R1.copyTo(_R);
+		t.copyTo(_t);
+		if (_mask.needed()) mask1.copyTo(_mask);
+		return good1;
+	}
+	else if (good2 >= good1 && good2 >= good3 && good2 >= good4)
+	{
+		if(triangulatedPoints.needed()) allTriangulations[1].copyTo(triangulatedPoints);
+		R2.copyTo(_R);
+		t.copyTo(_t);
+		if (_mask.needed()) mask2.copyTo(_mask);
+		return good2;
+	}
+	else if (good3 >= good1 && good3 >= good2 && good3 >= good4)
+	{
+		if(triangulatedPoints.needed()) allTriangulations[2].copyTo(triangulatedPoints);
+		t = -t;
+		R1.copyTo(_R);
+		t.copyTo(_t);
+		if (_mask.needed()) mask3.copyTo(_mask);
+		return good3;
+	}
+	else
+	{
+		if(triangulatedPoints.needed()) allTriangulations[3].copyTo(triangulatedPoints);
+		t = -t;
+		R2.copyTo(_R);
+		t.copyTo(_t);
+		if (_mask.needed()) mask4.copyTo(_mask);
+		return good4;
+	}
+}
+
+
+/*
+ * Perform motion estimation with hint from metric odometry.
+ * Movement is calculated as if F1 is identity.
+ */
+void
 Matcher::calculateMovement2(const BaseFrame &F1, const BaseFrame &F2,
 	const PairList &featurePairs,
-	PairList &validPairsByTriangulation, const TTransform &hint)
+	PairList &validPairsByTriangulation, TTransform &movement, std::vector<Eigen::Vector3d> &points3)
 {
-	validPairsByTriangulation = featurePairs;
+//	validPairsByTriangulation = featurePairs;
 
 	vector<cv::Point2f> pointsIn1(featurePairs.size()), pointsIn2(featurePairs.size());
 	for (int i=0; i<featurePairs.size(); ++i) {
@@ -489,9 +662,49 @@ Matcher::calculateMovement2(const BaseFrame &F1, const BaseFrame &F2,
 		pointsIn2[i] = F2.fKeypoints[m.second].pt;
 	}
 
-	cv::Mat E12, R12e, te, mask;
-	E12 = cv::findEssentialMat(pointsIn1, pointsIn2, F1.cameraParam.toCvMat(), cv::RANSAC, 0.999, 3.84*Matcher::circleOfConfusionDiameter, mask);
+	cv::Mat E12, R12e, te, mask, triangulatedPts;
+	E12 = cv::findEssentialMat(pointsIn1, pointsIn2, F1.cameraParam.toCvMat(), cv::RANSAC, 0.9, 4.0, mask);
 
+	int inliers;
+	double distanceThreshold = 100.0;
+	inliers = MRecoverPose(
+		E12,
+		pointsIn1, pointsIn2,
+		F1.cameraParam.toCvMat(),
+		R12e, te,
+		distanceThreshold,
+		mask,
+		triangulatedPts);
+
+	int ctr=0;
+	points3.clear();
+	validPairsByTriangulation.clear();
+
+	for (int i=0; i<mask.rows; ++i) {
+		auto m=mask.at<uchar>(i,0);
+		if (m!=0) {
+			ctr+=1;
+
+			triangulatedPts.col(i) /= triangulatedPts.at<double>(3,i);
+			Vector3d pt3(triangulatedPts.at<double>(0,i),
+					triangulatedPts.at<double>(1,i),
+					triangulatedPts.at<double>(2,i));
+
+			points3.push_back(pt3);
+			validPairsByTriangulation.push_back(featurePairs[i]);
+		}
+	}
+
+	assert(ctr==inliers);
+
+//	filterFeaturePairMask(validPairsByTriangulation, mask);
+
+	Matrix3d R12;
+	Vector3d t;
+	cv2eigen(R12e, R12);
+	cv2eigen(te, t);
+
+	movement = TTransform::from_R_t(t, R12);
 }
 
 
