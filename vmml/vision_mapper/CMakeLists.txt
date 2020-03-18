@@ -294,3 +294,13 @@ target_link_libraries(
 		${common_libs}
 )
 
+add_executable(
+	imagelidar_projection
+		nodes/imagelidar_projection.cpp
+)
+
+target_link_libraries(
+	imagelidar_projection
+		vmml_mapper
+		${common_libs}
+)
