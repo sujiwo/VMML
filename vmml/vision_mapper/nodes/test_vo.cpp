@@ -10,6 +10,7 @@
 #include <pcl/io/pcd_io.h>
 #include "vmml/VisualOdometry.h"
 #include "vmml/utilities.h"
+#include "vmml/Matcher.h"
 #include "ProgramOptions.h"
 #include "RVizConnector.h"
 
@@ -51,11 +52,13 @@ int main(int argc, char *argv[])
 	float startTimeSeconds=0;
 	float maxSecondsFromStart=-1;
 	int maxFrameNum=-1;
+	float resample=10.0;
 
 	ProgramOptions voProg;
 	voProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
 	voProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
 	voProg.addSimpleOptions("frames", "Maximum number of frames", maxFrameNum);
+	voProg.addSimpleOptions("resample", "Reduce image rate to x Hz", resample);
 	voProg.parseCommandLineArgs(argc, argv);
 
 	VisualOdometry::Parameters voPars;
@@ -73,7 +76,7 @@ int main(int argc, char *argv[])
 	RVizConnector rosConn(argc, argv, "test_vo");
 
 	vector<uint64> targetFrameId;
-	imageBag->desample(10.0, targetFrameId);
+	imageBag->desample(resample, targetFrameId);
 	if (maxFrameNum==-1)
 		maxFrameNum = targetFrameId.size();
 

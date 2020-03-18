@@ -146,7 +146,6 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 
 		Pose pCurrent = mAnchorImage->pose() * motion;
 		mCurrentImage->setPose(pCurrent);
-		mVoTrack.push_back(PoseStamped(mCurrentImage->pose(), timestamp));
 
 		// XXX: Transform points3
 /*
@@ -161,11 +160,13 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 	}
 
 	else {
+		mCurrentImage->setPose(mAnchorImage->pose());
 		voMatcherToAnchor = flowMatcherToAnchor;
 	}
 
-	frameCounter+=1;
+	mVoTrack.push_back(PoseStamped(mCurrentImage->pose(), timestamp));
 
+	frameCounter+=1;
 	return true;
 }
 
