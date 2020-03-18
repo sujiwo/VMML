@@ -26,8 +26,8 @@ public:
 	virtual ~ImageBag();
 
 	cv::Mat at(unsigned int position, bool raw=false);
-	cv::Mat at(const ptime &t);
-	cv::Mat at(const ros::Time &t);
+	cv::Mat at(const ptime &t, double *timeDiff=nullptr);
+	cv::Mat at(const ros::Time &t, double *timeDiff=nullptr);
 
 	cv::Mat getGrayscale(unsigned int position);
 

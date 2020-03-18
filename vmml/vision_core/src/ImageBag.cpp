@@ -52,16 +52,21 @@ ImageBag::getGrayscale(unsigned int position)
 
 
 cv::Mat
-ImageBag::at(const ptime &t)
+ImageBag::at(const ptime &t, double *timeDiff)
 {
-	return at(ros::Time::fromBoost(t));
+	return at(ros::Time::fromBoost(t), timeDiff);
 }
 
 
 cv::Mat
-ImageBag::at(const ros::Time &t)
+ImageBag::at(const ros::Time &t, double *timeDiff)
 {
 	uint N = getPositionAtTime(t);
+	auto tExact = timeAt(N);
+
+	if (timeDiff!=nullptr)
+		*timeDiff = (tExact-t).toSec();
+
 	return at(N);
 }
 
