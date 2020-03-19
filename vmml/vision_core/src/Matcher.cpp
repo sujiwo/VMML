@@ -308,6 +308,13 @@ Matcher::createMask(const BaseFrame &F1, const BaseFrame &F2, const PairList &pr
 	if (prevMatch.empty())
 		return mmask;
 
+	else {
+		mmask = ~mmask;
+		for (auto &pmatch: prevMatch) {
+			mmask.col(pmatch.second).setTo(0xff);
+		}
+		return mmask;
+	}
 }
 
 
