@@ -277,25 +277,4 @@ install(
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-add_executable(
-	test_rgb_filters
-		nodes/test_rgb_filters.cpp
-)
-
-target_link_libraries(
-	test_rgb_filters
-		vmml_mapper
-		${common_libs}
-)
-
-add_executable(
-	testbag
-		nodes/testbag.cpp
-)
-
-target_link_libraries(
-	testbag
-		vmml_mapper
-		${common_libs}
-)
 

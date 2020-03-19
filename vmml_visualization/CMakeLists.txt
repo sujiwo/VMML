@@ -50,17 +50,45 @@ if (SEGNET_FOUND)
 	list(APPEND common_libs ${Caffe_LIBRARIES})
 endif()
 
+###
 add_executable(
 	imagelidar_projection
 		nodes/imagelidar_projection.cpp
 )
-
 target_link_libraries(
 	imagelidar_projection
 		${common_libs}
 )
-
 install(
 	TARGETS imagelidar_projection
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+###
+add_executable(
+	test_rgb_filters
+		nodes/test_rgb_filters.cpp
+)
+target_link_libraries(
+	test_rgb_filters
+		${common_libs}
+)
+install(
+	TARGETS test_rgb_filters
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+###
+add_executable(
+	testbag
+		nodes/testbag.cpp
+)
+target_link_libraries(
+	testbag
+		${common_libs}
+)
+install(
+	TARGETS testbag
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
