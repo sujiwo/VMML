@@ -97,6 +97,8 @@ protected:
 	FeatureTrackList voFeatureTracker;
 
 	uint frameCounter = 0;
+
+	cv::Ptr<cv::BFMatcher> bfMatch;
 };
 
 } /* namespace Vmml */

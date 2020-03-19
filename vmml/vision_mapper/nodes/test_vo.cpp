@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <pcl/io/pcd_io.h>
+#include <opencv2/imgproc.hpp>
 #include "vmml/VisualOdometry.h"
 #include "vmml/utilities.h"
 #include "vmml/Matcher.h"
@@ -93,7 +94,7 @@ int main(int argc, char *argv[])
 		// Visualization
 		auto anchor = VoRunner.getAnchorFrame();
 		auto current = VoRunner.getCurrentFrame();
-		auto matches = VoRunner.getLastMatch();
+		auto &matches = VoRunner.getLastMatch();
 
 		auto drawFrame = drawOpticalFlow(anchor, current, matches);
 		rosConn.publishImage(drawFrame, ros::Time::fromBoost(timestamp));

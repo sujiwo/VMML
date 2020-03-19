@@ -38,6 +38,8 @@ VisualOdometry::VisualOdometry(Parameters par) :
 		cv::ORB::HARRIS_SCORE,
 		32,
 		10);
+	// NORM_HAMMING is used for binary descriptor, such as ORB and AKAZE
+	bfMatch = cv::BFMatcher::create(cv::NORM_HAMMING, true);
 }
 
 
@@ -128,8 +130,6 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 	mCurrentImage = BaseFrame::create(img, param.camera);
 	mCurrentImage->computeFeatures(featureDetector, mask);
 
-	// NORM_HAMMING is used for binary descriptor, such as ORB and AKAZE
-	auto bfMatch = cv::BFMatcher::create(cv::NORM_HAMMING, true);
 	Matcher::matchOpticalFlow(*mAnchorImage, *mCurrentImage, flowMatcherToAnchor, &isMoving);
 
 	if (matchOnly==false and isMoving==true) {

@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 	tf
 	vision_core
-	cv_bridge
 	sensor_msgs
 	cv_bridge
 	image_transport
@@ -60,7 +59,13 @@ generate_messages(
 )
 
 catkin_package(
-	CATKIN_DEPENDS vision_core
+	INCLUDE_DIRS include
+	LIBRARIES vmml_mapper
+	CATKIN_DEPENDS 
+		vision_core 
+		cv_bridge 
+		image_transport 
+		pcl_conversions
 )
 
 include_directories(
@@ -294,13 +299,3 @@ target_link_libraries(
 		${common_libs}
 )
 
-add_executable(
-	imagelidar_projection
-		nodes/imagelidar_projection.cpp
-)
-
-target_link_libraries(
-	imagelidar_projection
-		vmml_mapper
-		${common_libs}
-)
