@@ -43,6 +43,16 @@ public:
 	);
 
 	/*
+	 * Create mask for matching from F1 to F2.
+	 * If prevMatch is empty, resulting mask
+	 * is filled by ones.
+	 * Otherwise, it is filled by features in F1 that has
+	 * non-empty pair in prevMatch (prevMatch must be
+	 * filled from match from F0 to F1)
+	 */
+	static cv::Mat createMask(const BaseFrame &F1, const BaseFrame &F2, const PairList &prevMatch=PairList());
+
+	/*
 	 * Match features using Sparse Lucas-Kanade Optical Flow
 	 */
 	static int

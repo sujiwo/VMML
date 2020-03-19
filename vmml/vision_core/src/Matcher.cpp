@@ -301,6 +301,16 @@ bool isMoving(const vector<pair<cv::Point2f,cv::Point2f>> &flows)
 }
 
 
+cv::Mat
+Matcher::createMask(const BaseFrame &F1, const BaseFrame &F2, const PairList &prevMatch)
+{
+	cv::Mat mmask=cv::Mat::ones(F2.numOfKeyPoints(), F1.numOfKeyPoints(), CV_8UC1);
+	if (prevMatch.empty())
+		return mmask;
+
+}
+
+
 /*
  * Match features using Sparse Lucas-Kanade Optical Flow
  */
