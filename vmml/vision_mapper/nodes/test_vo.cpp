@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 
 	const auto voTrack = VoRunner.getTrajectory();
 	const auto cloudBuild = VoRunner.getPoints();
-	voTrack.dump("/tmp/x.csv");
+	voTrack.dump("/tmp/vo.csv");
 	pcl::io::savePCDFileBinary("/tmp/mapVoTest.pcd", *cloudBuild);
 
 	return 0;

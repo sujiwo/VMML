@@ -88,6 +88,12 @@ public:
 	inline void run(const sensor_msgs::Image::ConstPtr &imageBg, cv::Mat &imageOut, cv::Mat &mask)
 	{ run(*imageBg, imageOut, mask); }
 
+	bool isRetinexActivated() const
+	{ return retinexPrc!=nullptr; }
+
+	bool isSegmentationActivated() const
+	{ return gSegment!=NULL; }
+
 protected:
 
 	std::shared_ptr<Segmentation> gSegment=NULL;
@@ -102,7 +108,7 @@ protected:
 
 	cv::Size outputSize;
 
-	std::shared_ptr<Retinex> retinexPrc;
+	std::shared_ptr<Retinex> retinexPrc=nullptr;
 };
 
 } /* namespace Mapper */

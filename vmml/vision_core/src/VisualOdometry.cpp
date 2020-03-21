@@ -25,7 +25,7 @@ const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteri
 VisualOdometry::VisualOdometry(Parameters par) :
 	param(par),
 	featureGrid(par.bucket_width, par.bucket_height),
-	points3d(new CloudType)
+	pointsCloud3d(new CloudType)
 {
 	// XXX: Temporary
 	featureDetector=cv::ORB::create(
@@ -147,7 +147,11 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 		Pose pCurrent = mAnchorImage->pose() * motion;
 		mCurrentImage->setPose(pCurrent);
 
-		// XXX: Transform points3
+		// XXX: Transform pointsCloud3d
+		for (auto &_pt: points3) {
+			auto pt = pCurrent*_pt.homogeneous();
+			pointsCloud3d->push_back(PointType(pt.x(), pt.y(), pt.z()));
+		}
 /*
 		map<uint, Vector3d> mapPoints;
 		float parallax;

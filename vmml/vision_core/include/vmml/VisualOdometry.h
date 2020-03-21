@@ -52,7 +52,7 @@ public:
 	{ return mVoTrack; }
 
 	inline const LocalLidarMapper::CloudType::Ptr getPoints() const
-	{ return points3d; }
+	{ return pointsCloud3d; }
 
 	inline uint getInlier() const
 	{ return voMatcherToAnchor.size(); }
@@ -78,7 +78,9 @@ protected:
 	cv::Ptr<cv::ORB> featureDetector;
 	Grid<std::vector<cv::KeyPoint>> featureGrid;
 	Trajectory mVoTrack;
-	LocalLidarMapper::CloudType::Ptr points3d;
+
+	// Point cloud as result from triangulation
+	LocalLidarMapper::CloudType::Ptr pointsCloud3d;
 
 	BaseFrame::Ptr
 		mAnchorImage=nullptr,

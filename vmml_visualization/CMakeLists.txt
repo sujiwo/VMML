@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_conversions
 	vision_core
 	vision_mapper
+	libviso2
 )
 
 if(SEGNET_DIR)
@@ -92,3 +93,16 @@ install(
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+###
+add_executable(
+	viso_run
+		nodes/viso_run.cpp
+)
+target_link_libraries(
+	viso_run
+		${common_libs}
+)
+install(
+	TARGETS viso_run
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

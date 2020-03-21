@@ -722,6 +722,7 @@ Matcher::calculateMovement2(const BaseFrame &F1, const BaseFrame &F2,
 	cv2eigen(te, t);
 
 	movement = TTransform::from_R_t(t, R12);
+	movement = movement.inverse();
 }
 
 

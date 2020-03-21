@@ -39,6 +39,9 @@ struct PoseStamped : public Pose
 		timestamp = t;
 	}
 
+	inline static PoseStamped Identity(const ptime &t=unixTime0)
+	{ return PoseStamped(Pose::Identity(), t); }
+
 	inline PoseStamped (const Eigen::Vector3d &p, const Quaterniond &q, const ptime &t=unixTime0)
 	{
 		m_matrix = Pose::from_Pos_Quat(p, q).matrix();
