@@ -17,8 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_conversions
 	vision_core
 	vision_mapper
-	libviso2
 )
+find_package(libviso2)
 
 if(SEGNET_DIR)
 	message("SegNet is set")
@@ -94,15 +94,22 @@ install(
 )
 
 ###
-add_executable(
-	viso_run
-		nodes/viso_run.cpp
-)
-target_link_libraries(
-	viso_run
-		${common_libs}
-)
-install(
-	TARGETS viso_run
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+if (libviso2_FOUND)
+	message("Viso2-based visual odometry will be built")
+	add_executable(
+		viso_run
+			nodes/viso_run.cpp
+	)
+	target_include_directories(viso_run PUBLIC ${libviso2_INCLUDE_DIRS})
+	target_link_libraries(
+		viso_run
+			${common_libs}
+			${libviso2_LIBRARIES}
+	)
+	install(
+		TARGETS viso_run
+		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	)
+else()
+	message("Viso2-based visual odometry will NOT be built")
+endif()
