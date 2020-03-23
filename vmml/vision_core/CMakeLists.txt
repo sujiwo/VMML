@@ -97,7 +97,7 @@ add_library(
 		src/Trajectory.cpp
 		src/VisionMap.cpp
 		src/LidarScanBagRaw.cpp
-		src/MapBuilder.cpp
+		src/SimpleMapBuilder.cpp
 #		src/Initializer.cpp
 		src/Triangulation.cpp
 		src/Matcher.cpp

@@ -18,6 +18,8 @@
 #include <functional>
 #include "utilities.h"
 #include "CameraPinholeParams.h"
+#include "ImageDatabase.h"
+#include "KeyFrame.h"
 #include "VisionMap.h"
 #include "Matcher.h"
 #include "LoopClosure.h"
@@ -32,17 +34,33 @@ public:
 
 	struct Parameters {
 		CameraPinholeParams camera;
-
+		int numOfFeatures = 6000;
 		// More values to follow
 	};
 
 	SimpleMapBuilder (Parameters param);
 
-	void process (const cv::Mat &image, const ptime &timestamp);
+	void process (const cv::Mat &image, const ptime &timestamp, const cv::Mat &inputMask=cv::Mat());
 
+	std::shared_ptr<VisionMap>& getMap()
+	{ return vMap; }
+
+	const std::shared_ptr<VisionMap>& getMap() const
+	{ return vMap; }
 
 protected:
+	Parameters smBuildParams;
 
+	std::shared_ptr<VisionMap> vMap;
+
+	bool hasInitialized = false;
+
+	BaseFrame::Ptr
+		mAnchorImage=nullptr,
+		mCurrentImage=nullptr;
+
+	cv::Ptr<cv::ORB> featureDetector;
+	cv::Ptr<cv::BFMatcher> bfMatch;
 };
 
 

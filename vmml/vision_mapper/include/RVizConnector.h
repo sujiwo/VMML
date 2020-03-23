@@ -17,8 +17,8 @@
 #include <image_transport/image_transport.h>
 #include <pcl_ros/publisher.h>
 #include "vmml/BaseFrame.h"
+#include "vmml/Matcher.h"
 #include "vmml/VisionMap.h"
-#include "vmml/MapBuilder.h"
 #include "vmml/ImageDatabaseBuilder.h"
 
 
@@ -34,9 +34,9 @@ public:
 	inline void setMap(const VisionMap::Ptr &vmap)
 	{ mMap = vmap; }
 
-	void publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame);
+//	void publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame);
 
-	void publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFrame &workFrame);
+//	void publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFrame &workFrame);
 
 	void publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
 
@@ -69,7 +69,7 @@ protected:
 
 	sensor_msgs::ImageConstPtr createImageMsgFromFrame(const BaseFrame &fr) const;
 
-	static cv::Mat drawFrame(const MapBuilder::TmpFrame &workFrame);
+//	static cv::Mat drawFrame(const MapBuilder::TmpFrame &workFrame);
 
 	static cv::Mat drawFrameWithPairList (const Vmml::BaseFrame &frame, const Matcher::PairList &featurePairs=Matcher::PairList());
 
@@ -77,7 +77,7 @@ protected:
 
 	void publishPointCloudMap();
 
-	void publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos);
+//	void publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos);
 
 	void publishAllCurrentKeyFrames();
 

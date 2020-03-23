@@ -108,6 +108,7 @@ RVizConnector::~RVizConnector()
 {}
 
 
+/*
 void
 RVizConnector::publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame)
 {
@@ -128,6 +129,7 @@ RVizConnector::publishFrame(const Vmml::MapBuilder::TmpFrame &workFrame)
 	cvImg.header.stamp = timestamp;
 	imagePub.publish(cvImg.toImageMsg());
 }
+*/
 
 
 sensor_msgs::ImageConstPtr
@@ -140,11 +142,13 @@ RVizConnector::createImageMsgFromFrame(const BaseFrame &fr) const
 }
 
 
+/*
 cv::Mat
 RVizConnector::drawFrame(const MapBuilder::TmpFrame &workFrame)
 {
 	return drawFrameWithPairList(workFrame, workFrame.prevMapPointPairs);
 }
+*/
 
 
 cv::Mat
@@ -160,6 +164,7 @@ RVizConnector::drawFrameWithPairList (const Vmml::BaseFrame &frame, const Matche
 }
 
 
+/*
 void
 RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFrame &workFrame)
 {
@@ -176,13 +181,6 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 	publishPointCloudLidar(*workFrame.lidarScan, workFrame.pose());
 
 	if (workFrame.isKeyFrame==true) {
-/*
-		geometry_msgs::PoseStamped keyFramePose;
-		keyFramePose.header.stamp = ros::Time::fromBoost(currentTime);
-		keyFramePose.header.frame_id = originFrame;
-		keyFramePose.pose = createGeomPose(*currentKeyFrame);
-		keyframePosePub.publish(keyFramePose);
-*/
 		publishAllCurrentKeyFrames();
 		publishPointCloudMap();
 	}
@@ -194,6 +192,7 @@ RVizConnector::publishFrameWithLidar(const Vmml::ImageDatabaseBuilder::IdbWorkFr
 		posePubTf->sendTransform(kfStampedPose);
 	}
 }
+*/
 
 
 void
@@ -302,6 +301,7 @@ RVizConnector::publishPointCloudMap()
 }
 
 
+/*
 void
 RVizConnector::publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos)
 {
@@ -315,6 +315,7 @@ RVizConnector::publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &
 
 	lidarScanPub.publish(lidarCloud);
 }
+*/
 
 
 void

@@ -105,21 +105,6 @@ add_library(vmml_mapper STATIC
 	${common_class}
 )
 
-#add_executable(
-#	simple_bag_mapper
-#		nodes/simple_bag_mapper.cpp
-#)
-#
-#target_link_libraries(
-#	simple_bag_mapper
-#		vmml_mapper
-#		${common_libs}
-#)
-#
-#install(
-#	TARGETS simple_bag_mapper
-#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
 
 #add_executable(
 #	imagelidar_bag_mapper
@@ -137,6 +122,7 @@ add_library(vmml_mapper STATIC
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
+### Visual Odometry Node
 add_executable(
 	test_vo
 		nodes/test_vo.cpp
@@ -152,6 +138,25 @@ install(
 	TARGETS test_vo
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+### Simple Visual SLAM Node
+add_executable(
+	simple_mapper
+		nodes/simple_mapper.cpp
+)
+
+target_link_libraries(
+	simple_mapper
+		vmml_mapper
+		${common_libs}
+)
+
+install(
+	TARGETS simple_mapper
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
 
 
 #add_executable(
@@ -172,7 +177,7 @@ install(
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-
+# Place Indexer-only Node
 add_executable(
 	index_creator
 		nodes/index_creator.cpp
@@ -246,6 +251,7 @@ install(
 #	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
+# Place Recognizer Service Node
 add_executable(
 	place_recognizer_srv
 		nodes/place_recognizer_srv.cpp

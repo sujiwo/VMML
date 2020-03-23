@@ -11,7 +11,7 @@
 #include <string>
 #include "utilities.h"
 #include "RandomAccessBag.h"
-#include "MapBuilder.h"
+#include "SimpleMapBuilder.h"
 #include "LidarScanBag.h"
 #include "ImageBag.h"
 #include "RandomAccessBag.h"

@@ -5,7 +5,7 @@
  *      Author: sujiwo
  */
 
-#include "vmml/MapBuilder.h"
+#include "vmml/SimpleMapBuilder.h"
 #include "vmml/BaseFrame.h"
 #include "vmml/Matcher.h"
 #include "vmml/Triangulation.h"
@@ -17,6 +17,46 @@ using namespace Eigen;
 
 
 namespace Vmml {
+
+
+SimpleMapBuilder::SimpleMapBuilder (Parameters param):
+	smBuildParams(param)
+{
+	vMap = std::make_shared<VisionMap>();
+	vMap->addCameraParameter(smBuildParams.camera);
+	featureDetector=cv::ORB::create(
+			smBuildParams.numOfFeatures,
+			1.2,
+			8,
+			32,
+			0,
+			2,
+			cv::ORB::HARRIS_SCORE,
+			32,
+			10);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+
 
 
 MapBuilder::TmpFrame::

@@ -12,7 +12,7 @@
 #include <string>
 #include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
-#include "MapBuilder.h"
+#include "SimpleMapBuilder.h"
 #include "Trajectory.h"
 #include "Matcher.h"
 
