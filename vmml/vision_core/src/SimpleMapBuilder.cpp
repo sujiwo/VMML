@@ -34,10 +34,10 @@ SimpleMapBuilder::TmpFrame::create(cv::Mat img, shared_ptr<VisionMap> &_parent, 
 
 
 /*
- * XXX: This is candidate to be modified using matchOpticalFlow
+ * This function test optical flow hypothesis from kf to current frame
  */
 bool
-SimpleMapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf)
+SimpleMapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf, std::vector<Eigen::Vector3d> &points3)
 {
 	bool isMoving;
 	Matcher::matchOpticalFlow(*kf, *this, matchesToKeyFrame, &isMoving);
@@ -46,7 +46,7 @@ SimpleMapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf)
 		return false;
 
 	Matcher::PairList voMatches;
-	vector<Vector3d> points3;
+	points3.clear();
 	TTransform motion;
 	Matcher::calculateMovement2(
 		*kf, *this,
@@ -182,8 +182,9 @@ SimpleMapBuilder::process(const cv::Mat &inputImage, const ptime &timestamp, con
 			// Try initialization
 			if (initialize()==true) {
 				hasInitialized = true;
-				cout << "Initialization success;" << endl;
+				cout << "Initialization success; points: " << vMap->numOfMapPoints() << endl;
 				return true;
+				exit(1);
 			}
 
 			else {
@@ -212,10 +213,11 @@ bool
 SimpleMapBuilder::initialize()
 {
 	auto anchorKeyframe = vMap->keyframe(lastAnchor);
-	if (currentWorkframe->initializeMatch(anchorKeyframe)==false)
+	vector<Vector3d> trPoints;
+	if (currentWorkframe->initializeMatch(anchorKeyframe, trPoints)==false)
 		return false;
 
-	return createInitialMap();
+	return createInitialMap(trPoints);
 }
 
 
@@ -285,29 +287,22 @@ SimpleMapBuilder::track()
 
 
 bool
-SimpleMapBuilder::createInitialMap()
+SimpleMapBuilder::createInitialMap(const std::vector<Eigen::Vector3d> &initialTriangulatedPoints)
 {
 	auto anchorKeyframe = vMap->keyframe(lastAnchor);
-
-	// Create map points
-	map<uint, Vector3d> mapPoints;
-	float parallax;
-	TriangulateCV(*anchorKeyframe, *currentWorkframe, currentWorkframe->matchesToKeyFrame, mapPoints, &parallax);
-	if (mapPoints.size() < 10)
-		return false;
 
 	auto K2 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 	vMap->addKeyFrame(K2);
 
-	// Add points to Map
-	for (auto &ptPair: mapPoints) {
-		auto inlierKeyPointPair = currentWorkframe->matchesToKeyFrame[ptPair.first];
-		auto pt3d = MapPoint::create(ptPair.second);
-		vMap->addMapPoint(pt3d);
-		vMap->addMapPointVisibility(pt3d->getId(), anchorKeyframe->getId(), inlierKeyPointPair.first);
-		vMap->addMapPointVisibility(pt3d->getId(), K2->getId(), inlierKeyPointPair.second);
+	assert(initialTriangulatedPoints.size()==currentWorkframe->matchesToKeyFrame.size());
+	for (int i=0; i<initialTriangulatedPoints.size(); ++i) {
+		auto fpPair = currentWorkframe->matchesToKeyFrame[i];
+		auto vect3 = initialTriangulatedPoints[i];
+		auto mp3d = MapPoint::create(vect3);
+		vMap->addMapPoint(mp3d);
+		vMap->addMapPointVisibility(mp3d->getId(), anchorKeyframe->getId(), fpPair.first);
+		vMap->addMapPointVisibility(mp3d->getId(), K2->getId(), fpPair.second);
 	}
-	cout << "New map initialized: " << mapPoints.size() << " pts\n";
 
 	vMap->updateCovisibilityGraph(anchorKeyframe->getId());
 

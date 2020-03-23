@@ -63,7 +63,7 @@ public:
 
 		KeyFrame::Ptr toKeyFrame() const;
 
-		bool initializeMatch(const KeyFrame::Ptr &key);
+		bool initializeMatch(const KeyFrame::Ptr &key, std::vector<Eigen::Vector3d> &trPoints);
 
 		bool track(const kfid &kf);
 
@@ -106,7 +106,7 @@ protected:
 
 	FrameCreationCallback newFrameCallback;
 
-	bool createInitialMap();
+	bool createInitialMap(const std::vector<Eigen::Vector3d> &initialTriangulatedPoints);
 
 	bool createNewKeyFrame();
 
