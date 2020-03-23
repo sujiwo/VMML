@@ -40,7 +40,7 @@ public:
 	cv::Size getImageDimensions();
 
 	// Simulate reduced number of images per seconds
-	void desample(const float hz, std::vector<uint64> &desamplePos) const;
+//	void desample(const float hz, std::vector<uint64> &desamplePos) const;
 
 	inline sensor_msgs::ImageConstPtr getMessage(uint position)
 	{ return RandomAccessBag::at<sensor_msgs::Image>(position); }

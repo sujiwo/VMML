@@ -101,6 +101,7 @@ ImageBag::getImageDimensions()
 /*
  * XXX: Desampling algorithm should be improved, as it returns lower-than-requested
  */
+/*
 void
 ImageBag::desample(const float newFreq, std::vector<uint64> &messagePosList) const
 {
@@ -121,5 +122,6 @@ ImageBag::desample(const float newFreq, std::vector<uint64> &messagePosList) con
 		}
 	}
 }
+*/
 
 } /* namespace Vmml */

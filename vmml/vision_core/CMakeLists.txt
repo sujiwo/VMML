@@ -106,9 +106,9 @@ add_library(
 		src/ImageBag.cpp
 		src/Optimizer.cpp
 		src/LoopClosure.cpp
-		src/MapBuilderLidar.cpp
+#		src/MapBuilderLidar.cpp
 		src/LocalLidarMapper.cpp
-		src/ImageDatabaseBuilder.cpp
+#		src/ImageDatabaseBuilder.cpp
 		src/TrajectoryGNSS.cpp
 		src/ImagePreprocessor.cpp
 		src/ImageDatabase.cpp

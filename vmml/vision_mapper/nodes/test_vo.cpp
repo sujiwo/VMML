@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
 	RVizConnector rosConn(argc, argv, "test_vo");
 
-	vector<uint64> targetFrameId;
+	RandomAccessBag::DesampledMessageList targetFrameId;
 	imageBag->desample(resample, targetFrameId);
 	if (maxFrameNum==-1)
 		maxFrameNum = targetFrameId.size();

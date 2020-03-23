@@ -19,7 +19,7 @@
 
 namespace Vmml {
 
-class ImageDatabaseBuilder : public MapBuilder
+class ImageDatabaseBuilder : public SimpleMapBuilder
 {
 public:
 

@@ -33,7 +33,7 @@ public:
 
 	virtual void BaseFrameFunc(const BaseFrame::Ptr &fr);
 	virtual void KeyFrameFunc(const KeyFrame::Ptr &keyf);
-	virtual void MbFrameFunc(const MapBuilder::TmpFrame::Ptr &fr);
+	virtual void MbFrameFunc(const SimpleMapBuilder::TmpFrame::Ptr &fr);
 	virtual void MblFrameFunc(const MapBuilderLidar::LidarImageFrame::Ptr &fr);
 
 protected:

@@ -19,7 +19,7 @@ namespace Vmml {
 
 
 MapBuilderLidar::MapBuilderLidar(const CameraPinholeParams &camera0) :
-	MapBuilder(camera0)
+	SimpleMapBuilder(camera0)
 {
 	// TODO Auto-generated constructor stub
 

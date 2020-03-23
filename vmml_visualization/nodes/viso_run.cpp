@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	auto &imagePipe = vsoProg.getImagePipeline();
 
 	imageBag->setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
-	vector<uint64> targetFrameId;
+	RandomAccessBag::DesampledMessageList targetFrameId;
 	imageBag->desample(resample, targetFrameId);
 
 	// VISO setup

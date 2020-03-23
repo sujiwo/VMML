@@ -26,7 +26,7 @@ KeyFrame::KeyFrame(const std::shared_ptr<VisionMap> _parent) :
 {}
 
 
-KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const ptime &ts, const Pose &p, bool doComputeFeatures) :
+KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int cameraNo, const ptime &ts, const Pose &p, bool doComputeFeatures, const cv::Mat &mask) :
 	BaseFrame(img, _parent->getCameraParameter(cameraNo), p),
 	mParent(_parent),
 	cameraId(cameraNo),
@@ -34,7 +34,7 @@ KeyFrame::KeyFrame(cv::Mat img, const std::shared_ptr<VisionMap> _parent, int ca
 {
 	id = KeyFrame::nextId;
 	if (doComputeFeatures==true) {
-		computeFeatures(mParent->getFeatureDetector());
+		computeFeatures(mParent->getFeatureDetector(), mask);
 	}
 	nextId++;
 }

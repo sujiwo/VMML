@@ -55,100 +55,106 @@ class time_exception : public std::runtime_error {
   }
 };
 
-class RandomAccessBag : public rosbag::View {
+class RandomAccessBag : public rosbag::View
+{
 public:
-  typedef std::shared_ptr<RandomAccessBag> Ptr;
+	typedef std::shared_ptr<RandomAccessBag> Ptr;
 
-  RandomAccessBag(const rosbag::Bag &bag, const std::string &topic);
+	RandomAccessBag(const rosbag::Bag &bag, const std::string &topic);
 
-  RandomAccessBag(const rosbag::Bag &bag, const std::string &topic,
-                  const ros::Time &t1, const ros::Time &t2);
+	RandomAccessBag(const rosbag::Bag &bag, const std::string &topic,
+			const ros::Time &t1, const ros::Time &t2);
 
-  RandomAccessBag(rosbag::Bag const &bag, const std::string &topic,
-                  const double seconds1FromOffset,
-                  const double seconds2FromOffset);
+	RandomAccessBag(rosbag::Bag const &bag, const std::string &topic,
+			const double seconds1FromOffset,
+			const double seconds2FromOffset);
 
-  virtual ~RandomAccessBag();
+	virtual ~RandomAccessBag();
 
-  void setTimeConstraint(const ros::Time &t1, const ros::Time &t2);
+	void setTimeConstraint(const ros::Time &t1, const ros::Time &t2);
 
-  // Set time constraint to default (start & stop bag)
-  void resetTimeConstraint();
+	// Set time constraint to default (start & stop bag)
+	void resetTimeConstraint();
 
-  /*
-   * A note about seconds in this function:
-   * These parameters are time (in seconds) from start of the bag
-   */
-  void setTimeConstraint(double seconds1FromOffset=-1, double seconds2FromOffset=-1);
+	/*
+	 * A note about seconds in this function:
+	 * These parameters are time (in seconds) from start of the bag
+	 */
+	void setTimeConstraint(double seconds1FromOffset=-1, double seconds2FromOffset=-1);
 
-  /*
-   * Getter
-   */
-  template <typename T> boost::shared_ptr<T> at(unsigned int position) {
-    assert(position < size());
-//    return instantiate<T>(msgPtr.at(position));
-    return msgPtr.at(position).instantiate<T>();
-  }
+	/*
+	 * Getter
+	 */
+	template <typename T> boost::shared_ptr<T> at(unsigned int position) {
+		assert(position < size());
+		//    return instantiate<T>(msgPtr.at(position));
+		return msgPtr.at(position).instantiate<T>();
+	}
 
-  //	RandomAccessBag subset(const ros::Time &start, ros::Duration &d) const;
+	//	RandomAccessBag subset(const ros::Time &start, ros::Duration &d) const;
 
-  ros::Time timeAt(const int i) const { return msgPtr.at(i).getTime(); }
+	ros::Time timeAt(const int i) const { return msgPtr.at(i).getTime(); }
 
-  template <typename T> boost::shared_ptr<T> atDurationSecond(const double S) {
-    return at<T>(getPositionAtDurationSecond(S));
-  }
+	template <typename T> boost::shared_ptr<T> atDurationSecond(const double S) {
+		return at<T>(getPositionAtDurationSecond(S));
+	}
 
-  std::string getTopic() { return conn->topic; }
+	std::string getTopic() { return conn->topic; }
 
-  size_t size() const { return static_cast<size_t>(size_cache_); }
+	size_t size() const { return static_cast<size_t>(size_cache_); }
 
-  uint32_t getPositionAtDurationSecond(const double S) const;
+	uint32_t getPositionAtDurationSecond(const double S) const;
 
-  uint32_t getPositionAtTime(const ros::Time &tx) const;
+	uint32_t getPositionAtTime(const ros::Time &tx) const;
 
-  /*
-   * Duration of this view in ros::Duration
-   */
-  ros::Duration length() const { return stopTime() - startTime(); }
+	/*
+	 * Duration of this view in ros::Duration
+	 */
+	ros::Duration length() const { return stopTime() - startTime(); }
 
-  ros::Time startTime() const { return msgPtr.front().getTime(); }
+	ros::Time startTime() const { return msgPtr.front().getTime(); }
 
-  ros::Time stopTime() const { return msgPtr.back().getTime(); }
+	ros::Time stopTime() const { return msgPtr.back().getTime(); }
 
-  inline bool isTimeInside(const ros::Time &t) const {
-    return (t >= msgPtr.front().getTime() and t <= msgPtr.back().getTime());
-  }
+	inline bool isTimeInside(const ros::Time &t) const {
+		return (t >= msgPtr.front().getTime() and t <= msgPtr.back().getTime());
+	}
 
-  /*
-   * Convert time as represented by seconds from offset
-   */
-  ros::Time timeFromOffset(const double secondsFromStart) const;
+	/*
+	 * Convert time as represented by seconds from offset
+	 */
+	ros::Time timeFromOffset(const double secondsFromStart) const;
 
-  /*
-   * Convert time as represented by seconds from start of bag
-   */
-  ros::Time timeFromStart(const double seconds) const;
+	/*
+	 * Convert time as represented by seconds from start of bag
+	 */
+	ros::Time timeFromStart(const double seconds) const;
 
-  inline ros::Time getBagStartTime() const { return bagStartTime; }
+	inline ros::Time getBagStartTime() const { return bagStartTime; }
 
-  inline ros::Time getBagStopTime() const { return bagStopTime; }
+	inline ros::Time getBagStopTime() const { return bagStopTime; }
 
-  inline bool isTimeConstrained() const { return mIsTimeConstrained; }
+	inline bool isTimeConstrained() const { return mIsTimeConstrained; }
 
-  inline std::string topic() const { return viewTopic; }
+	inline std::string topic() const { return viewTopic; }
 
-  std::string messageType() const;
+	std::string messageType() const;
 
-  inline float hz() const
-  {
-	  return float(size()) / (getBagStopTime()-getBagStartTime()).toSec();
-  }
+	inline float hz() const
+	{
+		return float(size()) / (getBagStopTime()-getBagStartTime()).toSec();
+	}
 
-  static std::map<std::string, std::string>
-  getTopicList(const rosbag::Bag &bag);
+	static std::map<std::string, std::string>
+	getTopicList(const rosbag::Bag &bag);
 
-  const uint getOriginalZeroIndex() const
-  { return originalZeroIndex; }
+	const uint getOriginalZeroIndex() const
+	{ return originalZeroIndex; }
+
+	// Simulate reduced number of messages per seconds
+	typedef std::vector<uint> DesampledMessageList;
+	void desample(const float hz, DesampledMessageList &desamplePos) const;
+
 
 protected:
   void createCache();

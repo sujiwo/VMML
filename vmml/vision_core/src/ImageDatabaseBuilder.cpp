@@ -14,7 +14,7 @@
 namespace Vmml {
 
 ImageDatabaseBuilder::ImageDatabaseBuilder(Param _p, const CameraPinholeParams &camera0):
-	MapBuilder(camera0),
+	SimpleMapBuilder(camera0),
 	mParams(_p)
 {
 	// Parameter set

@@ -20,7 +20,7 @@
 
 namespace Vmml {
 
-class MapBuilderLidar : public Vmml::MapBuilder
+class MapBuilderLidar : public Vmml::SimpleMapBuilder
 {
 public:
 	MapBuilderLidar(const CameraPinholeParams &camera0);
@@ -29,7 +29,7 @@ public:
 	inline void setTransformationFromLidarToCamera(const TTransform &tx)
 	{ lidarToCamera = tx; }
 
-	struct LidarImageFrame : public MapBuilder::TmpFrame
+	struct LidarImageFrame : public SimpleMapBuilder::TmpFrame
 	{
 		typedef std::shared_ptr<LidarImageFrame> Ptr;
 

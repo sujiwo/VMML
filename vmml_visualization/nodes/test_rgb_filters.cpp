@@ -151,7 +151,7 @@ void runFromBagFile (Vmml::Mapper::RVizConnector &rosCtl, Vmml::Mapper::ProgramO
 	}
 
 	bagFile->setTimeConstraint(startTime, stopTime);
-	vector<uint64> targetFrame;
+	RandomAccessBag::DesampledMessageList targetFrame;
 	if (bagResample!=-1) {
 		bagFile->desample(bagResample, targetFrame);
 	}

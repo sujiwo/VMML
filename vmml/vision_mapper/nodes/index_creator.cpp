@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 
 	const int maxLim = images.size();
 
-	vector<uint64> imageRedSamples;
+	RandomAccessBag::DesampledMessageList imageRedSamples;
 	images.desample(frameRate, imageRedSamples);
 	auto tLen = (images.timeAt(imageRedSamples.back())-images.timeAt(imageRedSamples.front())).toSec();
 	cout << "Frequency after desampled: " << float(imageRedSamples.size()) / tLen << endl;

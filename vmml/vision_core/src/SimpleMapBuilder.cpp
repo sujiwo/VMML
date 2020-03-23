@@ -19,63 +19,46 @@ using namespace Eigen;
 namespace Vmml {
 
 
-SimpleMapBuilder::SimpleMapBuilder (Parameters param):
-	smBuildParams(param)
-{
-	vMap = std::make_shared<VisionMap>();
-	vMap->addCameraParameter(smBuildParams.camera);
-	featureDetector=cv::ORB::create(
-			smBuildParams.numOfFeatures,
-			1.2,
-			8,
-			32,
-			0,
-			2,
-			cv::ORB::HARRIS_SCORE,
-			32,
-			10);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
- *
- *
- *
- *
- */
-
-
-
-MapBuilder::TmpFrame::
-	TmpFrame(cv::Mat img, std::shared_ptr<VisionMap> &_parent) :
+SimpleMapBuilder::TmpFrame::
+	TmpFrame(cv::Mat img, std::shared_ptr<VisionMap> &_parent, const cv::Mat &mask) :
 		BaseFrame(img, _parent->getCameraParameter(0), Pose::Identity()),
 		parent(_parent)
 {
-	computeFeatures(parent->getFeatureDetector());
+	computeFeatures(parent->getFeatureDetector(), mask);
 }
 
 
-MapBuilder::TmpFrame::Ptr
-MapBuilder::TmpFrame::create(cv::Mat img, shared_ptr<VisionMap> &_parent)
-{ return Ptr(new TmpFrame(img, _parent)); }
+SimpleMapBuilder::TmpFrame::Ptr
+SimpleMapBuilder::TmpFrame::create(cv::Mat img, shared_ptr<VisionMap> &_parent, const cv::Mat &mask)
+{ return Ptr(new TmpFrame(img, _parent, mask)); }
 
 
+/*
+ * XXX: This is candidate to be modified using matchOpticalFlow
+ */
 bool
-MapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf)
+SimpleMapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf)
 {
+	bool isMoving;
+	Matcher::matchOpticalFlow(*kf, *this, matchesToKeyFrame, &isMoving);
+
+	if (isMoving==true)
+		return false;
+
+	Matcher::PairList voMatches;
+	vector<Vector3d> points3;
+	TTransform motion;
+	Matcher::calculateMovement2(
+		*kf, *this,
+		matchesToKeyFrame, voMatches,
+		motion, points3);
+	if (voMatches.size()<=10)
+		return false;
+
+	this->setPose(motion);
+	matchesToKeyFrame = voMatches;
+	return true;
+/*
 	parentKeyFrame = kf;
 
 	int Ns1 = Matcher::matchBruteForce(*parentKeyFrame, *this, matchesToKeyFrame);
@@ -90,11 +73,12 @@ MapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf)
 
 	matchesToKeyFrame = f12matchesInliers;
 	return true;
+*/
 }
 
 
 bool
-MapBuilder::TmpFrame::track(const kfid &kf)
+SimpleMapBuilder::TmpFrame::track(const kfid &kf)
 {
 	parentKeyFrame = parent->keyframe(kf);
 
@@ -141,7 +125,7 @@ MapBuilder::TmpFrame::track(const kfid &kf)
  * XXX: Check this function
  */
 bool
-MapBuilder::TmpFrame::isOkForKeyFrame() const
+SimpleMapBuilder::TmpFrame::isOkForKeyFrame() const
 {
 	const float mapPointThresholdRatio = 0.3;
 
@@ -154,7 +138,7 @@ MapBuilder::TmpFrame::isOkForKeyFrame() const
 
 
 KeyFrame::Ptr
-MapBuilder::TmpFrame::toKeyFrame() const
+SimpleMapBuilder::TmpFrame::toKeyFrame() const
 {
 	auto KF = KeyFrame::fromBaseFrame(*this, parent, 0, this->timestamp);
 	KF->setPose(this->pose());
@@ -162,18 +146,25 @@ MapBuilder::TmpFrame::toKeyFrame() const
 }
 
 
-MapBuilder::MapBuilder(const CameraPinholeParams &mycam) :
-	camera0(mycam)
+cv::Mat
+SimpleMapBuilder::TmpFrame::visualize() const
+{
+	return image.clone();
+}
+
+
+SimpleMapBuilder::SimpleMapBuilder(const Parameters &pars) :
+	smParameters(pars)
 {
 	vMap = std::make_shared<VisionMap>();
-	vMap->addCameraParameter(camera0);
+	vMap->addCameraParameter(smParameters.camera);
 }
 
 
 bool
-MapBuilder::feed(cv::Mat inputImage, const ptime &timestamp)
+SimpleMapBuilder::process(const cv::Mat &inputImage, const ptime &timestamp, const cv::Mat &mask)
 {
-	currentWorkframe = TmpFrame::create(inputImage, vMap);
+	currentWorkframe = TmpFrame::create(inputImage, vMap, mask);
 	currentWorkframe->timestamp = timestamp;
 	frameCounter += 1;
 
@@ -210,13 +201,13 @@ MapBuilder::feed(cv::Mat inputImage, const ptime &timestamp)
 }
 
 
-MapBuilder::~MapBuilder() {
+SimpleMapBuilder::~SimpleMapBuilder() {
 	// TODO Auto-generated destructor stub
 }
 
 
 bool
-MapBuilder::initialize()
+SimpleMapBuilder::initialize()
 {
 	auto anchorKeyframe = vMap->keyframe(lastAnchor);
 	if (currentWorkframe->initializeMatch(anchorKeyframe)==false)
@@ -227,7 +218,7 @@ MapBuilder::initialize()
 
 
 bool
-MapBuilder::track()
+SimpleMapBuilder::track()
 {
 	if (currentWorkframe->track(lastAnchor)==false)
 		return false;
@@ -292,7 +283,7 @@ MapBuilder::track()
 
 
 bool
-MapBuilder::createInitialMap()
+SimpleMapBuilder::createInitialMap()
 {
 	auto anchorKeyframe = vMap->keyframe(lastAnchor);
 
@@ -352,7 +343,7 @@ MapBuilder::createInitialMap()
 const int matchCountThreshold = 15;
 
 void
-MapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
+SimpleMapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
 {
 	auto KF1 = vMap->keyframe(ki1),
 		KF2 = vMap->keyframe(ki2);
@@ -392,14 +383,14 @@ MapBuilder::trackMapPoints(const kfid ki1, const kfid ki2)
 
 
 bool
-MapBuilder::createNewKeyFrame()
+SimpleMapBuilder::createNewKeyFrame()
 {
 
 }
 
 
 void
-MapBuilder::reset()
+SimpleMapBuilder::reset()
 {
 	vMap->reset();
 	hasInitialized = false;

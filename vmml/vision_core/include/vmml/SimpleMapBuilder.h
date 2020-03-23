@@ -31,62 +31,18 @@ namespace Vmml {
 class SimpleMapBuilder
 {
 public:
-
 	struct Parameters {
 		CameraPinholeParams camera;
-		int numOfFeatures = 6000;
-		// More values to follow
+		int numOfFeatures;
+
+		// More values to come
 	};
 
-	SimpleMapBuilder (Parameters param);
+	SimpleMapBuilder(const Parameters &pars);
 
-	void process (const cv::Mat &image, const ptime &timestamp, const cv::Mat &inputMask=cv::Mat());
+	virtual bool process(const cv::Mat &inputImage, const ptime &timestamp, const cv::Mat &mask=cv::Mat());
 
-	std::shared_ptr<VisionMap>& getMap()
-	{ return vMap; }
-
-	const std::shared_ptr<VisionMap>& getMap() const
-	{ return vMap; }
-
-protected:
-	Parameters smBuildParams;
-
-	std::shared_ptr<VisionMap> vMap;
-
-	bool hasInitialized = false;
-
-	BaseFrame::Ptr
-		mAnchorImage=nullptr,
-		mCurrentImage=nullptr;
-
-	cv::Ptr<cv::ORB> featureDetector;
-	cv::Ptr<cv::BFMatcher> bfMatch;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class MapBuilder
-{
-public:
-
-	MapBuilder(const CameraPinholeParams &camera0);
-
-	virtual bool feed(cv::Mat inputImage, const ptime &timestamp);
-
-	virtual ~MapBuilder();
+	virtual ~SimpleMapBuilder();
 
 	std::shared_ptr<VisionMap>& getMap()
 	{ return vMap; }
@@ -102,14 +58,16 @@ public:
 	public:
 		typedef std::shared_ptr<TmpFrame> Ptr;
 
-		TmpFrame(cv::Mat img, std::shared_ptr<VisionMap> &_parent);
-		static Ptr create(cv::Mat img, std::shared_ptr<VisionMap> &_parent);
+		TmpFrame(cv::Mat img, std::shared_ptr<VisionMap> &_parent, const cv::Mat &mask);
+		static Ptr create(cv::Mat img, std::shared_ptr<VisionMap> &_parent, const cv::Mat &mask);
 
 		KeyFrame::Ptr toKeyFrame() const;
 
 		bool initializeMatch(const KeyFrame::Ptr &key);
 
 		bool track(const kfid &kf);
+
+		cv::Mat visualize() const;
 
 		bool isOkForKeyFrame() const;
 
@@ -126,7 +84,12 @@ public:
 	inline void registerFrameCallback (const FrameCreationCallback &func)
 	{ newFrameCallback = func; }
 
+	inline const TmpFrame::Ptr& getCurrentFrame() const
+	{ return currentWorkframe; }
+
 protected:
+
+	Parameters smParameters;
 
 	std::shared_ptr<VisionMap> vMap;
 
@@ -138,7 +101,6 @@ protected:
 
 	bool hasInitialized = false;
 	kfid lastAnchor = 0;
-	CameraPinholeParams camera0;
 
 	uint frameCounter = 0;
 

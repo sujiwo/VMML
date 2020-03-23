@@ -47,7 +47,8 @@ public:
 		int cameraNo=0,
 		const ptime &ts=MAX_TIME,
 		const Pose &p=Pose::Identity(),
-		bool doComputeFeatures=true
+		bool doComputeFeatures=true,
+		const cv::Mat &mask=cv::Mat()
 		);
 
 	KeyFrame(const BaseFrame &bsFrame, const std::shared_ptr<VisionMap> _parent, int cameraNo=0, const ptime &ts=MAX_TIME);

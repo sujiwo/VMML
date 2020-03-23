@@ -263,4 +263,26 @@ RandomAccessBag::getTopicList(const rosbag::Bag &bag) {
 
 std::string RandomAccessBag::messageType() const { return conn->datatype; }
 
+void
+RandomAccessBag::desample(const float newFreq, DesampledMessageList &messagePosList) const
+{
+	// Must be lower than current frequency
+	assert(newFreq < hz());
 
+	messagePosList.clear();
+
+	const double lengthInSeconds = (getBagStopTime()-getBagStartTime()).toSec();
+
+	uint posWk = 0, nextWk;
+	const double tIntrv = 1.0 / newFreq;
+	for (double twork=0.0; twork<lengthInSeconds; twork+=1.0) {
+		double tMax = min(twork+1.0, lengthInSeconds);
+		double tm = twork+tIntrv;
+		while (tm < tMax) {
+			uint p = getPositionAtDurationSecond(tm);
+			messagePosList.push_back(p);
+			tm += tIntrv;
+		}
+	}
+
+}
