@@ -26,6 +26,40 @@
 namespace Vmml {
 
 
+class SimpleMapBuilder
+{
+public:
+
+	struct Parameters {
+		CameraPinholeParams camera;
+
+		// More values to follow
+	};
+
+	SimpleMapBuilder (Parameters param);
+
+	void process (const cv::Mat &image, const ptime &timestamp);
+
+
+protected:
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class MapBuilder
 {
 public:

@@ -48,9 +48,7 @@ VisualOdometry::~VisualOdometry()
 }
 
 
-//cv::Ptr<cv::BFMatcher> featureBfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
-
-
+/*
 bool
 VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 {
@@ -108,9 +106,9 @@ VisualOdometry::runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask)
 		}
 	}
 
-	drawFlow(img);
 	return true;
 }
+*/
 
 
 bool
@@ -147,19 +145,10 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 		Pose pCurrent = mAnchorImage->pose() * motion;
 		mCurrentImage->setPose(pCurrent);
 
-		// XXX: Transform pointsCloud3d
 		for (auto &_pt: points3) {
 			auto pt = pCurrent*_pt.homogeneous();
 			pointsCloud3d->push_back(PointType(pt.x(), pt.y(), pt.z()));
 		}
-/*
-		map<uint, Vector3d> mapPoints;
-		float parallax;
-		TriangulateCV(*mAnchorImage, *mCurrentImage, voMatcherToAnchor, mapPoints, &parallax);
-		for (auto &pt3dPr: mapPoints) {
-			points3d->push_back(PointType(pt3dPr.second.x(), pt3dPr.second.y(), pt3dPr.second.z()));
-		}
-*/
 		cout << "Found " << points3.size() << " triangulated points" << endl;
 	}
 
@@ -172,19 +161,6 @@ VisualOdometry::process(cv::Mat img, const ptime &timestamp, cv::Mat mask, bool 
 
 	frameCounter+=1;
 	return true;
-}
-
-
-void
-VisualOdometry::drawFlow(cv::Mat canvas)
-{
-	_flowCanvas = canvas.clone();
-
-	for (auto tr: voFeatureTracker.getFeatureTracksAt(frameCounter)) {
-		cv::Mat ptMat = tr->getPointsAsMat(10);
-		cv::circle(_flowCanvas, cv::Point2i(ptMat.row(ptMat.rows-1)), 1, cv::Scalar(0,0,255), -1);
-		cv::polylines(_flowCanvas, ptMat, false, cv::Scalar(0,255,0));
-	}
 }
 
 

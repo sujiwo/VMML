@@ -44,8 +44,6 @@ public:
 	VisualOdometry(Parameters par);
 	virtual ~VisualOdometry();
 
-	bool runMatching (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat());
-
 	bool process (cv::Mat img, const ptime &timestamp, cv::Mat mask=cv::Mat(), bool matchOnly=false);
 
 	inline const Trajectory& getTrajectory() const
@@ -66,11 +64,6 @@ public:
 	const Matcher::PairList& getLastMatch() const
 	{ return voMatcherToAnchor; }
 
-	// XXX: Temporary
-	cv::Mat _flowCanvas;
-	void drawFlow(cv::Mat canvas);
-
-//	bool process (const BaseFrame &newFrame, const Matcher::PairList &matchList);
 
 protected:
 
