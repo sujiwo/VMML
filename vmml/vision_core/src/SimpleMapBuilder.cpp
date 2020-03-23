@@ -182,12 +182,14 @@ SimpleMapBuilder::process(const cv::Mat &inputImage, const ptime &timestamp, con
 			// Try initialization
 			if (initialize()==true) {
 				hasInitialized = true;
+				cout << "Initialization success;" << endl;
 				return true;
 			}
 
 			else {
 				// skip to next frame, maybe better
 				return false;
+				cout << "Initialization failed\n";
 			}
 		}
 
