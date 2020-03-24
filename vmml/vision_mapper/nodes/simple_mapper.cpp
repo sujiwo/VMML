@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
 		mapBuild.process(currentImage, timestamp, mask);
 
 		auto curFrame = mapBuild.getCurrentFrame();
+
+		// XXX: make better visualization!
+		rosConn.publishImage(curFrame->visualize(), ros::Time::fromBoost(timestamp));
 	}
 
 	return 0;

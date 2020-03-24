@@ -42,7 +42,7 @@ SimpleMapBuilder::TmpFrame::initializeMatch(const KeyFrame::Ptr &kf, std::vector
 	bool isMoving;
 	Matcher::matchOpticalFlow(*kf, *this, matchesToKeyFrame, &isMoving);
 
-	if (isMoving==true)
+	if (isMoving==false)
 		return false;
 
 	Matcher::PairList voMatches;
@@ -175,8 +175,8 @@ SimpleMapBuilder::process(const cv::Mat &inputImage, const ptime &timestamp, con
 
 			else {
 				// skip to next frame, maybe better
-				return false;
 				cout << "Initialization failed\n";
+				return false;
 			}
 		}
 
