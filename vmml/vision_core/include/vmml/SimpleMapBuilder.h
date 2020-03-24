@@ -34,7 +34,8 @@ public:
 	struct Parameters {
 		CameraPinholeParams camera;
 		int numOfFeatures;
-
+		// maximum distance (in #of keyframes) since last local BA
+		int maxDistanceLocalBA=10;
 		// More values to come
 	};
 
@@ -79,6 +80,8 @@ public:
 			prevMapPointPairs,			// visible map points from parent keyframe
 			candidatesMapPointPairs;	// candidates for new map points
 		ptime timestamp;
+
+		uint frameId=0;
 	};
 
 	typedef std::function<void(const TmpFrame &)> FrameCreationCallback;
@@ -87,6 +90,11 @@ public:
 
 	inline const TmpFrame::Ptr& getCurrentFrame() const
 	{ return currentWorkframe; }
+
+	/*
+	 * Call this when image stream has ended (or should mapping be finished)
+	 */
+	void end();
 
 protected:
 

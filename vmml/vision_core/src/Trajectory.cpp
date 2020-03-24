@@ -285,7 +285,7 @@ Trajectory::getVelocityAt (const int idx) const
 
 Twist::Twist(const PoseStamped &p1, const PoseStamped &p2)
 {
-	assert(p2.timestamp > p1.timestamp);
+	assert(p2.timestamp >= p1.timestamp);
 	anchor = p2;
 
 	tduration td = p2.timestamp - p1.timestamp;

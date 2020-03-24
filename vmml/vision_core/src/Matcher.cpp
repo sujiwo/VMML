@@ -291,11 +291,11 @@ bool isMoving(const vector<pair<cv::Point2f,cv::Point2f>> &flows)
 
 	float confidence=float(c)/float(flows.size());
 	if (confidence < 0.5) {
-//		cout << "Moving: " << c << '/' << flows.size() << endl;
+//		cout << "Moving: " << confidence << endl;
 		return true;
 	}
 	else {
-//		cout << "Not moving: " << c << '/' << flows.size() << endl;
+//		cout << "Not moving: " << confidence << endl;
 		return false;
 	}
 }

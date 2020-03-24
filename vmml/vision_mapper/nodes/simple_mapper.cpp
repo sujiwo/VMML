@@ -69,5 +69,9 @@ int main(int argc, char *argv[])
 		publish(rosConn, curFrame);
 	}
 
+	mapBuild.end();
+	auto trajectory=mapBuild.getMap()->dumpCameraTrajectory();
+	trajectory.dump("/tmp/simple-vslam.csv");
+
 	return 0;
 }
