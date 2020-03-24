@@ -71,8 +71,9 @@ public:
 
 		bool isOkForKeyFrame() const;
 
-		KeyFrame::Ptr parentKeyFrame;
+		KeyFrame::Ptr parentKeyFrame=nullptr;
 		std::shared_ptr<VisionMap> parent;
+
 		Matcher::PairList
 			matchesToKeyFrame,			// all Inliers of matching to parent keyframe
 			prevMapPointPairs,			// visible map points from parent keyframe

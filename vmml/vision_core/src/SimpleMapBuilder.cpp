@@ -135,7 +135,13 @@ SimpleMapBuilder::TmpFrame::toKeyFrame() const
 cv::Mat
 SimpleMapBuilder::TmpFrame::visualize() const
 {
-	return image.clone();
+	auto buffer = image.clone();
+
+	for (auto &match: matchesToKeyFrame) {
+		cv::circle(buffer, keypoint(match.second).pt, 2.5, cv::Scalar(0,255,0), -1);
+	}
+
+	return buffer;
 }
 
 

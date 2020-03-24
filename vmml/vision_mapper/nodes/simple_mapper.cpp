@@ -20,6 +20,14 @@ using namespace Vmml;
 using namespace Vmml::Mapper;
 
 
+void publish(RVizConnector &ros, SimpleMapBuilder::TmpFrame::Ptr &currentFrame)
+{
+	auto currentPose = currentFrame->pose();
+	auto rstamp = ros::Time::fromBoost(currentFrame->timestamp);
+	ros.publishImage(currentFrame->visualize(), rstamp);
+}
+
+
 int main(int argc, char *argv[])
 {
 	float startTimeSeconds=0;
@@ -58,9 +66,7 @@ int main(int argc, char *argv[])
 		mapBuild.process(currentImage, timestamp, mask);
 
 		auto curFrame = mapBuild.getCurrentFrame();
-
-		// XXX: make better visualization!
-		rosConn.publishImage(curFrame->visualize(), ros::Time::fromBoost(timestamp));
+		publish(rosConn, curFrame);
 	}
 
 	return 0;
