@@ -582,7 +582,7 @@ void ImageDatabase::addImage2(const unsigned image_id,
 	auto t1=getCurrentTime();
 	searchDescriptors(descs, matches_feats, 2, 64);
 	auto t2=getCurrentTime();
-	cerr << "SearchDescriptor: " << toSeconds(t2-t1) << " s\n";
+//	cerr << "SearchDescriptor: " << toSeconds(t2-t1) << " s\n";
 
 	for (uint m=0; m<matches_feats.size(); ++m) {
 		if (matches_feats[m][0].distance < matches_feats[m][1].distance * 0.8)

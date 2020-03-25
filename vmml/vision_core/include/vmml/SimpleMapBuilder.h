@@ -96,6 +96,9 @@ public:
 	 */
 	void end();
 
+	const Trajectory& getTrajectory() const
+	{ return frameTrajectory; }
+
 protected:
 
 	Parameters smParameters;
@@ -128,6 +131,8 @@ protected:
 		if (newFrameCallback)
 			newFrameCallback(*currentWorkframe);
 	}
+
+	Trajectory frameTrajectory;
 };
 
 } /* namespace Vmml */

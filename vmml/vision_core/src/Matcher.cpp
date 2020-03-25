@@ -809,6 +809,7 @@ Matcher::solvePose(
 	bool hasSolution = cv::solvePnPRansac(objectPoints, imagePoints, cameraMatrix, cv::Mat(), cRVec, cKfTransVec, true, 100, 4.0, 0.99, inlierIdx, cv::SOLVEPNP_EPNP);
 	if (hasSolution==false)
 		throw runtime_error("No solutions found");
+	auto t2=getCurrentTime();
 
 	cv::Rodrigues(cRVec, cKfRotMat);
 	cv::cv2eigen(cKfRotMat, KfRotation);
@@ -816,6 +817,7 @@ Matcher::solvePose(
 	Q = KfRotation;
 	cv::cv2eigen(cKfTransVec, eKfTransVec);
 
+	// XXX: Inverse or not?
 	newFramePose = Pose::from_Pos_Quat(eKfTransVec, Q).inverse();
 
 	vector<KpPair> inliers(inlierIdx.rows);

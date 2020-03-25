@@ -139,7 +139,7 @@ SimpleMapBuilder::TmpFrame::visualize() const
 {
 	auto buffer = image.clone();
 
-	for (auto &match: matchesToKeyFrame) {
+	for (auto &match: prevMapPointPairs) {
 		cv::circle(buffer, keypoint(match.second).pt, 2.5, cv::Scalar(0,255,0), -1);
 	}
 
@@ -163,13 +163,15 @@ SimpleMapBuilder::process(const cv::Mat &inputImage, const ptime &timestamp, con
 	currentWorkframe->frameId=frameCounter;
 	frameCounter += 1;
 
+	bool trackState;
+
 	// No frame yet
 	if (lastAnchor==0) {
+		currentWorkframe->setPose(Pose::Identity());
 		auto K1 = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 		lastAnchor = K1->getId();
 		vMap->addKeyFrame(K1);
-		callFrameFunction();
-		return true;
+		trackState=true;
 	}
 	else {
 
@@ -178,24 +180,25 @@ SimpleMapBuilder::process(const cv::Mat &inputImage, const ptime &timestamp, con
 			if (initialize()==true) {
 				hasInitialized = true;
 				cout << "Initialization success; points: " << vMap->numOfMapPoints() << endl;
-				return true;
-				exit(1);
+				trackState=true;
 			}
 
 			else {
 				// skip to next frame, could be better
 				cout << "Initialization failed\n";
-				return false;
+				trackState=false;
 			}
 		}
 
 		// Tracking mode
 		else {
-			track();
+			trackState=track();
+			auto t2=getCurrentTime();
 		}
 	}
 
-	return true;
+	frameTrajectory.push_back(PoseStamped(currentWorkframe->pose(), currentWorkframe->timestamp));
+	return trackState;
 }
 
 
@@ -219,8 +222,11 @@ SimpleMapBuilder::initialize()
 bool
 SimpleMapBuilder::track()
 {
+	auto t1=getCurrentTime();
 	if (currentWorkframe->track(lastAnchor)==false)
 		return false;
+	auto t2=getCurrentTime();
+	cerr << "frametrack(): " << toSeconds(t2-t1) << endl;
 
 	/*
 	 * It's OK, we only continue when there has been enough 'innovation'
@@ -229,6 +235,7 @@ SimpleMapBuilder::track()
 		return true;
 	}
 
+	t1=getCurrentTime();
 	auto Knew = KeyFrame::fromBaseFrame(*currentWorkframe, vMap);
 	vMap->addKeyFrame(Knew);
 
@@ -238,8 +245,11 @@ SimpleMapBuilder::track()
 		vMap->addMapPointVisibility(ptId, Knew->getId(), currentWorkframe->prevMapPointPairs[i].second);
 		vMap->updateMapPointDescriptor(ptId);
 	}
+	t2=getCurrentTime();
+	cerr << "graph1(): " << toSeconds(t2-t1) << endl;
 
 	// Triangulation for new map points
+	t1=getCurrentTime();
 	map<uint, Vector3d> mapPoints;
 	float parallax;
 	TriangulateCV(*currentWorkframe->parentKeyFrame, *Knew, currentWorkframe->candidatesMapPointPairs, mapPoints, &parallax);
@@ -251,7 +261,10 @@ SimpleMapBuilder::track()
 		vMap->addMapPointVisibility(ptn->getId(), Knew->getId(), currentWorkframe->candidatesMapPointPairs[p.first].second);
 //		vMap->updateMapPointDescriptor(ptn->getId());
 	}
+	t2=getCurrentTime();
+	cerr << "triangulation(): " << toSeconds(t2-t1) << endl;
 
+	t1=getCurrentTime();
 	// Build connections to previous keyframes
 	vector<kfid> kfInsToAnchor = vMap->getKeyFramesComeInto(lastAnchor);
 	const kfid targetKfId = lastAnchor;
@@ -274,6 +287,8 @@ SimpleMapBuilder::track()
 
 	vMap->updateCovisibilityGraph(lastAnchor);
 	lastAnchor = Knew->getId();
+	t2=getCurrentTime();
+	cerr << "graph2(): " << toSeconds(t2-t1) << endl;
 
 	return true;
 }
@@ -325,7 +340,6 @@ SimpleMapBuilder::createInitialMap(const std::vector<Eigen::Vector3d> &initialTr
 
 	lastAnchor = K2->getId();
 	currentWorkframe->setPose(K2->pose());
-	callFrameFunction();
 	return true;
 }
 

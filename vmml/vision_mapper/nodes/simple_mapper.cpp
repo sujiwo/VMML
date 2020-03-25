@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	}
 
 	mapBuild.end();
-	auto trajectory=mapBuild.getMap()->dumpCameraTrajectory();
+	auto trajectory=mapBuild.getTrajectory();
 	trajectory.dump("/tmp/simple-vslam.csv");
 
 	return 0;

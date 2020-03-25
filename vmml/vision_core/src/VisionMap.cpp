@@ -103,6 +103,7 @@ VisionMap::addKeyFrame(KeyFrame::Ptr frame)
 
 	/*
 	 * image database part
+	 * XXX: Temporarily disabled
 	 */
 	if (imageDb.numImages()==0) {
 		imageDb.addImage(nId, frame->allKeypoints(), frame->allDescriptors());
