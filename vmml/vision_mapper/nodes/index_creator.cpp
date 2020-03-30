@@ -130,6 +130,15 @@ protected:
 };
 
 
+PoseStamped interExtrapolate(const Trajectory &track, const ptime &t)
+{
+	if (t<track.front().timestamp or t>track.back().timestamp)
+		return track.extrapolate(t);
+	else
+		return track.interpolate(t);
+}
+
+
 int main(int argc, char *argv[])
 {
 	float frameRate=10.0;
@@ -168,7 +177,9 @@ int main(int argc, char *argv[])
 
 	auto gnssTopic = selectTopicForGnssLocalization(mybag);
 	auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
+	trackGnss.transform(progOptions.getGnssOffset());
 	trackGnss.dump((progOptions.getWorkDir()/"gnss.csv").string());
+	cout << "GNSS dumped to " << (progOptions.getWorkDir()/"gnss.csv").string() << endl;
 
 	auto imgPipe = progOptions.getImagePipeline();
 
@@ -189,6 +200,10 @@ int main(int argc, char *argv[])
 		ptime imageTimestamp = images.timeAt(imageBagId).toBoost();
 		curFrame->computeFeatures(bFeats, mask);
 
+		auto imagePosByGnss = (imageTimestamp<trackGnss.front().timestamp or imageTimestamp>trackGnss.back().timestamp) ?
+			trackGnss.extrapolate(imageTimestamp) :
+			trackGnss.interpolate(imageTimestamp);
+
 		auto t1 = getCurrentTime();
 		if (keyframeId==0) {
 			// No checks
@@ -200,6 +215,8 @@ int main(int argc, char *argv[])
 		auto t2 = getCurrentTime();
 
 		rosConn.publishKeyPointsInFrame(*curFrame);
+		trackImage.push_back(imagePosByGnss);
+		rosConn.publishTrajectory(trackImage, ros::Time::fromBoost(imageTimestamp));
 
 		cout << ", " << toSeconds(t2-t1) << endl;
 		imageDb.keyframeIdToBag[keyframeId] = images.getOriginalZeroIndex()+imageBagId;

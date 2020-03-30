@@ -336,5 +336,24 @@ RVizConnector::publishAllCurrentKeyFrames()
 }
 
 
+void
+RVizConnector::publishTrajectory(const std::vector<Vmml::Pose> &vs, const ros::Time &t)
+{
+	if (rosDisabled)
+		return;
+
+	geometry_msgs::PoseArray allKeyframes;
+	allKeyframes.header.stamp = t;
+	allKeyframes.header.frame_id = originFrame;
+
+	for (auto &pf: vs) {
+		auto kfp = createGeomPose(pf);
+		allKeyframes.poses.push_back(kfp);
+	}
+
+	keyframePosePub.publish(allKeyframes);
+}
+
+
 } /* namespace Mapper */
 } /* namespace Vmml */

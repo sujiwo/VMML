@@ -181,6 +181,7 @@ public:
 
 	bool isInside(const ptime &t) const;
 
+	// Transform all poses with uniform offset tx
 	void transform(const TTransform &tx);
 
 	// Create new trajectory like this, but the first position is origin
@@ -189,6 +190,8 @@ public:
 	Trajectory setToOrigin(bool onlyPosition=false) const;
 
 	double getElapsedDistance (const uint frontPos, const uint backPos=0) const;
+
+	std::vector<Pose> toVectorPose() const;
 
 private:
 	typedef std::vector<PoseStamped> Parent;

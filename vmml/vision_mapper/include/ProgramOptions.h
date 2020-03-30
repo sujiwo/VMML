@@ -109,6 +109,9 @@ public:
 	getWorkingCameraParameter() const
 	{ return camera0 * imageResizeFactor; }
 
+	inline Vmml::TTransform getGnssOffset() const
+	{ return gnssOffset; }
+
 protected:
 	boost::program_options::options_description _options;
 	boost::program_options::variables_map _optionValues;
@@ -158,6 +161,8 @@ protected:
 	CameraPinholeParams camera0;
 
 	TTransform lidarToCamera=TTransform::Identity();
+
+	TTransform gnssOffset = TTransform::Identity();
 
 	ImagePipeline imagePipeline;
 	bool useRetinex;

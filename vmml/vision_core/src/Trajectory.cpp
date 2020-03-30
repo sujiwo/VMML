@@ -367,7 +367,8 @@ Trajectory::transform(const TTransform &tx)
 {
 	for (int i=0; i<size(); ++i) {
 		auto &p = Parent::at(i);
-		p = p * tx;
+		auto newp = tx * p;
+		p = PoseStamped(newp, p.timestamp);
 	}
 }
 
@@ -411,6 +412,15 @@ Trajectory::getElapsedDistance (const uint frontPos, const uint backPos) const
 	return elDist;
 }
 
+
+std::vector<Pose>
+Trajectory::toVectorPose() const
+{
+	vector<Pose> vs(size());
+	for (int i=0; i<size(); ++i)
+		vs[i] = at(i);
+	return vs;
+}
 
 }		// namespace Vmml
 

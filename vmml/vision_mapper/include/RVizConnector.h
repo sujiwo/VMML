@@ -57,6 +57,10 @@ public:
 
 	void setImageTopicName(const std::string &s);
 
+	void publishTrajectory(const std::vector<Vmml::Pose> &vs, const ros::Time &t);
+	void publishTrajectory(const Trajectory &vs, const ros::Time &t)
+	{ return publishTrajectory(vs.toVectorPose(), t); }
+
 protected:
 	std::shared_ptr<ros::NodeHandle> hdl;
 	VisionMap::Ptr mMap;

@@ -194,6 +194,18 @@ ProgramOptions::openWorkDir(const std::string &f)
 		featureMaskImagePath = workDir / "feature_mask.png";
 	if (lightMaskImagePath.empty())
 		lightMaskImagePath = workDir / "light_mask.png";
+
+	// GNSS Offset
+	Eigen::Vector3d gov;
+	gov.x() = cfg.GetReal("gnss_offset", "x", 0);
+	gov.y() = cfg.GetReal("gnss_offset", "y", 0);
+	gov.z() = cfg.GetReal("gnss_offset", "z", 0);
+	double
+		goRoll = cfg.GetReal("gnss_offset", "roll", 0),
+		goPitch = cfg.GetReal("gnss_offset", "pitch", 0),
+		goYaw = cfg.GetReal("gnss_offset", "yaw", 0);
+	gnssOffset = Vmml::TTransform::from_XYZ_RPY(gov, goRoll, goPitch, goYaw);
+
 }
 
 

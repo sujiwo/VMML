@@ -113,3 +113,14 @@ if (libviso2_FOUND)
 else()
 	message("Viso2-based visual odometry will NOT be built")
 endif()
+
+###
+#add_executable(
+#	openvideo
+#		nodes/openvideo.cpp
+#		nodes/VideoImageBag.cpp
+#)
+#target_link_libraries(
+#	openvideo
+#		${common_libs}
+#)
