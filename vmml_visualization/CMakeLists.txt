@@ -118,7 +118,8 @@ endif()
 ###
 if (libopenvslam_FOUND)
 	message("OpenVSlam demo will be built")
-		add_executable(
+	find_package(yaml-cpp REQUIRED)
+	add_executable(
 		vosl_demo
 			nodes/vosl_demo.cpp
 	)
