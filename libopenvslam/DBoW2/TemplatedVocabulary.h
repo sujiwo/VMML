@@ -246,6 +246,18 @@ public:
   void saveToTextFile(const std::string &filename) const;
 
   /**
+   * Loads the vocabulary from a binary file
+   * @param filename
+   */
+  void loadFromBinaryFile(const std::string& filename);
+
+  /**
+   * Saves the vocabulary into a binary file
+   * @param filename
+   */
+  void saveToBinaryFile(const std::string& filename) const;
+
+  /**
    * Saves the vocabulary into a file
    * @param filename
    */
@@ -1420,6 +1432,106 @@ bool TemplatedVocabulary<TDescriptor,F>::loadFromTextFile(const std::string &fil
 
     return true;
 
+}
+
+// --------------------------------------------------------------------------
+
+template<class TDescriptor, class F>
+void TemplatedVocabulary<TDescriptor, F>::saveToBinaryFile(const std::string& filename) const {
+  std::ofstream ofs;
+  ofs.open(filename.c_str(), std::ios_base::out | std::ios::binary);
+
+  if (!ofs) {
+    throw std::string("Could not open file: ") + filename;
+  }
+
+  const unsigned int n_nodes = m_nodes.size();
+  const unsigned int node_size = sizeof(m_nodes.at(0).parent) + F::L * sizeof(char) + sizeof(float) + sizeof(bool);
+
+  ofs.write((char*)&n_nodes, sizeof(n_nodes));
+  ofs.write((char*)&node_size, sizeof(node_size));
+  ofs.write((char*)&m_k, sizeof(m_k));
+  ofs.write((char*)&m_L, sizeof(m_L));
+  ofs.write((char*)&m_scoring, sizeof(m_scoring));
+  ofs.write((char*)&m_weighting, sizeof(m_weighting));
+
+  for (size_t i = 1; i < n_nodes; ++i) {
+    const Node& node = m_nodes.at(i);
+
+    ofs.write((char*)&node.parent, sizeof(node.parent));
+    ofs.write((char*)node.descriptor.data, F::L);
+
+    const float weight = node.weight;
+    ofs.write((char*)&weight, sizeof(weight));
+
+    const bool is_leaf = node.isLeaf();
+    ofs.write((char*)&is_leaf, sizeof(is_leaf));
+  }
+
+  ofs.close();
+}
+
+// --------------------------------------------------------------------------
+
+template<class TDescriptor, class F>
+void TemplatedVocabulary<TDescriptor, F>::loadFromBinaryFile(const std::string& filename) {
+  std::ifstream ifs;
+  ifs.open(filename.c_str(), std::ios_base::in | std::ios::binary);
+
+  if (!ifs) {
+    throw std::string("Could not open file: ") + filename;
+  }
+
+  unsigned int n_nodes, node_size;
+  ifs.read((char*)&n_nodes, sizeof(n_nodes));
+  ifs.read((char*)&node_size, sizeof(node_size));
+  ifs.read((char*)&m_k, sizeof(m_k));
+  ifs.read((char*)&m_L, sizeof(m_L));
+  ifs.read((char*)&m_scoring, sizeof(m_scoring));
+  ifs.read((char*)&m_weighting, sizeof(m_weighting));
+  createScoringObject();
+
+  m_words.clear();
+  m_words.reserve(std::pow(static_cast<double>(m_k), static_cast<double>(m_L) + 1.0));
+
+  m_nodes.clear();
+  m_nodes.resize(n_nodes);
+  m_nodes.at(0).id = 0;
+
+  char* buf = new char[node_size];
+  unsigned int n_id = 1;
+
+  while (!ifs.eof()) {
+    ifs.read(buf, node_size);
+    m_nodes.at(n_id).id = n_id;
+    const int* ptr = (int*)buf;
+
+    m_nodes.at(n_id).parent = *ptr;
+    m_nodes.at(m_nodes.at(n_id).parent).children.push_back(n_id);
+    m_nodes.at(n_id).descriptor = cv::Mat(1, F::L, CV_8U);
+
+    memcpy(m_nodes.at(n_id).descriptor.data, buf + 4, F::L);
+    m_nodes.at(n_id).weight = *reinterpret_cast<float*>(buf + 4 + F::L);
+
+    if (buf[8 + F::L]) {
+      const int w_id = m_words.size();
+      m_words.resize(w_id + 1);
+      m_nodes.at(n_id).word_id = w_id;
+      m_words.at(w_id) = &m_nodes.at(n_id);
+    }
+    else {
+      m_nodes.at(n_id).children.reserve(m_k);
+    }
+
+    ++n_id;
+    if (n_id == n_nodes) {
+      break;
+    }
+  }
+
+  ifs.close();
+
+  delete[] buf;
 }
 
 // --------------------------------------------------------------------------

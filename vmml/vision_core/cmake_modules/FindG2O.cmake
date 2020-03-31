@@ -18,9 +18,9 @@ IF(UNIX)
 
   MESSAGE(STATUS "Searching for g2o ...")
   FIND_PATH(G2O_INCLUDE_DIR
-    NAMES core math_groups types
+    NAMES g2o
     PATHS /usr/local /usr
-    PATH_SUFFIXES include/g2o include)
+    PATH_SUFFIXES include)
 
   find_path(SUITESPARSE_INCLUDE_DIRZ
   	NAMES cholmod.h
