@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(libopenvslam)
 
-add_compile_options(-std=c++11)
-
-add_compile_options(-std=c++11 -frtti -fopenmp)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set (CMAKE_MODULE_PATH 
 		${CMAKE_MODULE_PATH} 
@@ -11,6 +10,18 @@ set (CMAKE_MODULE_PATH
 
 find_package(catkin REQUIRED)
 find_package (G2O REQUIRED)
+find_package(Threads REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+find_package(OpenCV REQUIRED COMPONENTS 
+	core features2d calib3d highgui)
+message(STATUS "Use OpenCV ${OpenCV_VERSION}")
+
+include(CMakePackageConfigHelpers)
+set(LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+set(ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDES_DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 ###################################
 ## catkin specific configuration ##
