@@ -46,9 +46,24 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+	include
+	${catkin_INCLUDE_DIRS}
+	${EIGEN3_INCLUDE_DIRS}
+	${OpenCV_INCLUDE_DIRS}
+	${G2O_INCLUDE_DIR}
 )
+
+
+# built-in DBoW
+add_library(DBoW2 STATIC
+	DBoW2/BowVector.cpp
+	DBoW2/FORB.cpp      
+	DBoW2/FeatureVector.cpp
+	DBoW2/ScoringObject.cpp
+	DBoW2/DUtils/Random.cpp
+	DBoW2/DUtils/Timestamp.cpp
+)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

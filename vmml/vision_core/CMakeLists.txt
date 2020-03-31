@@ -45,7 +45,7 @@ catkin_package(
 
 include_directories(
 	include
-	DBoW2
+#	DBoW2
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
@@ -58,7 +58,7 @@ include_directories(
 )
 
 set(REQUIRED_LIBS
-	DBoW2
+#	DBoW2
 	${OpenCV_LIBS}
 	${PCL_LIBRARIES}
 	${G2O_LIBRARIES}
@@ -69,21 +69,21 @@ set(REQUIRED_LIBS
 
 
 # DBoW2 is now handled directly
-add_library(DBoW2
-	DBoW2/BowVector.cpp
-	DBoW2/FORB.cpp      
-	DBoW2/FeatureVector.cpp
-	DBoW2/ScoringObject.cpp
-	DBoW2/DUtils/Random.cpp
-	DBoW2/DUtils/Timestamp.cpp
-)
+#add_library(DBoW2
+#	DBoW2/BowVector.cpp
+#	DBoW2/FORB.cpp      
+#	DBoW2/FeatureVector.cpp
+#	DBoW2/ScoringObject.cpp
+#	DBoW2/DUtils/Random.cpp
+#	DBoW2/DUtils/Timestamp.cpp
+#)
 
-target_link_libraries(DBoW2 ${OpenCV_LIBS})
+#target_link_libraries(DBoW2 ${OpenCV_LIBS})
 
-install(
-	TARGETS DBoW2
-	DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-)
+#install(
+#	TARGETS DBoW2
+#	DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#)
 
 # Main Library
 add_library(
