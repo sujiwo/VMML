@@ -74,7 +74,6 @@ public:
 
 	/*
 	 * Add an option. When user sets it, its value will be stored to S
-	 * XXX: Add special value for bool
 	 */
 	template<typename T>
 	void addSimpleOptions(const std::string &opt, const std::string &description, T& S)
@@ -87,10 +86,8 @@ public:
 		);
 	}
 
-/*
-	template<>
-	void addSimpleOptions<bool>(const std::string &opt, const std::string &description, bool& target);
-*/
+	inline void addSimpleOptions(const std::string &opt, const std::string &description)
+	{ _options.add_options()(opt.c_str(), description.c_str()); }
 
 	inline int getArgc() const
 	{ return rArgc; }

@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 	vision_mapper
 )
 find_package(libviso2)
+find_package(libopenvslam)
 
 if(SEGNET_DIR)
 	message("SegNet is set")
@@ -112,6 +113,27 @@ if (libviso2_FOUND)
 	)
 else()
 	message("Viso2-based visual odometry will NOT be built")
+endif()
+
+###
+if (libopenvslam_FOUND)
+	message("OpenVSlam demo will be built")
+		add_executable(
+		vosl_demo
+			nodes/vosl_demo.cpp
+	)
+	target_include_directories(vosl_demo PUBLIC ${libopenvslam_INCLUDE_DIRS})
+	target_link_libraries(
+		vosl_demo
+			${common_libs}
+			${libopenvslam_LIBRARIES}
+	)
+	install(
+		TARGETS vosl_demo
+		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	)
+else()
+	message("OpenVSlam demo will NOT be built")
 endif()
 
 ###

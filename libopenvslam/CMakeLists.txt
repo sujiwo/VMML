@@ -36,7 +36,7 @@ set(INCLUDES_DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS openvslam
+  INCLUDE_DIRS ${PROJECT_SOURCE_DIR}
   LIBRARIES openvslam
 #  CATKIN_DEPENDS other_catkin_pkg
   DEPENDS OpenCV G2O Eigen3

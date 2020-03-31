@@ -61,9 +61,10 @@ else()
     message(STATUS "SSE for floating-point operation (-mfpmath=sse): DISABLED")
 endif()
 
-add_definitions(-DUSE_DBOW2)
+#add_definitions(-DUSE_DBOW2)
 
 # ----- Configure OpenVSLAM library -----
+target_compile_definitions(openvslam PUBLIC -DUSE_DBOW2)
 
 # Include directories
 #target_include_directories(openvslam
