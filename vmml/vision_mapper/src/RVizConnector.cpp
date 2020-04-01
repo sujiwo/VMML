@@ -30,15 +30,21 @@ namespace Vmml {
 namespace Mapper {
 
 
-tf::Transform createPose(const BaseFrame &f)
+tf::Transform createPose(const Pose &ps)
 {
 	tf::Transform fPose;
-	auto pos = f.pose().position();
-	auto orn = f.pose().orientation();
+	auto pos = ps.position();
+	auto orn = ps.orientation();
 	fPose.setOrigin(tf::Vector3(pos.x(), pos.y(), pos.z()));
 	fPose.setRotation(tf::Quaternion(orn.x(), orn.y(), orn.z(), orn.w()));
 
 	return fPose;
+}
+
+
+tf::Transform createPose(const BaseFrame &f)
+{
+	return createPose(f.pose());
 }
 
 
@@ -262,7 +268,7 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::Pai
 
 	// Pose
 	const tf::Transform kfPose = createPose(frame);
-	tf::StampedTransform kfStampedPose(kfPose, timestamp, originFrame, "camera");
+	tf::StampedTransform kfStampedPose(kfPose, timestamp, originFrame, cameraFrameName);
 	posePubTf->sendTransform(kfStampedPose);
 
 	// Image
@@ -271,6 +277,18 @@ RVizConnector::publishBaseFrame(const Vmml::BaseFrame &frame, const Matcher::Pai
 	cvImg.encoding = sensor_msgs::image_encodings::BGR8;
 	cvImg.header.stamp = timestamp;
 	imagePub.publish(cvImg.toImageMsg());
+}
+
+
+void
+RVizConnector::publishPose(const Pose &camPose, const ros::Time &t)
+{
+	if (rosDisabled)
+		return;
+
+	const tf::Transform kfPose = createPose(camPose);
+	tf::StampedTransform kfStampedPose(kfPose, t, originFrame, cameraFrameName);
+	posePubTf->sendTransform(kfStampedPose);
 }
 
 

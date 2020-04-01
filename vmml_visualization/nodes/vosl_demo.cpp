@@ -109,6 +109,7 @@ void publishFrame(const ros::Time &timestamp)
 	Eigen::Matrix4d posee = mapPub->get_current_cam_pose().inverse();
 	Pose pose = posee;
 	rosConn.publishImage(frame, timestamp);
+	rosConn.publishPose(pose, timestamp);
 }
 
 private:

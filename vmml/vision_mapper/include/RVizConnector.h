@@ -44,6 +44,8 @@ public:
 
 	void publishImage(const cv::Mat &img, const ros::Time &t=ros::Time(0));
 
+	void publishPose(const Pose &camPose, const ros::Time &t);
+
 	void publishKeyPointsInFrame(const Vmml::BaseFrame &frame);
 
 	inline bool isRosUsed() const
@@ -56,6 +58,9 @@ public:
 	{ return hdl; }
 
 	void setImageTopicName(const std::string &s);
+
+	inline void setCameraFrameName(const std::string &c)
+	{ cameraFrameName = c; }
 
 	void publishTrajectory(const std::vector<Vmml::Pose> &vs, const ros::Time &t);
 	void publishTrajectory(const Trajectory &vs, const ros::Time &t)
@@ -92,7 +97,8 @@ protected:
 
 	ptime currentTime;
 
-	string imageTopicName = "imageframe";
+	std::string imageTopicName = "imageframe";
+	std::string cameraFrameName = "camera";
 };
 
 } /* namespace Mapper */
