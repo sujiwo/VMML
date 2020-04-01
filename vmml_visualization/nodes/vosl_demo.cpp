@@ -15,6 +15,7 @@
 #include "openvslam/config.h"
 #include "openvslam/publish/frame_publisher.h"
 #include "openvslam/publish/map_publisher.h"
+#include "openvslam/data/landmark.h"
 
 #include "vmml/Pose.h"
 #include "vmml/Trajectory.h"
@@ -23,6 +24,7 @@
 
 
 using namespace std;
+using namespace Vmml;
 
 
 YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resample=-1)
@@ -59,20 +61,65 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 class PrimitiveViewer
 {
 public:
-PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, Vmml::Mapper::RVizConnector &rosCon, openvslam::system &slam_):
+PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	slam(slam_),
 	mapPub(slam_.get_map_publisher()),
-	framePub(slam_.get_frame_publisher())
+	framePub(slam_.get_frame_publisher()),
+	rosConn(prog.getArgc(), prog.getArgv(), "vosl_demo")
+{
+	rosConn.setImageTopicName("openvslam");
+}
+
+void run()
 {
 
 }
 
+void publishMap(const ros::Time &timestamp)
+{
+	std::vector<openvslam::data::keyframe*> keyfrms;
+	mapPub->get_keyframes(keyfrms);
+
+	vector<Pose> track;
+	for (auto kf: keyfrms) {
+		Pose pkf = kf->get_cam_pose_inv();
+		track.push_back(pkf);
+	}
+
+	std::vector<openvslam::data::landmark*> landmarks;
+	std::set<openvslam::data::landmark*> local_landmarks;
+	mapPub->get_landmarks(landmarks, local_landmarks);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr mapToCloud(new pcl::PointCloud<pcl::PointXYZ>);
+	for (auto &lm: landmarks) {
+		auto pt = lm->get_pos_in_world();
+		pcl::PointXYZ pt3d;
+		pt3d.x = pt.x();
+		pt3d.y = pt.y();
+		pt3d.z = pt.z();
+		mapToCloud->push_back(pt3d);
+	}
+
+	rosConn.publishTrajectory(track, timestamp);
+	rosConn.publishPointCloud(mapToCloud, timestamp);
+}
+
+void publishFrame(const ros::Time &timestamp)
+{
+	cv::Mat frame = framePub->draw_frame();
+	Eigen::Matrix4d posee = mapPub->get_current_cam_pose().inverse();
+	Pose pose = posee;
+	rosConn.publishImage(frame, timestamp);
+}
+
 private:
-openvslam::system &slam;
-const shared_ptr<openvslam::publish::frame_publisher> framePub;
-const shared_ptr<openvslam::publish::map_publisher> mapPub;
+	openvslam::system &slam;
+	const shared_ptr<openvslam::publish::frame_publisher> framePub;
+	const shared_ptr<openvslam::publish::map_publisher> mapPub;
+	Vmml::Mapper::RVizConnector rosConn;
 };
 
+
+/////////////////
 
 int main(int argc, char *argv[])
 {
@@ -98,15 +145,13 @@ int main(int argc, char *argv[])
 	RandomAccessBag::DesampledMessageList targetFrameId;
 	imageBag->desample(resample, targetFrameId);
 
-	Vmml::Mapper::RVizConnector rosConn(argc, argv, "vosl_demo");
-	rosConn.setImageTopicName("openvslam");
-
 	auto dummyYaml = createDummyConfig(vsoProg, resample);
 	auto slamConfig = make_shared<openvslam::config>(dummyYaml);
 
 	// Slam dunk
 	openvslam::system SlamDunk (slamConfig, vocPath);
 	SlamDunk.startup();
+	PrimitiveViewer rosConn(vsoProg, SlamDunk);
 
 	for (auto &frameId: targetFrameId) {
 
@@ -122,7 +167,8 @@ int main(int argc, char *argv[])
 
 		// XXX: temporary
 		cv::Mat frame = framePub->draw_frame();
-		rosConn.publishImage(frame, timestamp);
+		rosConn.publishFrame(timestamp);
+		rosConn.publishMap(timestamp);
 
 		if (SlamDunk.terminate_is_requested())
 			break;

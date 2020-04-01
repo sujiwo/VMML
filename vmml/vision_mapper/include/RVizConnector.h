@@ -42,14 +42,14 @@ public:
 
 	void publishPlainBaseFrame(const Vmml::BaseFrame &frame);
 
-	void publishPointcloud();
-
 	void publishImage(const cv::Mat &img, const ros::Time &t=ros::Time(0));
 
 	void publishKeyPointsInFrame(const Vmml::BaseFrame &frame);
 
 	inline bool isRosUsed() const
 	{ return !rosDisabled; }
+
+	void publishPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud, const ros::Time &t);
 
 	std::shared_ptr<ros::NodeHandle>
 	getNodeHandle()

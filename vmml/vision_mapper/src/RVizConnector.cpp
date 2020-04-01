@@ -301,6 +301,17 @@ RVizConnector::publishPointCloudMap()
 }
 
 
+void
+RVizConnector::publishPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud, const ros::Time &t)
+{
+	sensor_msgs::PointCloud2 mapCloud;
+	pcl::toROSMsg(*cloud, mapCloud);
+	mapCloud.header.stamp = t;
+	mapCloud.header.frame_id = originFrame;
+
+	mapPointsPub.publish(mapCloud);
+}
+
 /*
 void
 RVizConnector::publishPointCloudLidar(const Vmml::ImageDatabaseBuilder::CloudT &cl, const TTransform &lidarPos)
