@@ -65,6 +65,7 @@ void
 ImagePipeline::setFixedFeatureMask(const cv::Mat &fmask)
 {
 	stdMask = fmask.clone();
+	stdMaskResized = stdMask;
 	if (resizeFactor!=1.0 and stdMask.empty()==false)
 		cv::resize(stdMask, stdMaskResized, cv::Size(), resizeFactor, resizeFactor);
 }
