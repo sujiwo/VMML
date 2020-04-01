@@ -13,6 +13,8 @@
 
 #include "openvslam/system.h"
 #include "openvslam/config.h"
+#include "openvslam/publish/frame_publisher.h"
+#include "openvslam/publish/map_publisher.h"
 
 #include "vmml/Pose.h"
 #include "vmml/Trajectory.h"
@@ -54,6 +56,20 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 }
 
 
+class PrimitiveViewer
+{
+public:
+PrimitiveViewer(const Vmml::Mapper::ProgramOptions &prog, const Vmml::Mapper::RVizConnector &rosCon, openvslam::system &slam_):
+	slam(slam_)
+{
+
+}
+
+private:
+openvslam::system &slam;
+};
+
+
 int main(int argc, char *argv[])
 {
 	Vmml::Mapper::ProgramOptions vsoProg;
@@ -88,5 +104,24 @@ int main(int argc, char *argv[])
 	openvslam::system SlamDunk (slamConfig, vocPath);
 	SlamDunk.startup();
 
+	for (auto &frameId: targetFrameId) {
+
+		auto image = imageBag->at(frameId);
+		auto timestamp = imageBag->timeAt(frameId);
+		cv::Mat mask;
+		imagePipe.run(image, image, mask);
+
+		SlamDunk.feed_monocular_frame(image, resample, mask);
+
+		auto framePub = SlamDunk.get_frame_publisher();
+		auto mapPub = SlamDunk.get_map_publisher();
+
+//		cv::Mat frame = framePub->draw_frame();
+
+		if (SlamDunk.terminate_is_requested())
+			break;
+	}
+
+	SlamDunk.shutdown();
 	return 0;
 }
