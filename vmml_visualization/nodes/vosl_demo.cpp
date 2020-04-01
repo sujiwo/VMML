@@ -59,14 +59,18 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 class PrimitiveViewer
 {
 public:
-PrimitiveViewer(const Vmml::Mapper::ProgramOptions &prog, const Vmml::Mapper::RVizConnector &rosCon, openvslam::system &slam_):
-	slam(slam_)
+PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, Vmml::Mapper::RVizConnector &rosCon, openvslam::system &slam_):
+	slam(slam_),
+	mapPub(slam_.get_map_publisher()),
+	framePub(slam_.get_frame_publisher())
 {
 
 }
 
 private:
 openvslam::system &slam;
+const shared_ptr<openvslam::publish::frame_publisher> framePub;
+const shared_ptr<openvslam::publish::map_publisher> mapPub;
 };
 
 

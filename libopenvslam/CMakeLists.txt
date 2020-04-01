@@ -3,7 +3,7 @@ project(libopenvslam)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-fPIC)
+add_compile_options(-fPIC -msse3 -mfpmath=sse)
 
 set (CMAKE_MODULE_PATH 
 		${CMAKE_MODULE_PATH} 
