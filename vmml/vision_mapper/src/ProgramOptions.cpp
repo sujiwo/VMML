@@ -80,14 +80,14 @@ ProgramOptions::ProgramOptions() :
 				"Image file mask for gamma equalization")
 	;
 
-	addSimpleOptions("bag-file", "Bag file input", inputBagPath);
-	addSimpleOptions("resize", "Resize all masks and images from bags with a scalar value (0-1.0)", imageResizeFactor);
-	addSimpleOptions("image-topic", "Image topic to be used", imageTopic);
-	addSimpleOptions("lidar-topic", "Point cloud topic contained in bag", lidarTopic);
-	addSimpleOptions("gnss-topic", "GNSS topic contained in bag", gnssTopic);
-	addSimpleOptions("segnet-model", "Path to SegNet Model", segnetModelPath);
-	addSimpleOptions("segnet-weight", "Path to SegNet Weights", segnetWeightsPath);
-	addSimpleOptions("retinex", "Enable/disable Retinex enhancement", useRetinex);
+	addSimpleOptions("bag-file", "Bag file input", &inputBagPath);
+	addSimpleOptions("resize", "Resize all masks and images from bags with a scalar value (0-1.0)", &imageResizeFactor);
+	addSimpleOptions("image-topic", "Image topic to be used", &imageTopic);
+	addSimpleOptions("lidar-topic", "Point cloud topic contained in bag", &lidarTopic);
+	addSimpleOptions("gnss-topic", "GNSS topic contained in bag", &gnssTopic);
+	addSimpleOptions("segnet-model", "Path to SegNet Model", &segnetModelPath);
+	addSimpleOptions("segnet-weight", "Path to SegNet Weights", &segnetWeightsPath);
+	addSimpleOptions("retinex", "Enable/disable Retinex enhancement", &useRetinex);
 }
 
 
@@ -101,6 +101,22 @@ void ProgramOptions::showHelp()
 
 ProgramOptions::~ProgramOptions()
 {}
+
+
+/*
+void
+ProgramOptions::addSimpleOptions(bool isRequired, const std::string &opt, const std::string &description)
+{
+	auto valueSo = value<string>();
+	if (isRequired)
+		valueSo->required();
+
+	auto dt = boost::make_shared<po::option_description>(opt.c_str(), valueSo, description.c_str());
+	_options.add(dt);
+
+//	_options.add_options()(opt.c_str(), description.c_str());
+}
+*/
 
 
 void
@@ -300,15 +316,30 @@ ProgramOptions::openInputs()
 
 
 template<>
-void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool& target)
+void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool* target, bool isRequired)
 {
 	_options.add_options()(opt.c_str(), boost::program_options::bool_switch()
 		->default_value(false)->notifier([&](const bool &v) {
-			target = v;
+			*target = v;
 	}),
 	description.c_str());
 }
 
+template<>
+void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, Vmml::Path *S, bool isRequired)
+{
+	auto value_segm = boost::program_options::value<string>();
+	if (isRequired)
+		value_segm->required();
+	if (S!=nullptr)
+		value_segm->notifier([S](const string &v){
+			*S = v;
+		});
+
+	_options.add_options()(opt.c_str(), value_segm, description.c_str()
+	);
+
+}
 
 } /* namespace Mapper */
 } /* namespace Vmml */

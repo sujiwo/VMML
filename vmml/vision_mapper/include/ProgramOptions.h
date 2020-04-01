@@ -50,8 +50,12 @@ public:
 	{ return lidarToCamera; }
 
 	template<typename tp>
-	tp get(const std::string &cf)
-	{ return _optionValues.at(cf).as<tp>(); }
+	tp get(const std::string &cf, const tp &defaultValue)
+	{
+		try {
+			return _optionValues.at(cf).as<tp>();
+		} catch (std::out_of_range &e) { return defaultValue; }
+	}
 
 	const double getImageResizeFactor() const
 	{ return imageResizeFactor; }
@@ -73,21 +77,31 @@ public:
 
 
 	/*
-	 * Add an option. When user sets it, its value will be stored to S
+	 * Add an option. When user sets it, optionally its value will be stored to S
 	 */
-	template<typename T>
-	void addSimpleOptions(const std::string &opt, const std::string &description, T& S)
+	template<typename T=std::string>
+	void addSimpleOptions(const std::string &opt, const std::string &description, T* S=nullptr, bool isRequired=false)
 	{
-		_options.add_options()(opt.c_str(), boost::program_options::value<T>()
-			->notifier([&](const T&v){
-				S = v;
-			}),
-			description.c_str()
+		auto value_segm = boost::program_options::value<T>();
+		if (isRequired)
+			value_segm->required();
+		if (S!=nullptr)
+			value_segm->notifier([S](const T &v){
+				*S = v;
+			});
+		else
+			value_segm->notifier([](const T&v){});
+
+		_options.add_options()(opt.c_str(), value_segm, description.c_str()
 		);
 	}
 
-	inline void addSimpleOptions(const std::string &opt, const std::string &description)
-	{ _options.add_options()(opt.c_str(), description.c_str()); }
+	void addSimpleOptions(const std::string &opt, const std::string &description, bool isRequired=false)
+	{
+		return addSimpleOptions<std::string>(opt, description, nullptr, isRequired);
+	}
+
+//	void addSimpleOptions(bool isRequired, const std::string &opt, const std::string &Description);
 
 	inline int getArgc() const
 	{ return rArgc; }
@@ -170,7 +184,10 @@ protected:
 
 
 template<>
-void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool& target);
+void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool *target, bool isRequired);
+
+template<>
+void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, Vmml::Path *target, bool isRequired);
 
 
 #endif /* VMML_MAPPER_PROGRAMOPTIONS_H_ */

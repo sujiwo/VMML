@@ -43,18 +43,8 @@ bool PlaceRecognizerService(
 	vision_mapper::place_recognizer::Request &request,
 	vision_mapper::place_recognizer::Response &response)
 {
-/*
-	cv_bridge::CvImagePtr imageReq = cv_bridge::toCvCopy(request.input, sensor_msgs::image_encodings::BGR8);
-
-	cv::Vec3f
-		weights(0.3333, 0.3333, 0.3333),
-		sigmas(10, 10, 10);
-	cv::Mat workImg = ImagePreprocessor::retinaHdr(imageReq->image, weights, sigmas, 128, 128, 1.0, 10);
-*/
 	cv::Mat workImg, mask;
 	imagePipe->run(request.input, workImg, mask);
-//	cv::resize(workImg, workImg, cv::Size(), 0.6666666667, 0.6666666666667);
-//	workImg = ImagePreprocessor::autoAdjustGammaRGB(workImg);
 
 	auto queryFrame = BaseFrame::create(workImg);
 	queryFrame->computeFeatures(bFeats, mask);
@@ -74,7 +64,6 @@ bool PlaceRecognizerService(
 	for (int i=0; i<min(15, (int)imageMatches.size()); i++) {
 		int bagRefId = imageDb.keyframeIdToBag.at(imageMatches[i].image_id);
 		response.keyframeId.push_back(bagRefId);
-//		cout << imageMatches[i].image_id << ' ' << imageMatches[i].score << endl;
 	}
 
 	return true;
@@ -88,7 +77,7 @@ int main(int argc, char *argv[])
 
 	Vmml::Mapper::ProgramOptions progOptions;
 	string mapPath;
-	progOptions.addSimpleOptions("map-path", "Path to Map File", mapPath);
+	progOptions.addSimpleOptions("map-path", "Path to Map File", &mapPath);
 	progOptions.parseCommandLineArgs(argc, argv);
 	imagePipe = &progOptions.getImagePipeline();
 

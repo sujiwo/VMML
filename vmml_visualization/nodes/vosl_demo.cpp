@@ -41,7 +41,7 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 	vsConf["Camera.k2"] = cameraConf.distortionCoeffs[1];
 	vsConf["Camera.p1"] = cameraConf.distortionCoeffs[2];
 	vsConf["Camera.p2"] = cameraConf.distortionCoeffs[3];
-	vsConf["Camera.p3"] = cameraConf.distortionCoeffs[4];
+	vsConf["Camera.k3"] = cameraConf.distortionCoeffs[4];
 	vsConf["Camera.fps"] = resample;
 	vsConf["Camera.cols"] = cameraConf.width;
 	vsConf["Camera.rows"] = cameraConf.height;
@@ -73,20 +73,20 @@ openvslam::system &slam;
 int main(int argc, char *argv[])
 {
 	Vmml::Mapper::ProgramOptions vsoProg;
-	vsoProg.addSimpleOptions("vocabulary", "Path to vocabulary");
-	vsoProg.addSimpleOptions("start-time", "Mapping will start from x seconds");
-	vsoProg.addSimpleOptions("stop-time", "Maximum seconds from start");
-	vsoProg.addSimpleOptions("resample", "Reduce image rate to x Hz");
+	vsoProg.addSimpleOptions("vocabulary", "Path to vocabulary", true);
+	vsoProg.addSimpleOptions<float>("start-time", "Mapping will start from x seconds");
+	vsoProg.addSimpleOptions<float>("stop-time", "Maximum seconds from start");
+	vsoProg.addSimpleOptions<float>("resample", "Reduce image rate to x Hz");
 	vsoProg.parseCommandLineArgs(argc, argv);
 
 	auto imageBag = vsoProg.getImageBag();
 	auto cameraPars = vsoProg.getWorkingCameraParameter();
 	auto &imagePipe = vsoProg.getImagePipeline();
 
-	auto vocPath = vsoProg.get<string>("vocabulary");
-	auto startTime = vsoProg.get<float>("start-time");
-	auto stopTime = vsoProg.get<float>("stop-time");
-	auto resample = vsoProg.get<float>("resample");
+	auto vocPath = vsoProg.get<string>("vocabulary", "");
+	auto startTime = vsoProg.get<float>("start-time", 0);
+	auto stopTime = vsoProg.get<float>("stop-time", -1);
+	auto resample = vsoProg.get<float>("resample", 0);
 
 	if (resample==0)
 		resample = imageBag->hz();
@@ -111,12 +111,14 @@ int main(int argc, char *argv[])
 		cv::Mat mask;
 		imagePipe.run(image, image, mask);
 
-		SlamDunk.feed_monocular_frame(image, resample, mask);
+		SlamDunk.feed_monocular_frame(image, timestamp.toSec(), mask);
 
 		auto framePub = SlamDunk.get_frame_publisher();
 		auto mapPub = SlamDunk.get_map_publisher();
 
-//		cv::Mat frame = framePub->draw_frame();
+		// XXX: temporary
+		cv::Mat frame = framePub->draw_frame();
+		rosConn.publishImage(frame, timestamp);
 
 		if (SlamDunk.terminate_is_requested())
 			break;

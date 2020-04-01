@@ -25,9 +25,9 @@ int main(int argc, char *argv[])
 	float resample=10.0;
 
 	Vmml::Mapper::ProgramOptions vsoProg;
-	vsoProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
-	vsoProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
-	vsoProg.addSimpleOptions("resample", "Reduce image rate to x Hz", resample);
+	vsoProg.addSimpleOptions("start-time", "Mapping will start from x seconds", &startTimeSeconds);
+	vsoProg.addSimpleOptions("stop-time", "Maximum seconds from start", &maxSecondsFromStart);
+	vsoProg.addSimpleOptions("resample", "Reduce image rate to x Hz", &resample);
 	vsoProg.parseCommandLineArgs(argc, argv);
 
 	auto imageBag = vsoProg.getImageBag();

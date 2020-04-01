@@ -56,10 +56,10 @@ int main(int argc, char *argv[])
 	float resample=10.0;
 
 	ProgramOptions voProg;
-	voProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
-	voProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
-	voProg.addSimpleOptions("frames", "Maximum number of frames", maxFrameNum);
-	voProg.addSimpleOptions("resample", "Reduce image rate to x Hz", resample);
+	voProg.addSimpleOptions("start-time", "Mapping will start from x seconds", &startTimeSeconds);
+	voProg.addSimpleOptions("stop-time", "Maximum seconds from start", &maxSecondsFromStart);
+	voProg.addSimpleOptions("frames", "Maximum number of frames", &maxFrameNum);
+	voProg.addSimpleOptions("resample", "Reduce image rate to x Hz", &resample);
 	voProg.parseCommandLineArgs(argc, argv);
 
 	VisualOdometry::Parameters voPars;

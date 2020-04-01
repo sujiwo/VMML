@@ -147,10 +147,10 @@ int main(int argc, char *argv[])
 	float maxSecondsFromStart=-1;
 
 	Vmml::Mapper::ProgramOptions progOptions;
-	progOptions.addSimpleOptions("frame-rate", "Reduce image rate", frameRate);
-	progOptions.addSimpleOptions("map-name", "Resulting map file name in working directory", mapFilename);
-	progOptions.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
-	progOptions.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
+	progOptions.addSimpleOptions("frame-rate", "Reduce image rate", &frameRate);
+	progOptions.addSimpleOptions("map-name", "Resulting map file name in working directory", &mapFilename);
+	progOptions.addSimpleOptions("start-time", "Mapping will start from x seconds", &startTimeSeconds);
+	progOptions.addSimpleOptions("stop-time", "Maximum seconds from start", &maxSecondsFromStart);
 
 	progOptions.parseCommandLineArgs(argc, argv);
 

@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
 	RVizConnector rosConn(argc, argv, "test_vo");
 
 	ProgramOptions mapperProg;
-	mapperProg.addSimpleOptions("start-time", "Mapping will start from x seconds", startTimeSeconds);
-	mapperProg.addSimpleOptions("stop-time", "Maximum seconds from start", maxSecondsFromStart);
-	mapperProg.addSimpleOptions("resample", "Reduce image rate to x Hz", resample);
+	mapperProg.addSimpleOptions("start-time", "Mapping will start from x seconds", &startTimeSeconds);
+	mapperProg.addSimpleOptions("stop-time", "Maximum seconds from start", &maxSecondsFromStart);
+	mapperProg.addSimpleOptions("resample", "Reduce image rate to x Hz", &resample);
 	mapperProg.parseCommandLineArgs(argc, argv);
 
 	auto imageBag = mapperProg.getImageBag();

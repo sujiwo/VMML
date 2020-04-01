@@ -195,10 +195,10 @@ int main(int argc, char *argv[])
 	string outputBag;
 	float resample, startTime, stopTime;
 
-	progOpts.addSimpleOptions("bag-output", "Bag output", outputBag);
-	progOpts.addSimpleOptions("resample", "Rate for playing bag", resample);
-	progOpts.addSimpleOptions("start-time", "Process will start from x seconds", startTime);
-	progOpts.addSimpleOptions("stop-time", "Maximum seconds from start", stopTime);
+	progOpts.addSimpleOptions("bag-output", "Bag output", &outputBag);
+	progOpts.addSimpleOptions("resample", "Rate for playing bag", &resample);
+	progOpts.addSimpleOptions("start-time", "Process will start from x seconds", &startTime);
+	progOpts.addSimpleOptions("stop-time", "Maximum seconds from start", &stopTime);
 
 	progOpts.parseCommandLineArgs(argc, argv);
 	imgPipe = &progOpts.getImagePipeline();
