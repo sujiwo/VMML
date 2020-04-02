@@ -29,7 +29,7 @@ public:
 	ProgramOptions();
 	virtual ~ProgramOptions();
 
-	void parseCommandLineArgs(int argc, char *argv[], const ros::NodeHandle *rosNode=nullptr);
+	void parseCommandLineArgs(int argc, char *argv[]);
 
 	cv::Mat& getFeatureMask()
 	{ return featureMask; }

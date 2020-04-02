@@ -141,6 +141,7 @@ ImagePipeline::setRetinex(
 	const float _lowClip,
 	const float _highClip)
 {
+	cout << "Retinex enabled\n";
 	retinexPrc.reset(new Retinex(_ss, _lowClip, _highClip));
 }
 

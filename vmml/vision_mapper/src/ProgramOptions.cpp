@@ -103,24 +103,8 @@ ProgramOptions::~ProgramOptions()
 {}
 
 
-/*
 void
-ProgramOptions::addSimpleOptions(bool isRequired, const std::string &opt, const std::string &description)
-{
-	auto valueSo = value<string>();
-	if (isRequired)
-		valueSo->required();
-
-	auto dt = boost::make_shared<po::option_description>(opt.c_str(), valueSo, description.c_str());
-	_options.add(dt);
-
-//	_options.add_options()(opt.c_str(), description.c_str());
-}
-*/
-
-
-void
-ProgramOptions::parseCommandLineArgs(int argc, char *argv[], const ros::NodeHandle *rosNode)
+ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
 {
 	rArgc = argc;
 	rArgv = argv;
@@ -142,43 +126,6 @@ ProgramOptions::parseCommandLineArgs(int argc, char *argv[], const ros::NodeHand
 
 	openInputs();
 }
-
-
-/*
-void
-ProgramOptions::openFeatureMask(const std::string &f)
-{
-	featureMask = cv::imread(f, cv::IMREAD_GRAYSCALE);
-
-	if (featureMask.empty())
-		throw runtime_error("Unable to open feature mask file");
-
-	auto factor = _optionValues["resize"].as<double>();
-	cout << "Mask size: " << featureMask.size << endl;
-	if (factor!=1.0) {
-		cv::resize(featureMask, featureMask, cv::Size(), factor, factor);
-		cout << "Resized to " << featureMask.size << endl;
-	}
-	camera0.mask = featureMask;
-}
-
-
-void
-ProgramOptions::openLightMask(const std::string &f)
-{
-	lightMask = cv::imread(f, cv::IMREAD_GRAYSCALE);
-
-	if (lightMask.empty())
-		return;
-
-	auto factor = _optionValues["resize"].as<double>();
-	cout << "Light Mask size: " << lightMask.size << endl;
-	if (factor!=1.0) {
-		cv::resize(lightMask, lightMask, cv::Size(), factor, factor);
-		cout << "Resized to " << lightMask.size << endl;
-	}
-}
-*/
 
 
 void

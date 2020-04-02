@@ -75,6 +75,9 @@ void run()
 
 }
 
+/*
+ * XXX: publishX() should rotate axes to conform with RViz convention
+ */
 void publishMap(const ros::Time &timestamp)
 {
 	std::vector<openvslam::data::keyframe*> keyfrms;
