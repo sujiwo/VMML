@@ -142,11 +142,6 @@ protected:
 
 	void showHelp();
 
-/*
-	void openFeatureMask(const std::string &f);
-	void openLightMask(const std::string &f);
-*/
-
 	void openWorkDir(const std::string &);
 
 	// Common input for mapper programs

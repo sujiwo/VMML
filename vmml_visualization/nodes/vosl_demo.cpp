@@ -67,6 +67,7 @@ PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	framePub(slam_.get_frame_publisher()),
 	rosConn(prog.getArgc(), prog.getArgv(), "vosl_demo")
 {
+	useRealtime = prog.get<bool>("ros-time", false);
 	rosConn.setImageTopicName("openvslam");
 }
 
@@ -109,12 +110,29 @@ void publishMap(const ros::Time &timestamp)
 void publishFrame(const ros::Time &timestamp)
 {
 	cv::Mat frame = framePub->draw_frame();
+	rosConn.publishImage(frame, timestamp);
+
 	Eigen::Matrix4d posee = mapPub->get_current_cam_pose().inverse();
 	Pose pose = posee;
-	rosConn.publishImage(frame, timestamp);
+
+	if (!pose.isIdentity()) {
+		TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
+		pose = rot180*pose;
+	}
+
 	rosConn.publishPose(pose, timestamp);
 }
 
+void publish(const ros::Time &timestamp)
+{
+	auto rt=ros::Time::now();
+	if (useRealtime==false)
+		rt = timestamp;
+	publishFrame(rt);
+//	publishMap(rt);
+}
+
+bool useRealtime = false;
 private:
 	openvslam::system &slam;
 	const shared_ptr<openvslam::publish::frame_publisher> framePub;
@@ -132,6 +150,7 @@ int main(int argc, char *argv[])
 	vsoProg.addSimpleOptions<float>("start-time", "Mapping will start from x seconds");
 	vsoProg.addSimpleOptions<float>("stop-time", "Maximum seconds from start");
 	vsoProg.addSimpleOptions<float>("resample", "Reduce image rate to x Hz");
+	vsoProg.addSimpleOptions<bool>("ros-time", "Use ROS time for published frames and map instead of bag time");
 	vsoProg.parseCommandLineArgs(argc, argv);
 
 	auto imageBag = vsoProg.getImageBag();
@@ -171,8 +190,7 @@ int main(int argc, char *argv[])
 
 		// XXX: temporary
 		cv::Mat frame = framePub->draw_frame();
-		rosConn.publishFrame(timestamp);
-		rosConn.publishMap(timestamp);
+		rosConn.publish(timestamp);
 
 		if (SlamDunk.terminate_is_requested())
 			break;

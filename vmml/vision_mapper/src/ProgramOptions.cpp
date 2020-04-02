@@ -272,15 +272,25 @@ ProgramOptions::openInputs()
 	imagePipeline.setIntendedInputSize(imageSize0);
 }
 
-
 template<>
 void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool* target, bool isRequired)
 {
+	auto boolSwitch = boost::program_options::bool_switch()->default_value(false);
+	if (isRequired)
+		boolSwitch->required();
+	if (target!=nullptr)
+		boolSwitch->notifier([target](const bool &v) {
+		*target = v;
+	});
+	_options.add_options()(opt.c_str(), boolSwitch, description.c_str());
+/*
+
 	_options.add_options()(opt.c_str(), boost::program_options::bool_switch()
 		->default_value(false)->notifier([target](const bool &v) {
 			*target = v;
 	}),
 	description.c_str());
+*/
 }
 
 template<>

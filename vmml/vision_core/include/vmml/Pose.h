@@ -220,6 +220,12 @@ struct TTransform : public Eigen::Affine3d
 		return m;
 	}
 
+	inline bool isIdentity() const
+	{
+		return (qx()==0 and qy()==0 and qz()==0 and qw()==1
+			and x()==0 and y()==0 and z()==0);
+	}
+
 	/*
 	 * XXX: Dubious
 	 */
