@@ -12,6 +12,7 @@
 #include <opencv2/core.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <ros/ros.h>
 #include "vmml/utilities.h"
 #include "vmml/CameraPinholeParams.h"
 #include "vmml/Pose.h"
@@ -28,7 +29,7 @@ public:
 	ProgramOptions();
 	virtual ~ProgramOptions();
 
-	void parseCommandLineArgs(int argc, char *argv[]);
+	void parseCommandLineArgs(int argc, char *argv[], const ros::NodeHandle *rosNode=nullptr);
 
 	cv::Mat& getFeatureMask()
 	{ return featureMask; }
@@ -123,6 +124,9 @@ public:
 	inline Vmml::TTransform getGnssOffset() const
 	{ return gnssOffset; }
 
+	uint getMaxOrbKeypoints() const
+	{ return maxOrbKeypoints; }
+
 protected:
 	boost::program_options::options_description _options;
 	boost::program_options::variables_map _optionValues;
@@ -177,6 +181,8 @@ protected:
 
 	ImagePipeline imagePipeline;
 	bool useRetinex;
+
+	uint maxOrbKeypoints=10;
 };
 
 } /* namespace Mapper */

@@ -47,7 +47,7 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 	vsConf["Camera.fps"] = resample;
 	vsConf["Camera.cols"] = cameraConf.width;
 	vsConf["Camera.rows"] = cameraConf.height;
-	vsConf["Feature.max_num_keypoints"] = 6000;
+	vsConf["Feature.max_num_keypoints"] = po.getMaxOrbKeypoints();
 	vsConf["Feature.scale_factor"] = 1.2;
 	vsConf["Feature.num_levels"] = 8;
 	vsConf["Feature.ini_fast_threshold"] = 20;

@@ -120,13 +120,23 @@ ProgramOptions::addSimpleOptions(bool isRequired, const std::string &opt, const 
 
 
 void
-ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
+ProgramOptions::parseCommandLineArgs(int argc, char *argv[], const ros::NodeHandle *rosNode)
 {
 	rArgc = argc;
 	rArgv = argv;
 
-	po::store(po::parse_command_line(argc, argv, _options), _optionValues);
-	po::notify(_optionValues);
+	vector<string> optionKeys;
+	for (auto &opt: _options.options()) {
+		optionKeys.push_back(opt->key(""));
+	}
+
+	try {
+		po::store(po::parse_command_line(argc, argv, _options), _optionValues);
+		po::notify(_optionValues);
+	} catch (po::error &e) {
+		cerr << "Parameter error: " << e.what() << endl;
+		showHelp();
+	}
 
 	if (_optionValues.count("help")) showHelp();
 
@@ -222,6 +232,7 @@ ProgramOptions::openWorkDir(const std::string &f)
 		goYaw = cfg.GetReal("gnss_offset", "yaw", 0);
 	gnssOffset = Vmml::TTransform::from_XYZ_RPY(gov, goRoll, goPitch, goYaw);
 
+	maxOrbKeypoints = cfg.GetInteger("ORB", "max_keypoints", 1000);
 }
 
 
@@ -319,7 +330,7 @@ template<>
 void Vmml::Mapper::ProgramOptions::addSimpleOptions(const std::string &opt, const std::string &description, bool* target, bool isRequired)
 {
 	_options.add_options()(opt.c_str(), boost::program_options::bool_switch()
-		->default_value(false)->notifier([&](const bool &v) {
+		->default_value(false)->notifier([target](const bool &v) {
 			*target = v;
 	}),
 	description.c_str());
