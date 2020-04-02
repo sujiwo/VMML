@@ -117,7 +117,11 @@ void publishFrame(const ros::Time &timestamp)
 
 	if (!pose.isIdentity()) {
 		TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
+		TTransform rot180x(0, 0, 0, 1.571, 0, 0);
+		// against origin point
 		pose = rot180*pose;
+		// in-place
+		pose = pose*rot180x;
 	}
 
 	rosConn.publishPose(pose, timestamp);
@@ -129,7 +133,7 @@ void publish(const ros::Time &timestamp)
 	if (useRealtime==false)
 		rt = timestamp;
 	publishFrame(rt);
-//	publishMap(rt);
+	publishMap(rt);
 }
 
 bool useRealtime = false;
