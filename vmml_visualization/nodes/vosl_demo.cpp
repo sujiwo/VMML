@@ -102,8 +102,10 @@ void publishMap(const ros::Time &timestamp)
 		pt3d.z = pt.z();
 		mapToCloud->push_back(pt3d);
 	}
+	TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
+	pcl::transformPointCloud(*mapToCloud, *mapToCloud, rot180.matrix().cast<float>());
 
-	rosConn.publishTrajectory(track, timestamp);
+//	rosConn.publishTrajectory(track, timestamp);
 	rosConn.publishPointCloud(mapToCloud, timestamp);
 }
 
@@ -129,9 +131,10 @@ void publishFrame(const ros::Time &timestamp)
 
 void publish(const ros::Time &timestamp)
 {
-	auto rt=ros::Time::now();
+	ros::Time rt;
 	if (useRealtime==false)
 		rt = timestamp;
+	else rt = ros::Time::now();
 	publishFrame(rt);
 	publishMap(rt);
 }

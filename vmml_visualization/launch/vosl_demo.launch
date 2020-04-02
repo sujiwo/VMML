@@ -1,6 +1,7 @@
 <!-- 
 Sample launch file for vosl_demo
 Adjust with your own machine
+Paths must be absolute
 -->
 
 <launch>
