@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include "yaml-cpp/yaml.h"
+#include "pcl/common/transforms.h"
 
 #include "openvslam/system.h"
 #include "openvslam/config.h"
@@ -20,7 +21,7 @@
 #include "vmml/Pose.h"
 #include "vmml/Trajectory.h"
 #include "ProgramOptions.h"
-#include "RVizConnector.h"
+#include "ROSConnector.h"
 
 
 using namespace std;
@@ -63,6 +64,8 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 
 class PrimitiveViewer
 {
+using PubId=Mapper::ROSConnector::PublisherId;
+
 public:
 PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	slam(slam_),
@@ -70,8 +73,9 @@ PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	framePub(slam_.get_frame_publisher()),
 	rosConn(prog.getArgc(), prog.getArgv(), "vosl_demo")
 {
+	camera = prog.getWorkingCameraParameter();
 	useRealtime = prog.get<bool>("ros-time", false);
-	rosConn.setImageTopicName("openvslam");
+	pubOVFrame = rosConn.createImagePublisher("frame_render", prog.getWorkingCameraParameter());
 }
 
 void run()
@@ -79,9 +83,6 @@ void run()
 
 }
 
-/*
- * XXX: publishX() should rotate axes to conform with RViz convention
- */
 void publishMap(const ros::Time &timestamp)
 {
 	std::vector<openvslam::data::keyframe*> keyfrms;
@@ -108,14 +109,14 @@ void publishMap(const ros::Time &timestamp)
 	}
 	pcl::transformPointCloud(*mapToCloud, *mapToCloud, rot180.matrix().cast<float>());
 
-	rosConn.publishTrajectory(track, timestamp);
-	rosConn.publishPointCloud(mapToCloud, timestamp);
+//	rosConn.publishTrajectory(track, timestamp);
+//	rosConn.publishPointCloud(mapToCloud, timestamp);
 }
 
 void publishFrame(const ros::Time &timestamp)
 {
 	cv::Mat frame = framePub->draw_frame();
-	rosConn.publishImage(frame, timestamp);
+	rosConn.publishImage(frame, pubOVFrame, timestamp);
 
 	Eigen::Matrix4d posee = mapPub->get_current_cam_pose().inverse();
 	Pose pose = posee;
@@ -127,7 +128,7 @@ void publishFrame(const ros::Time &timestamp)
 		pose = pose*rot180x;
 	}
 
-	rosConn.publishPose(pose, timestamp);
+//	rosConn.publishPose(pose, timestamp);
 }
 
 void publish(const ros::Time &timestamp)
@@ -137,7 +138,7 @@ void publish(const ros::Time &timestamp)
 		rt = timestamp;
 	else rt = ros::Time::now();
 	publishFrame(rt);
-	publishMap(rt);
+//	publishMap(rt);
 }
 
 bool useRealtime = false;
@@ -145,7 +146,10 @@ private:
 	openvslam::system &slam;
 	const shared_ptr<openvslam::publish::frame_publisher> framePub;
 	const shared_ptr<openvslam::publish::map_publisher> mapPub;
-	Vmml::Mapper::RVizConnector rosConn;
+	Vmml::Mapper::ROSConnector rosConn;
+	CameraPinholeParams camera;
+
+	PubId pubOVFrame;
 };
 
 
@@ -196,6 +200,7 @@ int main(int argc, char *argv[])
 
 		if (SlamDunk.terminate_is_requested())
 			break;
+		cout << "Frame#: " << frameId << endl;
 	}
 
 	SlamDunk.shutdown();

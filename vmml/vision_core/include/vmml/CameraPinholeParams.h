@@ -22,7 +22,7 @@ struct CameraPinholeParams
 	double
 		fx=0, fy=0,
 		cx=0, cy=0;
-	int width, height;
+	int width=-1, height=-1;
 
 	Eigen::VectorXd distortionCoeffs = Eigen::VectorXd::Zero(5);
 

@@ -17,8 +17,8 @@ Paths must be absolute
 <arg name="bag_file" value="/Data/MapServer/Logs/motoyama/motoyama.bag" />
 <arg name="retinex" value="" />
 <arg name="resample" value="12.0" />
-<arg name="start_time" value="" />
-<arg name="stop_time" value="" />
+<arg name="start_time" value="-1" />
+<arg name="stop_time" value="-1" />
 <arg name="resize" value="1" />
 
 <node
@@ -33,8 +33,8 @@ Paths must be absolute
 	--vocabulary $(arg vocabulary) \
 	--resize $(arg resize) \
 	$(arg retinex) \
-	$(arg start_time) \
-	$(arg stop_time)" 
+	--start-time=$(arg start_time) \
+	--stop-time=$(arg stop_time)" 
 />
 
 </launch>
