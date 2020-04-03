@@ -78,6 +78,7 @@ ROSConnector::ROSConnector(int argc, char *argv[], const std::string &nodeName)
 	else rosDisabled = false;
 
 	hdl.reset(new ros::NodeHandle);
+	imageTransport.reset(new image_transport::ImageTransport(*hdl));
 }
 
 ROSConnector::~ROSConnector()
@@ -96,8 +97,7 @@ ROSConnector::createImagePublisher(const std::string &topic, CameraPinholeParams
 
 	ImagePublisher ip;
 	ip.topic=topic;
-	ip.transport.reset(new image_transport::ImageTransport(*hdl));
-	ip.publisher = ip.transport->advertise(imageTopic, 1);
+	ip.publisher = imageTransport->advertise(imageTopic, 1);
 	ip.cameraInfoPublisher = hdl->advertise<sensor_msgs::CameraInfo>(cameraInfoTopic, 1);
 	imgPublishers.push_back(ip);
 	auto id=imgPublishers.size()-1;

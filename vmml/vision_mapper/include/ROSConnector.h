@@ -42,7 +42,6 @@ public:
 	 * These functions automate publishing of image and corresponding cameraInfo, if any.
 	 */
 	struct ImagePublisher {
-		std::shared_ptr<image_transport::ImageTransport> transport;
 		image_transport::Publisher publisher;
 		ros::Publisher cameraInfoPublisher;
 		std::string topic;
@@ -80,7 +79,10 @@ protected:
 
 	std::shared_ptr<ros::NodeHandle> hdl;
 
+	// Image part
+	std::shared_ptr<image_transport::ImageTransport> imageTransport;
 	std::vector<ImagePublisher> imgPublishers;
+
 	std::vector<TrajectoryPublisher> trackPublishers;
 };
 
