@@ -192,12 +192,6 @@ int main(int argc, char *argv[])
 		imagePipe.run(image, image, mask);
 
 		SlamDunk.feed_monocular_frame(image, timestamp.toSec(), mask);
-
-		auto framePub = SlamDunk.get_frame_publisher();
-		auto mapPub = SlamDunk.get_map_publisher();
-
-		// XXX: temporary
-		cv::Mat frame = framePub->draw_frame();
 		rosConn.publish(timestamp);
 
 		if (SlamDunk.terminate_is_requested())
