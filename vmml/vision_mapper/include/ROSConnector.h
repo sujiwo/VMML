@@ -17,6 +17,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
+#include <image_transport/camera_publisher.h>
 #include <pcl_ros/publisher.h>
 #include "vmml/CameraPinholeParams.h"
 #include "vmml/Pose.h"
@@ -33,6 +34,12 @@ public:
 	ROSConnector(int argc, char *argv[], const std::string &nodeName);
 	virtual ~ROSConnector();
 
+	inline std::shared_ptr<ros::NodeHandle> getRosHandle()
+	{ return hdl; }
+
+	inline std::shared_ptr<image_transport::ImageTransport> getImageTransport()
+	{ return imageTransport; }
+
 	struct PosePublisher {
 
 	};
@@ -42,9 +49,7 @@ public:
 	 * These functions automate publishing of image and corresponding cameraInfo, if any.
 	 */
 	struct ImagePublisher {
-		image_transport::Publisher publisher;
-		ros::Publisher cameraInfoPublisher;
-		std::string topic;
+		image_transport::CameraPublisher publisher;
 		sensor_msgs::CameraInfo cameraParams;
 	};
 
@@ -54,6 +59,8 @@ public:
 	void setCameraParam(int publisherId, const CameraPinholeParams &cam);
 
 	void publishImage(const cv::Mat &img, int publisherId, ros::Time t=ros::TIME_MIN) const;
+
+	static sensor_msgs::CameraInfo createCameraInfoMsg (const CameraPinholeParams &c);
 
 	/*
 	 * Trajectory

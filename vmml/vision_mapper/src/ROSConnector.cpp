@@ -46,7 +46,8 @@ void copyToArray(const Eigen::MatrixBase<Scalar> &mat, vector<T> &target)
 	copyMatToArray(mat, target);
 }
 
-sensor_msgs::CameraInfo createCameraInfoMsg (const CameraPinholeParams &c)
+sensor_msgs::CameraInfo
+ROSConnector::createCameraInfoMsg (const CameraPinholeParams &c)
 {
 	sensor_msgs::CameraInfo info;
 	info.distortion_model = "plump_bob";
@@ -86,22 +87,17 @@ ROSConnector::~ROSConnector()
 }
 
 int
-ROSConnector::createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams)
+ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholeParams cameraParamsInp)
 {
 	// Do nothing when ROS is disabled
 	if (rosDisabled)
 		return -1;
 
-	string imageTopic = topic + "/image_raw",
-		cameraInfoTopic = topic + "/camera_info";
-
 	ImagePublisher ip;
-	ip.topic=topic;
-	ip.publisher = imageTransport->advertise(imageTopic, 1);
-	ip.cameraInfoPublisher = hdl->advertise<sensor_msgs::CameraInfo>(cameraInfoTopic, 1);
+	ip.publisher = imageTransport->advertiseCamera(basetopic, 1);
+	ip.cameraParams = createCameraInfoMsg(cameraParamsInp);
 	imgPublishers.push_back(ip);
 	auto id=imgPublishers.size()-1;
-	setCameraParam(id, cameraParams);
 	return id;
 }
 
@@ -137,9 +133,7 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 
 	cvImg.image = img;
 	cvImg.header.stamp = t;
-	imgPub.publisher.publish(cvImg.toImageMsg());
-
-	imgPub.cameraInfoPublisher.publish(imgPub.cameraParams);
+	imgPub.publisher.publish(*cvImg.toImageMsg(), imgPub.cameraParams);
 }
 
 

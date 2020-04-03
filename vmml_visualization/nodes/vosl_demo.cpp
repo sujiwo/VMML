@@ -185,8 +185,8 @@ int main(int argc, char *argv[])
 
 	// Slam dunk
 	openvslam::system SlamDunk (slamConfig, vocPath);
-	SlamDunk.startup();
 	PrimitiveViewer rosConn(vsoProg, SlamDunk);
+	SlamDunk.startup();
 
 	for (auto &frameId: targetFrameId) {
 
