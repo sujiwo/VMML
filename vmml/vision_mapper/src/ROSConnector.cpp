@@ -46,18 +46,17 @@ void copyToArray(const Eigen::MatrixBase<Scalar> &mat, vector<T> &target)
 	copyMatToArray(mat, target);
 }
 
-sensor_msgs::CameraInfo::Ptr createCameraInfoMsg (const CameraPinholeParams &c)
+sensor_msgs::CameraInfo createCameraInfoMsg (const CameraPinholeParams &c)
 {
-	sensor_msgs::CameraInfo::Ptr info(new sensor_msgs::CameraInfo);
-	info->distortion_model = "plump_bob";
-	info->width = c.width;
-	info->height = c.height;
+	sensor_msgs::CameraInfo info;
+	info.distortion_model = "plump_bob";
+	info.width = c.width;
+	info.height = c.height;
 	auto K = c.toMatrix3();
 	auto P = c.toMatrix();
-	copyToArray(K, info->K);
-	copyToArray(c.distortionCoeffs, info->D);
-	copyToArray(P, info->P);
-
+	copyToArray(K, info.K);
+	copyToArray(c.distortionCoeffs, info.D);
+	copyToArray(P, info.P);
 	return info;
 }
 
@@ -97,13 +96,21 @@ ROSConnector::createImagePublisher(const std::string &topic, CameraPinholeParams
 
 	ImagePublisher ip;
 	ip.topic=topic;
-	ip.cameraParams = cameraParams;
 	ip.transport.reset(new image_transport::ImageTransport(*hdl));
 	ip.publisher = ip.transport->advertise(imageTopic, 1);
 	ip.cameraInfoPublisher = hdl->advertise<sensor_msgs::CameraInfo>(cameraInfoTopic, 1);
-
 	imgPublishers.push_back(ip);
-	return imgPublishers.size()-1;
+	auto id=imgPublishers.size()-1;
+	setCameraParam(id, cameraParams);
+	return id;
+}
+
+void
+ROSConnector::setCameraParam(int publisherId, const CameraPinholeParams &cam)
+{
+	if (cam.width!=-1) {
+		imgPublishers.at(publisherId).cameraParams = createCameraInfoMsg(cam);
+	}
 }
 
 void
@@ -132,11 +139,7 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 	cvImg.header.stamp = t;
 	imgPub.publisher.publish(cvImg.toImageMsg());
 
-	if (imgPub.cameraParams.width!=-1) {
-		auto info = createCameraInfoMsg(imgPub.cameraParams);
-		info->header.stamp = t;
-//		imgPub.cameraInfoPublisher.publish(info);
-	}
+	imgPub.cameraInfoPublisher.publish(imgPub.cameraParams);
 }
 
 

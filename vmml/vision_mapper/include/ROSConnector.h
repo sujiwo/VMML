@@ -13,6 +13,7 @@
 #include <opencv2/core.hpp>
 #include <tf/transform_broadcaster.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
@@ -45,14 +46,13 @@ public:
 		image_transport::Publisher publisher;
 		ros::Publisher cameraInfoPublisher;
 		std::string topic;
-		CameraPinholeParams cameraParams;
+		sensor_msgs::CameraInfo cameraParams;
 	};
 
 	// create publisher
 	int createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams());
 
-	inline void setCameraParam(int publisherId, const CameraPinholeParams &cam)
-	{ imgPublishers.at(publisherId).cameraParams=cam; }
+	void setCameraParam(int publisherId, const CameraPinholeParams &cam);
 
 	void publishImage(const cv::Mat &img, int publisherId, ros::Time t=ros::TIME_MIN) const;
 
