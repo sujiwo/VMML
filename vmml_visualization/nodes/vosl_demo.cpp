@@ -27,6 +27,9 @@ using namespace std;
 using namespace Vmml;
 
 
+const TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
+const TTransform rot180x(0, 0, 0, 1.571, 0, 0);
+
 YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resample=-1)
 {
 	YAML::Node vsConf;
@@ -87,6 +90,7 @@ void publishMap(const ros::Time &timestamp)
 	vector<Pose> track;
 	for (auto kf: keyfrms) {
 		Pose pkf = kf->get_cam_pose_inv();
+		pkf = rot180*pkf; pkf = pkf*rot180x;
 		track.push_back(pkf);
 	}
 
@@ -102,10 +106,9 @@ void publishMap(const ros::Time &timestamp)
 		pt3d.z = pt.z();
 		mapToCloud->push_back(pt3d);
 	}
-	TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
 	pcl::transformPointCloud(*mapToCloud, *mapToCloud, rot180.matrix().cast<float>());
 
-//	rosConn.publishTrajectory(track, timestamp);
+	rosConn.publishTrajectory(track, timestamp);
 	rosConn.publishPointCloud(mapToCloud, timestamp);
 }
 
@@ -118,8 +121,6 @@ void publishFrame(const ros::Time &timestamp)
 	Pose pose = posee;
 
 	if (!pose.isIdentity()) {
-		TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
-		TTransform rot180x(0, 0, 0, 1.571, 0, 0);
 		// against origin point
 		pose = rot180*pose;
 		// in-place
