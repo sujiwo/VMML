@@ -27,6 +27,14 @@
 namespace Vmml {
 namespace Mapper {
 
+/*
+ * This class is an utility to abstract ROS publisher for:
+ * 1) Image
+ * 2) Pose
+ * 3) Trajectory
+ * 4) Point Cloud
+ */
+
 class ROSConnector {
 public:
 	typedef int PublisherId;
@@ -40,10 +48,6 @@ public:
 	inline std::shared_ptr<image_transport::ImageTransport> getImageTransport()
 	{ return imageTransport; }
 
-	struct PosePublisher {
-
-	};
-
 	/*
 	 * Images.
 	 * These functions automate publishing of image and corresponding cameraInfo, if any.
@@ -51,32 +55,40 @@ public:
 	struct ImagePublisher {
 		image_transport::CameraPublisher publisher;
 		sensor_msgs::CameraInfo cameraParams;
+		std::string topic() const { return publisher.getTopic(); }
 	};
-
-	// create publisher
-	int createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams());
-
-	void setCameraParam(int publisherId, const CameraPinholeParams &cam);
-
-	void publishImage(const cv::Mat &img, int publisherId, ros::Time t=ros::TIME_MIN) const;
-
+	PublisherId createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams());
+	void setCameraParam(PublisherId publisherId, const CameraPinholeParams &cam);
+	void publishImage(const cv::Mat &img, PublisherId publisherId, ros::Time t=ros::TIME_MIN) const;
 	static sensor_msgs::CameraInfo createCameraInfoMsg (const CameraPinholeParams &c);
+
+	/*
+	 * Pose Publisher, implemented as TF
+	 */
+	struct PosePublisher: public tf::TransformBroadcaster {
+		std::string parentFrame, myFrame;
+	};
+	PublisherId createPosePublisher(const std::string &parentFrame, const std::string &myFrame);
+	void publishPose(PublisherId pId, const Vmml::Pose &pose, ros::Time t=ros::TIME_MIN) const;
+	static tf::Transform createPose(const Pose &ps);
 
 	/*
 	 * Trajectory
 	 */
 	struct TrajectoryPublisher {
-		std::string topic;
-		ros::Publisher publisher;
+		ros::Publisher pub;
+		std::string originFrameName;
+		std::string topic() const { return pub.getTopic(); }
 	};
-	int createTrajectoryPublisher(const std::string &topic);
-	void publishTrajectory(const std::vector<Pose> &track, const ros::Time=ros::TIME_MIN, int publisherId=0) const;
-	void publishTrajectory(const Trajectory &track, const ros::Time=ros::TIME_MIN, int publisherId=0) const;
+	PublisherId createTrajectoryPublisher(const std::string &topic, const std::string &originFrame);
+	void publishTrajectory(const std::vector<Pose> &track, ros::Time t=ros::TIME_MIN, PublisherId id=0) const;
+	void publishTrajectory(const Trajectory &track, ros::Time t=ros::TIME_MIN, PublisherId id=0) const
+	{ return publishTrajectory(track.toVectorPose(), t, id); }
+	static geometry_msgs::Pose createGeomPose(const Pose &p);
 
 	/*
 	 * Point Cloud
 	 */
-	struct PointCloudPublisher : public TrajectoryPublisher {};
 	int createPointCloudPublisher(const std::string &topic);
 	void publishPointCloud(const pcl::PointCloud<pcl::PointXYZ> &cloudPt, int publisherId=0) const;
 
@@ -89,6 +101,9 @@ protected:
 	// Image part
 	std::shared_ptr<image_transport::ImageTransport> imageTransport;
 	std::vector<ImagePublisher> imgPublishers;
+
+	// Poses part
+	std::vector<PosePublisher> posesPub;
 
 	std::vector<TrajectoryPublisher> trackPublishers;
 };

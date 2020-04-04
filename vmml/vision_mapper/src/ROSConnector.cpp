@@ -133,9 +133,104 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 
 	cvImg.image = img;
 	cvImg.header.stamp = t;
-	imgPub.publisher.publish(*cvImg.toImageMsg(), imgPub.cameraParams);
+	imgPub.publisher.publish(*cvImg.toImageMsg(), imgPub.cameraParams, t);
 }
 
+
+tf::Transform
+ROSConnector::createPose(const Pose &ps)
+{
+	tf::Transform fPose;
+	auto pos = ps.position();
+	auto orn = ps.orientation();
+	fPose.setOrigin(tf::Vector3(pos.x(), pos.y(), pos.z()));
+	fPose.setRotation(tf::Quaternion(orn.x(), orn.y(), orn.z(), orn.w()));
+
+	return fPose;
+}
+
+
+ROSConnector::PublisherId
+ROSConnector::createPosePublisher(const std::string &parentFrame, const std::string &myFrame)
+{
+	if (rosDisabled==true)
+		return -1;
+
+	PosePublisher pz;
+	pz.parentFrame = parentFrame;
+	pz.myFrame = myFrame;
+
+	posesPub.push_back(pz);
+	return posesPub.size()-1;
+}
+
+
+void
+ROSConnector::publishPose(PublisherId pId, const Vmml::Pose &pose, ros::Time t)
+const
+{
+	if (rosDisabled==true)
+		return;
+
+	if (t==ros::TIME_MIN)
+		t = ros::Time::now();
+
+	auto pz = posesPub.at(pId);
+	auto tfp = createPose(pose);
+	tf::StampedTransform kfStampedPose(tfp, t, pz.parentFrame, pz.myFrame);
+	pz.sendTransform(kfStampedPose);
+}
+
+
+geometry_msgs::Pose
+ROSConnector::createGeomPose(const Pose &p)
+{
+	geometry_msgs::Pose px;
+	px.position.x = p.x();
+	px.position.y = p.y();
+	px.position.z = p.z();
+	px.orientation.w = p.qw();
+	px.orientation.x = p.qx();
+	px.orientation.y = p.qy();
+	px.orientation.z = p.qz();
+	return px;
+}
+
+
+ROSConnector::PublisherId
+ROSConnector::createTrajectoryPublisher(const std::string &topic, const std::string &originFrame)
+{
+	if (rosDisabled==true)
+		return -1;
+
+	TrajectoryPublisher trackpub;
+	trackpub.pub = hdl->advertise<geometry_msgs::PoseArray>(topic, 1);
+	trackpub.originFrameName = originFrame;
+	trackPublishers.push_back(trackpub);
+	return trackPublishers.size()-1;
+}
+
+
+void ROSConnector::publishTrajectory(const std::vector<Pose> &track, ros::Time t, PublisherId id) const
+{
+	if (rosDisabled==true)
+		return;
+
+	if (t==ros::TIME_MIN)
+		t = ros::Time::now();
+
+	auto &pub = trackPublishers.at(id);
+
+	geometry_msgs::PoseArray allKeyframes;
+	allKeyframes.header.stamp = t;
+	allKeyframes.header.frame_id = pub.originFrameName;
+
+	for (auto &pf: track) {
+		auto kfp = createGeomPose(pf);
+		allKeyframes.poses.push_back(kfp);
+	}
+	pub.pub.publish(allKeyframes);
+}
 
 } /* namespace Mapper */
 } /* namespace Vmml */

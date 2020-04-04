@@ -76,6 +76,8 @@ PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	camera = prog.getWorkingCameraParameter();
 	useRealtime = prog.get<bool>("ros-time", false);
 	pubOVFrame = rosConn.createImagePublisher("frame_render", prog.getWorkingCameraParameter());
+	pubFramePose = rosConn.createPosePublisher("world", "camera");
+	pubCamTrack = rosConn.createTrajectoryPublisher("camera_trajectory", "world");
 }
 
 void run()
@@ -109,7 +111,7 @@ void publishMap(const ros::Time &timestamp)
 	}
 	pcl::transformPointCloud(*mapToCloud, *mapToCloud, rot180.matrix().cast<float>());
 
-//	rosConn.publishTrajectory(track, timestamp);
+	rosConn.publishTrajectory(track, timestamp);
 //	rosConn.publishPointCloud(mapToCloud, timestamp);
 }
 
@@ -128,7 +130,7 @@ void publishFrame(const ros::Time &timestamp)
 		pose = pose*rot180x;
 	}
 
-//	rosConn.publishPose(pose, timestamp);
+	rosConn.publishPose(pubFramePose, pose, timestamp);
 }
 
 void publish(const ros::Time &timestamp)
@@ -138,7 +140,7 @@ void publish(const ros::Time &timestamp)
 		rt = timestamp;
 	else rt = ros::Time::now();
 	publishFrame(rt);
-//	publishMap(rt);
+	publishMap(rt);
 }
 
 bool useRealtime = false;
@@ -149,7 +151,7 @@ private:
 	Vmml::Mapper::ROSConnector rosConn;
 	CameraPinholeParams camera;
 
-	PubId pubOVFrame;
+	PubId pubOVFrame, pubFramePose, pubCamTrack;
 };
 
 
