@@ -15,6 +15,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/common/transforms.h>
 #include <ros/master.h>
 #include <ROSConnector.h>
 
@@ -230,6 +231,35 @@ void ROSConnector::publishTrajectory(const std::vector<Pose> &track, ros::Time t
 		allKeyframes.poses.push_back(kfp);
 	}
 	pub.pub.publish(allKeyframes);
+}
+
+
+ROSConnector::PublisherId
+ROSConnector::createPointCloudPublisher(const std::string &topic, const std::string &originFrame, const TTransform &transfirst)
+{
+	if (rosDisabled==true)
+		return -1;
+
+	PointCloudPublisher pcpub;
+	pcpub.pub = hdl->advertise<sensor_msgs::PointCloud2>(topic, 1);
+	pcpub.originFrameName = originFrame;
+	pcPublishers.push_back(pcpub);
+	return pcPublishers.size()-1;
+}
+
+
+void
+ROSConnector::doPublishPc(sensor_msgs::PointCloud2 &cld, ros::Time t, PublisherId id) const
+{
+	if (rosDisabled==true)
+		return;
+
+	if (t==ros::TIME_MIN)
+		t = ros::Time::now();
+
+	auto publ = pcPublishers.at(id);
+	cld.header.frame_id = publ.originFrameName;
+	publ.pub.publish(cld);
 }
 
 } /* namespace Mapper */

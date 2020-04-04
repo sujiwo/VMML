@@ -89,8 +89,23 @@ public:
 	/*
 	 * Point Cloud
 	 */
-	int createPointCloudPublisher(const std::string &topic);
-	void publishPointCloud(const pcl::PointCloud<pcl::PointXYZ> &cloudPt, int publisherId=0) const;
+	struct PointCloudPublisher : public TrajectoryPublisher {
+		TTransform disposition=TTransform::Identity();
+	};
+	PublisherId createPointCloudPublisher(
+		const std::string &topic,
+		const std::string &originFrame,
+		const TTransform &transfirst=TTransform::Identity());
+
+	template<typename T>
+	void publishPointCloud(const pcl::PointCloud<T> &cloudPtSrc, ros::Time t=ros::TIME_MIN, PublisherId id=0) const
+	{
+		pcl::PointCloud<T> transformedPc;
+		pcl::transformPointCloud(cloudPtSrc, transformedPc, pcPublishers[id].disposition.matrix().cast<float>());
+		sensor_msgs::PointCloud2 mapCloud;
+		pcl::toROSMsg(cloudPtSrc, mapCloud);
+		return doPublishPc(mapCloud, t, id);
+	}
 
 
 protected:
@@ -106,6 +121,10 @@ protected:
 	std::vector<PosePublisher> posesPub;
 
 	std::vector<TrajectoryPublisher> trackPublishers;
+
+	// Point Clouds
+	std::vector<PointCloudPublisher> pcPublishers;
+	void doPublishPc(sensor_msgs::PointCloud2 &cld, ros::Time t=ros::TIME_MIN, PublisherId id=0) const;
 };
 
 } /* namespace Mapper */

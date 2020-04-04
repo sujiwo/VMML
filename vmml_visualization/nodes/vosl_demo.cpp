@@ -78,6 +78,7 @@ PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	pubOVFrame = rosConn.createImagePublisher("frame_render", prog.getWorkingCameraParameter());
 	pubFramePose = rosConn.createPosePublisher("world", "camera");
 	pubCamTrack = rosConn.createTrajectoryPublisher("camera_trajectory", "world");
+	pubMapPoints = rosConn.createPointCloudPublisher("map_points", "world");
 }
 
 void run()
@@ -100,19 +101,19 @@ void publishMap(const ros::Time &timestamp)
 	std::vector<openvslam::data::landmark*> landmarks;
 	std::set<openvslam::data::landmark*> local_landmarks;
 	mapPub->get_landmarks(landmarks, local_landmarks);
-	pcl::PointCloud<pcl::PointXYZ>::Ptr mapToCloud(new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ> mapToCloud;
 	for (auto &lm: landmarks) {
 		auto pt = lm->get_pos_in_world();
 		pcl::PointXYZ pt3d;
 		pt3d.x = pt.x();
 		pt3d.y = pt.y();
 		pt3d.z = pt.z();
-		mapToCloud->push_back(pt3d);
+		mapToCloud.push_back(pt3d);
 	}
-	pcl::transformPointCloud(*mapToCloud, *mapToCloud, rot180.matrix().cast<float>());
+	pcl::transformPointCloud(mapToCloud, mapToCloud, rot180.matrix().cast<float>());
 
 	rosConn.publishTrajectory(track, timestamp);
-//	rosConn.publishPointCloud(mapToCloud, timestamp);
+	rosConn.publishPointCloud(mapToCloud, timestamp, pubMapPoints);
 }
 
 void publishFrame(const ros::Time &timestamp)
@@ -151,7 +152,7 @@ private:
 	Vmml::Mapper::ROSConnector rosConn;
 	CameraPinholeParams camera;
 
-	PubId pubOVFrame, pubFramePose, pubCamTrack;
+	PubId pubOVFrame, pubFramePose, pubCamTrack, pubMapPoints;
 };
 
 
