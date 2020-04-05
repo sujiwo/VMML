@@ -169,6 +169,7 @@ int main(int argc, char *argv[])
 	vsoProg.parseCommandLineArgs(argc, argv);
 
 	auto imageBag = vsoProg.getImageBag();
+	auto lidarBag = vsoProg.getLidarScanBag();
 	auto cameraPars = vsoProg.getWorkingCameraParameter();
 	auto &imagePipe = vsoProg.getImagePipeline();
 
