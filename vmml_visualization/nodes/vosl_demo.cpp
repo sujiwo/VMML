@@ -5,7 +5,8 @@
  *      Author: sujiwo
  */
 
-
+#include <unistd.h>
+#include <signal.h>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -30,6 +31,7 @@ using namespace Vmml;
 
 const TTransform rot180(0, 0, 0, -M_PI_2, 0, 0);
 const TTransform rot180x(0, 0, 0, 1.571, 0, 0);
+bool breakImageStream = false;
 
 YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resample=-1)
 {
@@ -62,6 +64,16 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 }
 
 
+void handleInterruptSignal(int signal)
+{
+	cout << "Signaled to term, forking\n";
+	// Daemonize, parent will exit and child continue the work.
+	// We break free from ROS
+	daemon(1, 1);
+	breakImageStream = true;
+}
+
+
 class PrimitiveViewer
 {
 using PubId=Mapper::ROSConnector::PublisherId;
@@ -71,19 +83,61 @@ PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	slam(slam_),
 	mapPub(slam_.get_map_publisher()),
 	framePub(slam_.get_frame_publisher()),
-	rosConn(prog.getArgc(), prog.getArgv(), "vosl_demo")
+	rosConn(prog.getArgc(), prog.getArgv(), "vosl_demo", ros::InitOption::NoSigintHandler)
 {
 	camera = prog.getWorkingCameraParameter();
 	useRealtime = prog.get<bool>("ros-time", false);
-	pubOVFrame = rosConn.createImagePublisher("frame_render", prog.getWorkingCameraParameter());
+	pubOVFrame = rosConn.createImagePublisher("frame_render", prog.getWorkingCameraParameter(), "camera");
 	pubFramePose = rosConn.createPosePublisher("world", "camera");
 	pubCamTrack = rosConn.createTrajectoryPublisher("camera_trajectory", "world");
 	pubMapPoints = rosConn.createPointCloudPublisher("map_points", "world");
+	pubLocalMapPoints = rosConn.createPointCloudPublisher("local_map_points", "world");
+	pubMask = rosConn.createImagePublisher("mask");
 }
 
 void run()
 {
 
+}
+
+static void dumpMap(const shared_ptr<openvslam::publish::map_publisher> mapPub,
+		pcl::PointCloud<pcl::PointXYZ> &mapCloud,
+		pcl::PointCloud<pcl::PointXYZ> &localMapCloud,
+		vector<Pose> &mapTrajectory)
+{
+	std::vector<openvslam::data::keyframe*> keyfrms;
+	mapPub->get_keyframes(keyfrms);
+
+	vector<Pose> track;
+	for (auto kf: keyfrms) {
+		Pose pkf = kf->get_cam_pose_inv();
+//		pkf = rot180*pkf; pkf = pkf*rot180x;
+		track.push_back(pkf);
+	}
+
+	std::vector<openvslam::data::landmark*> landmarks;
+	std::set<openvslam::data::landmark*> local_landmarks;
+	mapPub->get_landmarks(landmarks, local_landmarks);
+
+	for (auto &lm: landmarks) {
+		auto pt = lm->get_pos_in_world();
+		pcl::PointXYZ pt3d;
+		pt3d.x = pt.x();
+		pt3d.y = pt.y();
+		pt3d.z = pt.z();
+		mapCloud.push_back(pt3d);
+	}
+//	pcl::transformPointCloud(mapCloud, mapCloud, rot180.matrix().cast<float>());
+
+	for (auto &lm: local_landmarks) {
+		auto pt = lm->get_pos_in_world();
+		pcl::PointXYZ pt3d;
+		pt3d.x = pt.x();
+		pt3d.y = pt.y();
+		pt3d.z = pt.z();
+		localMapCloud.push_back(pt3d);
+	}
+//	pcl::transformPointCloud(localMapCloud, localMapCloud, rot180.matrix().cast<float>());
 }
 
 void publishMap(const ros::Time &timestamp)
@@ -101,6 +155,7 @@ void publishMap(const ros::Time &timestamp)
 	std::vector<openvslam::data::landmark*> landmarks;
 	std::set<openvslam::data::landmark*> local_landmarks;
 	mapPub->get_landmarks(landmarks, local_landmarks);
+
 	pcl::PointCloud<pcl::PointXYZ> mapToCloud;
 	for (auto &lm: landmarks) {
 		auto pt = lm->get_pos_in_world();
@@ -112,14 +167,27 @@ void publishMap(const ros::Time &timestamp)
 	}
 	pcl::transformPointCloud(mapToCloud, mapToCloud, rot180.matrix().cast<float>());
 
+	pcl::PointCloud<pcl::PointXYZ> localMapCloud;
+	for (auto &lm: local_landmarks) {
+		auto pt = lm->get_pos_in_world();
+		pcl::PointXYZ pt3d;
+		pt3d.x = pt.x();
+		pt3d.y = pt.y();
+		pt3d.z = pt.z();
+		localMapCloud.push_back(pt3d);
+	}
+	pcl::transformPointCloud(localMapCloud, localMapCloud, rot180.matrix().cast<float>());
+
 	rosConn.publishTrajectory(track, timestamp);
 	rosConn.publishPointCloud(mapToCloud, timestamp, pubMapPoints);
+	rosConn.publishPointCloud(localMapCloud, timestamp, pubLocalMapPoints);
 }
 
 void publishFrame(const ros::Time &timestamp)
 {
 	cv::Mat frame = framePub->draw_frame();
 	rosConn.publishImage(frame, pubOVFrame, timestamp);
+	rosConn.publishImage(frameMask, pubMask, timestamp);
 
 	Eigen::Matrix4d posee = mapPub->get_current_cam_pose().inverse();
 	Pose pose = posee;
@@ -145,6 +213,9 @@ void publish(const ros::Time &timestamp)
 }
 
 bool useRealtime = false;
+cv::Mat frameMask;
+cv::Mat originalFrameImage;
+
 private:
 	openvslam::system &slam;
 	const shared_ptr<openvslam::publish::frame_publisher> framePub;
@@ -152,7 +223,12 @@ private:
 	Vmml::Mapper::ROSConnector rosConn;
 	CameraPinholeParams camera;
 
-	PubId pubOVFrame, pubFramePose, pubCamTrack, pubMapPoints;
+	PubId
+		pubOVFrame, pubMask,
+		pubFramePose,
+		pubCamTrack,
+		pubMapPoints,
+		pubLocalMapPoints;
 };
 
 
@@ -192,12 +268,17 @@ int main(int argc, char *argv[])
 	PrimitiveViewer rosConn(vsoProg, SlamDunk);
 	SlamDunk.startup();
 
+	// Install our own signal interrupt handler
+	signal(SIGINT, handleInterruptSignal);
+
 	for (auto &frameId: targetFrameId) {
 
 		auto image = imageBag->at(frameId);
 		auto timestamp = imageBag->timeAt(frameId);
 		cv::Mat mask;
 		imagePipe.run(image, image, mask);
+		rosConn.frameMask = mask;
+		rosConn.originalFrameImage = image;
 
 		SlamDunk.feed_monocular_frame(image, timestamp.toSec(), mask);
 		rosConn.publish(timestamp);
@@ -205,8 +286,15 @@ int main(int argc, char *argv[])
 		if (SlamDunk.terminate_is_requested())
 			break;
 		cout << "Frame#: " << frameId << endl;
+
+		if (breakImageStream==true)
+			break;
 	}
 
 	SlamDunk.shutdown();
+
+	// Save map
+	SlamDunk.save_map_database("/tmp/test.map");
+
 	return 0;
 }

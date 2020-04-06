@@ -51,7 +51,7 @@ sensor_msgs::CameraInfo
 ROSConnector::createCameraInfoMsg (const CameraPinholeParams &c)
 {
 	sensor_msgs::CameraInfo info;
-	info.distortion_model = "plump_bob";
+//	info.distortion_model = "plump_bob";
 	info.width = c.width;
 	info.height = c.height;
 	auto K = c.toMatrix3();
@@ -63,12 +63,12 @@ ROSConnector::createCameraInfoMsg (const CameraPinholeParams &c)
 }
 
 
-ROSConnector::ROSConnector(int argc, char *argv[], const std::string &nodeName)
+ROSConnector::ROSConnector(int argc, char *argv[], const std::string &nodeName, uint32_t RosInitOptions)
 {
 	/*
 	 * Disable ROS connector when debugging (set __NOROS environment variable to 1)
 	 */
-	ros::init(argc, argv, nodeName);
+	ros::init(argc, argv, nodeName, RosInitOptions);
 	ros::Time::init();
 	auto checkDebug=getenv("__NOROS");
 	auto roschk = ros::master::check();
@@ -88,7 +88,7 @@ ROSConnector::~ROSConnector()
 }
 
 int
-ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholeParams cameraParamsInp)
+ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholeParams cameraParamsInp, const std::string &frameIdName)
 {
 	// Do nothing when ROS is disabled
 	if (rosDisabled)
@@ -96,7 +96,9 @@ ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholePa
 
 	ImagePublisher ip;
 	ip.publisher = imageTransport->advertiseCamera(basetopic, 1);
+	ip.frameId = frameIdName;
 	ip.cameraParams = createCameraInfoMsg(cameraParamsInp);
+	ip.cameraParams.header.frame_id = ip.frameId;
 	imgPublishers.push_back(ip);
 	auto id=imgPublishers.size()-1;
 	return id;
@@ -119,7 +121,7 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 	if (t==ros::TIME_MIN)
 		t = ros::Time::now();
 
-	auto imgPub = imgPublishers.at(publisherId);
+	auto &imgPub = imgPublishers.at(publisherId);
 	cv::Mat img;
 	if (imgPub.cameraParams.width!=-1 and imgPub.cameraParams.width!=imgSrc.cols) {
 		cv::resize(imgSrc, img, cv::Size(imgPub.cameraParams.width, imgPub.cameraParams.height));
@@ -134,7 +136,10 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 
 	cvImg.image = img;
 	cvImg.header.stamp = t;
-	imgPub.publisher.publish(*cvImg.toImageMsg(), imgPub.cameraParams, t);
+	cvImg.header.frame_id = imgPub.frameId;
+	auto camInfo = imgPub.cameraParams;
+	camInfo.header.stamp = t;
+	imgPub.publisher.publish(*cvImg.toImageMsg(), camInfo, t);
 }
 
 

@@ -39,7 +39,7 @@ class ROSConnector {
 public:
 	typedef int PublisherId;
 
-	ROSConnector(int argc, char *argv[], const std::string &nodeName);
+	ROSConnector(int argc, char *argv[], const std::string &nodeName, uint32_t RosInitOptions=0);
 	virtual ~ROSConnector();
 
 	inline std::shared_ptr<ros::NodeHandle> getRosHandle()
@@ -55,9 +55,10 @@ public:
 	struct ImagePublisher {
 		image_transport::CameraPublisher publisher;
 		sensor_msgs::CameraInfo cameraParams;
+		std::string frameId;
 		std::string topic() const { return publisher.getTopic(); }
 	};
-	PublisherId createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams());
+	PublisherId createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams(), const std::string &frameIdName="");
 	void setCameraParam(PublisherId publisherId, const CameraPinholeParams &cam);
 	void publishImage(const cv::Mat &img, PublisherId publisherId, ros::Time t=ros::TIME_MIN) const;
 	static sensor_msgs::CameraInfo createCameraInfoMsg (const CameraPinholeParams &c);
