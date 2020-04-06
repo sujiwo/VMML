@@ -66,10 +66,6 @@ YAML::Node createDummyConfig(const Vmml::Mapper::ProgramOptions &po, float resam
 
 void handleInterruptSignal(int signal)
 {
-	cout << "Signaled to term, forking\n";
-	// Daemonize, parent will exit and child continue the work.
-	// We break free from ROS
-	daemon(1, 1);
 	breakImageStream = true;
 }
 
@@ -103,12 +99,15 @@ void run()
 static void dumpMap(const shared_ptr<openvslam::publish::map_publisher> mapPub,
 		pcl::PointCloud<pcl::PointXYZ> &mapCloud,
 		pcl::PointCloud<pcl::PointXYZ> &localMapCloud,
-		vector<Pose> &mapTrajectory)
+		vector<Pose> &track)
 {
+	track.clear();
+	mapCloud.clear();
+	localMapCloud.clear();
+
 	std::vector<openvslam::data::keyframe*> keyfrms;
 	mapPub->get_keyframes(keyfrms);
 
-	vector<Pose> track;
 	for (auto kf: keyfrms) {
 		Pose pkf = kf->get_cam_pose_inv();
 //		pkf = rot180*pkf; pkf = pkf*rot180x;
@@ -142,44 +141,19 @@ static void dumpMap(const shared_ptr<openvslam::publish::map_publisher> mapPub,
 
 void publishMap(const ros::Time &timestamp)
 {
-	std::vector<openvslam::data::keyframe*> keyfrms;
-	mapPub->get_keyframes(keyfrms);
+	pcl::PointCloud<pcl::PointXYZ> mapCloud, localMapCloud;
+	vector<Pose> mapTrajectory;
 
-	vector<Pose> track;
-	for (auto kf: keyfrms) {
-		Pose pkf = kf->get_cam_pose_inv();
-		pkf = rot180*pkf; pkf = pkf*rot180x;
-		track.push_back(pkf);
+	dumpMap(mapPub, mapCloud, localMapCloud, mapTrajectory);
+
+	for (auto &ps: mapTrajectory) {
+		ps = rot180*ps; ps = ps*rot180x;
 	}
-
-	std::vector<openvslam::data::landmark*> landmarks;
-	std::set<openvslam::data::landmark*> local_landmarks;
-	mapPub->get_landmarks(landmarks, local_landmarks);
-
-	pcl::PointCloud<pcl::PointXYZ> mapToCloud;
-	for (auto &lm: landmarks) {
-		auto pt = lm->get_pos_in_world();
-		pcl::PointXYZ pt3d;
-		pt3d.x = pt.x();
-		pt3d.y = pt.y();
-		pt3d.z = pt.z();
-		mapToCloud.push_back(pt3d);
-	}
-	pcl::transformPointCloud(mapToCloud, mapToCloud, rot180.matrix().cast<float>());
-
-	pcl::PointCloud<pcl::PointXYZ> localMapCloud;
-	for (auto &lm: local_landmarks) {
-		auto pt = lm->get_pos_in_world();
-		pcl::PointXYZ pt3d;
-		pt3d.x = pt.x();
-		pt3d.y = pt.y();
-		pt3d.z = pt.z();
-		localMapCloud.push_back(pt3d);
-	}
+	pcl::transformPointCloud(mapCloud, mapCloud, rot180.matrix().cast<float>());
 	pcl::transformPointCloud(localMapCloud, localMapCloud, rot180.matrix().cast<float>());
 
-	rosConn.publishTrajectory(track, timestamp);
-	rosConn.publishPointCloud(mapToCloud, timestamp, pubMapPoints);
+	rosConn.publishTrajectory(mapTrajectory, timestamp);
+	rosConn.publishPointCloud(mapCloud, timestamp, pubMapPoints);
 	rosConn.publishPointCloud(localMapCloud, timestamp, pubLocalMapPoints);
 }
 
@@ -283,18 +257,21 @@ int main(int argc, char *argv[])
 		SlamDunk.feed_monocular_frame(image, timestamp.toSec(), mask);
 		rosConn.publish(timestamp);
 
-		if (SlamDunk.terminate_is_requested())
-			break;
 		cout << "Frame#: " << frameId << endl;
 
-		if (breakImageStream==true)
+		if (breakImageStream==true) {
 			break;
+		}
 	}
 
-	SlamDunk.shutdown();
+	cout << "Termination\n";
 
 	// Save map
 	SlamDunk.save_map_database("/tmp/test.map");
+	pcl::PointCloud<pcl::PointXYZ> mapCloud, localMapCloud;
+	vector<Pose> mapTrajectory;
+	PrimitiveViewer::dumpMap(SlamDunk.get_map_publisher(), mapCloud, localMapCloud, mapTrajectory);
+	SlamDunk.shutdown();
 
 	return 0;
 }
