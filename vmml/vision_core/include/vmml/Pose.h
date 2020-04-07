@@ -238,6 +238,7 @@ struct TTransform : public Eigen::Affine3d
 		return mti;
 	}
 
+	std::string dump() const;
 /*
 	TTransform operator / (const tduration &td) const
 	{ return *this / toSeconds(td); }

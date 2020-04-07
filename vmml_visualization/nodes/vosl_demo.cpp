@@ -12,6 +12,7 @@
 #include <iostream>
 #include "yaml-cpp/yaml.h"
 #include "pcl/common/transforms.h"
+#include "pcl/io/pcd_io.h"
 
 #include "openvslam/system.h"
 #include "openvslam/config.h"
@@ -139,6 +140,30 @@ static void dumpMap(const shared_ptr<openvslam::publish::map_publisher> mapPub,
 //	pcl::transformPointCloud(localMapCloud, localMapCloud, rot180.matrix().cast<float>());
 }
 
+static void dumpTrajectoryToFile(const vector<TTransform> &tfList, const string &filename="")
+{
+	fstream trackFd;
+	ostream xo(NULL);
+
+	if (filename.empty())
+		xo.rdbuf(cout.rdbuf());
+	else {
+		trackFd.open(filename, ios_base::out|ios_base::trunc);
+		if (!trackFd.is_open())
+			throw runtime_error("Unable to create "+filename);
+		xo.rdbuf(trackFd.rdbuf());
+	}
+
+	for (const auto &tf: tfList) {
+		xo << tf.dump() << endl;
+	}
+
+	if (filename.empty()==false)
+		trackFd.close();
+
+	return;
+}
+
 void publishMap(const ros::Time &timestamp)
 {
 	pcl::PointCloud<pcl::PointXYZ> mapCloud, localMapCloud;
@@ -174,6 +199,9 @@ void publishFrame(const ros::Time &timestamp)
 	}
 
 	rosConn.publishPose(pubFramePose, pose, timestamp);
+
+	PoseStamped poseWts(pose, timestamp.toBoost());
+	frameTrajectory.push_back(poseWts);
 }
 
 void publish(const ros::Time &timestamp)
@@ -185,6 +213,12 @@ void publish(const ros::Time &timestamp)
 	publishFrame(rt);
 	publishMap(rt);
 }
+
+bool dumpTrajectory(const std::string &f) const
+{
+	return frameTrajectory.dump(f);
+}
+
 
 bool useRealtime = false;
 cv::Mat frameMask;
@@ -203,6 +237,8 @@ private:
 		pubCamTrack,
 		pubMapPoints,
 		pubLocalMapPoints;
+
+	Trajectory frameTrajectory;
 };
 
 
@@ -271,6 +307,8 @@ int main(int argc, char *argv[])
 	pcl::PointCloud<pcl::PointXYZ> mapCloud, localMapCloud;
 	vector<Pose> mapTrajectory;
 	PrimitiveViewer::dumpMap(SlamDunk.get_map_publisher(), mapCloud, localMapCloud, mapTrajectory);
+	rosConn.dumpTrajectory("/tmp/trajectory-slam.csv");
+	pcl::io::savePCDFile("/tmp/vslam-map.pcd", mapCloud, true);
 	SlamDunk.shutdown();
 
 	return 0;

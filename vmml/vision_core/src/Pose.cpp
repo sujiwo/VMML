@@ -292,4 +292,17 @@ TTransform TTransform::operator * (const double &mul) const
 	return from_Pos_Quat(pn, qn);
 }
 
+
+std::string
+TTransform::dump() const
+{
+	std::stringstream s;
+	Vector3d v = position();
+	s << v.x() << " " << v.y() << " " << v.z() << " ";
+	Quaterniond q = orientation();
+	s << q.x() << " " << q.y() << " " << q.z() << ' ' << q.w();
+
+	return s.str();
+}
+
 } /* namespace Vmml */
