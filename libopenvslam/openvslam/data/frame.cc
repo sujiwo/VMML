@@ -28,6 +28,9 @@ frame::frame(const cv::Mat& img_gray, const double timestamp,
 
     // Extract ORB feature
     extract_orb(img_gray, mask);
+
+    img_gray_ = img_gray.clone();
+
     num_keypts_ = keypts_.size();
     if (keypts_.empty()) {
         spdlog::warn("frame {}: cannot extract any keypoints", id_);

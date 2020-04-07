@@ -27,6 +27,8 @@ public:
 
     bool robust_match_based_track(data::frame& curr_frm, const data::frame& last_frm, data::keyframe* ref_keyfrm) const;
 
+    bool optical_flow_match_track(data::frame& curr_frm, const data::frame& last_frm, data::keyframe* ref_keyfrm) const;
+
 private:
     unsigned int discard_outliers(data::frame& curr_frm) const;
 

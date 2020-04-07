@@ -121,6 +121,42 @@ bool frame_tracker::robust_match_based_track(data::frame& curr_frm, const data::
     }
 }
 
+#include <opencv2/video/tracking.hpp>
+#include <opencv2/features2d.hpp>
+bool frame_tracker::optical_flow_match_track(data::frame& curr_frm, const data::frame& last_frm, data::keyframe* ref_keyfrm) const
+{
+	std::vector<data::landmark*> matched_lms_in_curr;
+
+	std::vector<cv::DMatch> bfResult1;
+	auto bfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING, true);
+	bfMatcher->match(ref_keyfrm->descriptors_, curr_frm.descriptors_, bfResult1);
+
+	// Store targets
+	cv::Mat vKeypoints2, p1;
+	cv::Mat vKeypoints1(curr_frm.keypts_.size(), 2, CV_32F);
+	for (int i=0; i<curr_frm.keypts_.size(); ++i) {
+		vKeypoints1.at<float>(i,0) = curr_frm.keypts_[i].pt.x;
+		vKeypoints1.at<float>(i,1) = curr_frm.keypts_[i].pt.y;
+	}
+
+/*
+	cv::calcOpticalFlowPyrLK(curr_frm., F2.getImage(),
+		vKeypoints1, vKeypoints2,
+		statusOf, errOf,
+		optFlowWindowSize, maxLevel,
+		optFlowStopCriteria);
+	cv::calcOpticalFlowPyrLK(F2.getImage(), F1.getImage(),
+		vKeypoints2, p1,
+		statusOf, errOf,
+		optFlowWindowSize, maxLevel,
+		optFlowStopCriteria);
+*/
+
+
+
+	return true;
+}
+
 unsigned int frame_tracker::discard_outliers(data::frame& curr_frm) const {
     unsigned int num_valid_matches = 0;
 
