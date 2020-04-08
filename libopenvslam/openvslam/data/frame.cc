@@ -30,6 +30,7 @@ frame::frame(const cv::Mat& img_gray, const double timestamp,
     extract_orb(img_gray, mask);
 
     img_gray_ = img_gray.clone();
+    mask_ = mask.clone();
 
     num_keypts_ = keypts_.size();
     if (keypts_.empty()) {
