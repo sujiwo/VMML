@@ -133,9 +133,27 @@ if (libopenvslam_FOUND)
 		TARGETS vosl_demo
 		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 	)
+	
+	# Place Recognizer Service Node
+	add_executable(
+		vosl_place_recognizer_srv
+			nodes/vosl_place_recognizer_srv.cpp
+	)
+	target_include_directories(vosl_place_recognizer_srv PUBLIC ${libopenvslam_INCLUDE_DIRS})
+	target_link_libraries(
+		vosl_place_recognizer_srv
+			${common_libs}
+			${libopenvslam_LIBRARIES}
+	)
+	install(
+		TARGETS vosl_place_recognizer_srv
+		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	)
+	
 else()
 	message("OpenVSlam demo will NOT be built")
 endif()
+
 
 ###
 #add_executable(

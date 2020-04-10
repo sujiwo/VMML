@@ -143,6 +143,22 @@ public:
     //!! Termination of the system is requested or not
     bool terminate_is_requested() const;
 
+    // !! Loophole for accessing the elements of OpenVSLAM
+    data::bow_database* _getFrameDatabase()
+    { return bow_db_; }
+
+    data::bow_vocabulary* _getVocabulary()
+    { return bow_vocab_; }
+
+    camera::base* _getCamera()
+    { return camera_; }
+
+    tracking_module* _getTracker()
+    { return tracker_; }
+
+    data::map_database* _getMapDatabase()
+    { return map_db_; }
+
 private:
     //! Check reset request of the system
     void check_reset_request();

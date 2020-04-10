@@ -101,6 +101,10 @@ public:
     //! Resume the tracking module
     void resume();
 
+    // ! Accessing elements of Tracking
+    inline feature::orb_extractor* _getMonocularFeatureExtractor()
+    { return extractor_left_; }
+
     //-----------------------------------------
     // variables
 
