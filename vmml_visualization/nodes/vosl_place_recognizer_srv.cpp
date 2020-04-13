@@ -151,7 +151,6 @@ protected:
 int main(int argc, char *argv[])
 {
 	VoslPlaceRecognizerService server(argc, argv);
-	exit(1);
 	server.run();
 	return 0;
 }

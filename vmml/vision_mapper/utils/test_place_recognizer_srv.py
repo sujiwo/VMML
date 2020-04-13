@@ -61,6 +61,7 @@ if __name__=='__main__':
 #         cv2.imwrite(str(queryId)+".png", evaluateImage)
         testResults[queryId]={'id': queryId, 'ans': qResult, 'time': timeRun}
         print(queryId, len(qResult), timeRun)
+        print(qResult)
     
     pickle.dump(testResults, open("place_recognizer_results.pickle", "wb"))
     pass
