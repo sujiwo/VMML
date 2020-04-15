@@ -303,13 +303,13 @@ int main(int argc, char *argv[])
 	cout << "Termination\n";
 
 	// Save map
-	SlamDunk.save_map_database("/tmp/test.map");
+	SlamDunk.shutdown();
+	SlamDunk.save_map_database((vsoProg.getWorkDir()/"/test.map").string());
 	pcl::PointCloud<pcl::PointXYZ> mapCloud, localMapCloud;
 	vector<Pose> mapTrajectory;
 	PrimitiveViewer::dumpMap(SlamDunk.get_map_publisher(), mapCloud, localMapCloud, mapTrajectory);
-	rosConn.dumpTrajectory("/tmp/trajectory-slam.csv");
-	pcl::io::savePCDFile("/tmp/vslam-map.pcd", mapCloud, true);
-	SlamDunk.shutdown();
+	rosConn.dumpTrajectory((vsoProg.getWorkDir()/"trajectory-slam.csv").string());
+	pcl::io::savePCDFile((vsoProg.getWorkDir()/"vslam-map.pcd").string(), mapCloud, true);
 
 	return 0;
 }

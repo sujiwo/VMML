@@ -79,7 +79,7 @@ public:
 
 		placerc.reset(new openvslam::system(slamConfig, vocPath));
 		placerc->load_map_database(progOptions.get<string>("map-file", ""));
-		placerc->startup();
+		placerc->startup(false);
 		frameDb = placerc->_getFrameDatabase();
 		placerc->disable_mapping_module();
 
@@ -115,11 +115,15 @@ public:
 			placerc->_getCamera(),
 			100.0,
 			mask);
+		curfrm.compute_bow();
+
 		auto kfCandidates = frameDb->acquire_relocalization_candidates(&curfrm);
 
-		if (kfCandidates.empty()==true)
+		if (kfCandidates.empty()==true) {
 			return false;
+		}
 
+		cerr << "Size: " << kfCandidates.size() << endl;
 		for (const auto kf: kfCandidates) {
 			response.keyframeId.push_back(kf->id_);
 		}
