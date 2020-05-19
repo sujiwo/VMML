@@ -70,6 +70,7 @@ install(
 add_executable(
 	test_rgb_filters
 		nodes/test_rgb_filters.cpp
+		nodes/sift/sift.cpp
 )
 target_link_libraries(
 	test_rgb_filters

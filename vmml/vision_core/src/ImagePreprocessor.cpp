@@ -156,6 +156,25 @@ cv::Mat ImagePreprocessor::toIlluminatiInvariant (const cv::Mat &imageBayer, con
 	return iImage;
 }
 
+cv::Mat ImagePreprocessor::toIlluminatiInvariantRGB (const cv::Mat &rgbImage, const float alpha)
+{
+	cv::Mat iImage (rgbImage.rows, rgbImage.cols, CV_8UC1);
+//	cout << rgbImage.rows << ' ' << rgbImage.cols << endl;
+
+	cv::MatConstIterator_<cv::Vec3b> it, end;
+	for (it=rgbImage.begin<cv::Vec3b>(), end=rgbImage.end<cv::Vec3b>(); it!=end; ++it) {
+//		cv::Vec3b &curPixel = *it;
+		float
+			fb = (*it)[0] / 255.0,
+			fg = (*it)[1] / 255.0,
+			fr = (*it)[2] / 255.0;
+		float iPix = 0.5 + logf(fg) - alpha*logf(fb) - (1-alpha)*logf(fr);
+		iImage.at<uchar>(it.pos()) = (uchar)(iPix*255);
+	}
+
+	return iImage;
+}
+
 
 cv::Mat ImagePreprocessor::setGamma (const cv::Mat &grayImage, const float gamma, bool LUT_only)
 {

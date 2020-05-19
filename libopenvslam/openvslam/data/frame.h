@@ -245,7 +245,7 @@ public:
     std::vector<float> inv_level_sigma_sq_;
 
     // Additional info
-    cv::Mat img_gray_, mask_;
+//    cv::Mat img_gray_, mask_;
 
 private:
     //! enumeration to control the behavior of extract_orb()

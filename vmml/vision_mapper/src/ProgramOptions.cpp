@@ -252,6 +252,11 @@ ProgramOptions::openInputs()
 			if (tp.second=="sensor_msgs/PointCloud2" and lidarTopic.empty())
 				lidarTopic = tp.first;
 
+			// Guess GNSS topic
+			if (gnssTopic.empty()==true) {
+				if (tp.second=="nmea_msgs/Sentence" or tp.second=="sensor_msgs/NavSatFix")
+					gnssTopic = tp.first;
+			}
 /*
 			if (tp.second=="velodyne_msgs/VelodyneScan" and lidarTopic.empty())
 				lidarTopic = tp.first;

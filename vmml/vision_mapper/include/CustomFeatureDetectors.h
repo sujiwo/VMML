@@ -15,11 +15,11 @@
 namespace Vmml {
 namespace Mapper {
 
-class CustomFeatureDetectors : public cv::FeatureDetector
+class SIFT : public cv::FeatureDetector
 {
 public:
-	CustomFeatureDetectors();
-	virtual ~CustomFeatureDetectors();
+	SIFT();
+	virtual ~SIFT();
 };
 
 } /* namespace Mapper */

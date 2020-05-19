@@ -44,6 +44,7 @@ public:
 	static cv::Mat autoAdjustGammaRGB (const cv::Mat &rgbImage, const cv::Mat &mask=cv::Mat());
 	static cv::Mat autoAdjustGammaMono (cv::Mat &grayImage, float *gamma=NULL, cv::Mat mask=cv::Mat());
 	static cv::Mat toIlluminatiInvariant (const cv::Mat &bayerImage, const float alpha);
+	static cv::Mat toIlluminatiInvariantRGB (const cv::Mat &rgbImage, const float alpha);
 
 	/*
 	 * Multi-scale Retinex with Color Restoration

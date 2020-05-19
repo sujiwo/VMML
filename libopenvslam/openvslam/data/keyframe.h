@@ -285,7 +285,7 @@ public:
     //! list of 1 / sigma^2 for optimization
     const std::vector<float> inv_level_sigma_sq_;
 
-    cv::Mat img_gray_, mask_;
+//    cv::Mat img_gray_, mask_;
 
 private:
     //-----------------------------------------

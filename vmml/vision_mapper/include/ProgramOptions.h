@@ -67,6 +67,9 @@ public:
 	const std::string& getLidarTopic() const
 	{ return lidarTopic; }
 
+	const std::string& getGnssTopic() const
+	{ return gnssTopic; }
+
 	const Path& getWorkDir() const
 	{ return workDir; }
 

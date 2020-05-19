@@ -291,9 +291,11 @@ bool tracking_module::track_current_frame() {
         if (!succeeded) {
             succeeded = frame_tracker_.robust_match_based_track(curr_frm_, last_frm_, ref_keyfrm_);
         }
+/*
         if (!succeeded) {
         	succeeded = frame_tracker_.optical_flow_match_track(curr_frm_, last_frm_, ref_keyfrm_);
         }
+*/
     }
     else {
         // Lost mode

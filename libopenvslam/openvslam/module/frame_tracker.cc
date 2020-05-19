@@ -134,6 +134,7 @@ const cv::TermCriteria optFlowStopCriteria(cv::TermCriteria::EPS|cv::TermCriteri
 
 bool frame_tracker::optical_flow_match_track(data::frame& curr_frm, const data::frame& last_frm, data::keyframe* ref_keyfrm) const
 {
+/*
 	std::vector<cv::DMatch> bfResult1;
 	auto bfMatcher = cv::BFMatcher::create(cv::NORM_HAMMING, true);
 	bfMatcher->match(ref_keyfrm->descriptors_, curr_frm.descriptors_, bfResult1);
@@ -231,6 +232,7 @@ bool frame_tracker::optical_flow_match_track(data::frame& curr_frm, const data::
 	else {
 		return true;
 	}
+*/
 }
 
 unsigned int frame_tracker::discard_outliers(data::frame& curr_frm) const {

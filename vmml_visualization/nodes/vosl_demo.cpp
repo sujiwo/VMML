@@ -22,6 +22,7 @@
 
 #include "vmml/Pose.h"
 #include "vmml/Trajectory.h"
+#include "vmml/TrajectoryGNSS.h"
 #include "ProgramOptions.h"
 #include "ROSConnector.h"
 
@@ -82,14 +83,17 @@ PrimitiveViewer(Vmml::Mapper::ProgramOptions &prog, openvslam::system &slam_):
 	framePub(slam_.get_frame_publisher()),
 	rosConn(prog.getArgc(), prog.getArgv(), "vosl_demo", ros::InitOption::NoSigintHandler)
 {
+	cout << "Start\n";
 	camera = prog.getWorkingCameraParameter();
 	useRealtime = prog.get<bool>("ros-time", false);
 	pubOVFrame = rosConn.createImagePublisher("frame_render", prog.getWorkingCameraParameter(), "camera");
 	pubFramePose = rosConn.createPosePublisher("world", "camera");
+	cout << "XYZ 1\n";
 	pubCamTrack = rosConn.createTrajectoryPublisher("camera_trajectory", "world");
 	pubMapPoints = rosConn.createPointCloudPublisher("map_points", "world");
 	pubLocalMapPoints = rosConn.createPointCloudPublisher("local_map_points", "world");
 	pubMask = rosConn.createImagePublisher("mask");
+	cout << "Almost\n";
 }
 
 void run()
@@ -273,10 +277,19 @@ int main(int argc, char *argv[])
 	auto dummyYaml = createDummyConfig(vsoProg, resample);
 	auto slamConfig = make_shared<openvslam::config>(dummyYaml);
 
+	// GNSS
+/*
+	auto &mybag = vsoProg.getInputBag();
+	auto trackGnss = TrajectoryGNSS::fromRosBag(mybag, vsoProg.getGnssTopic());
+	trackGnss.dump((vsoProg.getWorkDir()/"gnss.csv").string());
+	exit(2);
+*/
+
 	// Slam dunk
 	openvslam::system SlamDunk (slamConfig, vocPath);
 	PrimitiveViewer rosConn(vsoProg, SlamDunk);
 	SlamDunk.startup();
+	cout << "Ready\n";
 
 	// Install our own signal interrupt handler
 	signal(SIGINT, handleInterruptSignal);
@@ -303,13 +316,16 @@ int main(int argc, char *argv[])
 	cout << "Termination\n";
 
 	// Save map
-	SlamDunk.shutdown();
 	SlamDunk.save_map_database((vsoProg.getWorkDir()/"/test.map").string());
 	pcl::PointCloud<pcl::PointXYZ> mapCloud, localMapCloud;
 	vector<Pose> mapTrajectory;
 	PrimitiveViewer::dumpMap(SlamDunk.get_map_publisher(), mapCloud, localMapCloud, mapTrajectory);
 	rosConn.dumpTrajectory((vsoProg.getWorkDir()/"trajectory-slam.csv").string());
 	pcl::io::savePCDFile((vsoProg.getWorkDir()/"vslam-map.pcd").string(), mapCloud, true);
+	cout << "Data saved\n";
+
+	// shutdown() crashes the program
+	SlamDunk.shutdown();
 
 	return 0;
 }

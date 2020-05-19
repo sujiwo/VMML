@@ -10,12 +10,12 @@
 namespace Vmml {
 namespace Mapper {
 
-CustomFeatureDetectors::CustomFeatureDetectors() {
+SIFT::SIFT() {
 	// TODO Auto-generated constructor stub
 
 }
 
-CustomFeatureDetectors::~CustomFeatureDetectors() {
+SIFT::~SIFT() {
 	// TODO Auto-generated destructor stub
 }
 

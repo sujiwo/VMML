@@ -23,14 +23,16 @@
 #include "ImagePipeline.h"
 #include "ProgramOptions.h"
 #include "RVizConnector.h"
+#include "sift/sift.hpp"
 
 
 using namespace std;
+using cv::xfeatures2d::SIFT;
 
 
 image_transport::Publisher imagePub1, imagePub2;
-auto detector2 = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE, 256, 3, 0.03f, 8);
-auto detector = cv::ORB::create(
+auto akzDetector = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE, 256, 3, 0.03f, 8);
+auto orbDetector = cv::ORB::create(
 		6000,
 		1.2,
 		8,
@@ -40,6 +42,7 @@ auto detector = cv::ORB::create(
 		cv::ORB::HARRIS_SCORE,
 		31,
 		10);
+auto siftDetector = SIFT::create(6000);
 const float alpha = 0.3975;
 
 Vmml::Mapper::ImagePipeline *imgPipe;
@@ -60,16 +63,19 @@ cv::Mat imagePipelineRun (const cv::Mat &srcRgb)
 	cv::Mat mask, imageReady;
 
 	imgPipe->run(srcRgb, imageReady, mask);
+	cv::Mat srcRgbResz;
+	cv::resize(srcRgb, srcRgbResz, cv::Size(), imgPipe->getResizeFactor(), imgPipe->getResizeFactor());
+	cv::Mat illImage = ImagePreprocessor::toIlluminatiInvariantRGB(srcRgbResz, alpha);
 
-	// ORB Test
+	// Detector Test
 	std::vector<cv::KeyPoint> kpList;
 	cv::Mat descriptors, drawFrameKeypts;
-	detector->detectAndCompute(
-		imageReady,
+	orbDetector->detectAndCompute(
+		illImage,
 		mask,
 		kpList,
 		descriptors);
-	cv::drawKeypoints(imageReady, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
+	cv::drawKeypoints(illImage, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
 
 	return drawFrameKeypts;
 }
