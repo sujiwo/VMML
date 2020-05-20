@@ -51,6 +51,17 @@ target_link_libraries(
 		${catkin_LIBRARIES}
 )
 
+add_library(
+	image_dataset_viewer
+		bag_viewer/GenericDatasetViewer.cpp
+)
+
+target_link_libraries(
+	image_dataset_viewer
+		Qt5::Widgets
+		${OpenCV_LIBS}
+)
+
 
 add_executable(bag_viewer
 	bag_viewer/main.cpp
