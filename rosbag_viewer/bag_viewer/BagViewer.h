@@ -39,7 +39,7 @@
 
 #include "ClickableLabel.h"
 #include <QMainWindow>
-#include "rqt_image_view/ratio_layouted_frame.h"
+#include "ratio_layouted_frame.h"
 
 #include <rosbag/bag.h>
 

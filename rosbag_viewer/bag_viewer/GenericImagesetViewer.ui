@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>BagViewer</class>
- <widget class="QMainWindow" name="BagViewer">
+ <class>GenericImagesetViewer</class>
+ <widget class="QMainWindow" name="GenericImagesetViewer">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -32,7 +32,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="controlLayout">
         <item>
          <widget class="QPushButton" name="prevFrameBtn">
           <property name="text">
@@ -126,7 +126,7 @@
   <customwidget>
    <class>RatioLayoutedFrame</class>
    <extends>QFrame</extends>
-   <header>ratio_layouted_frame.h</header>
+   <header location="global">ratio_layouted_frame.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

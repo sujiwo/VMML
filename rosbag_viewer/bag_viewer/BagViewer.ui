@@ -88,7 +88,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset theme="edit-copy"/>
+           <iconset theme="edit-copy">
+            <normaloff>.</normaloff>.</iconset>
           </property>
          </widget>
         </item>
@@ -128,7 +129,7 @@
   <customwidget>
    <class>RatioLayoutedFrame</class>
    <extends>QFrame</extends>
-   <header>ratio_layouted_frame.h</header>
+   <header location="global">ratio_layouted_frame.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

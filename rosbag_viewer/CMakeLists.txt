@@ -35,6 +35,7 @@ include_directories(
 	${PCL_INCLUDE_DIRS}
 	common
 	include
+	bag_viewer
 )
 
 #link_directories(
@@ -52,12 +53,17 @@ target_link_libraries(
 )
 
 add_library(
-	image_dataset_viewer
-		bag_viewer/GenericDatasetViewer.cpp
+	generic_imageset_viewer
+		bag_viewer/GenericImagesetViewer.cpp
+		bag_viewer/ratio_layouted_frame.cpp
+#		bag_viewer/ratio_layouted_frame.h
+		bag_viewer/GenericImagesetViewer.ui
+		bag_viewer/ClickableLabel.cpp
+		bag_viewer/ClickableLabel.h
 )
 
 target_link_libraries(
-	image_dataset_viewer
+	generic_imageset_viewer
 		Qt5::Widgets
 		${OpenCV_LIBS}
 )
@@ -68,7 +74,7 @@ add_executable(bag_viewer
 	bag_viewer/BagViewer.cpp
 	bag_viewer/ClickableLabel.cpp
  	bag_viewer/ratio_layouted_frame.cpp
- 	bag_viewer/ratio_layouted_frame.h
+# 	bag_viewer/ratio_layouted_frame.h
 	bag_viewer/BagViewer.ui
 	bag_viewer/ClickableLabel.h
 )
