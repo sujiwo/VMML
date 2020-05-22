@@ -31,7 +31,7 @@ typedef boost::posix_time::time_duration tduration;
 
 struct ImageDatasetObject {
 	uint id=0;
-	virtual cv::Mat image() { return cv::Mat();};
+	cv::Mat image;
 	ptime timestamp;
 };
 
@@ -41,8 +41,8 @@ struct ImageDataset {
 
 	virtual ImageDatasetObject at(uint i)=0;
 
-	virtual size_t size() const;
-	virtual tduration length() const;
+	virtual size_t size() const=0;
+	virtual tduration length() const=0;
 };
 
 
@@ -53,7 +53,7 @@ public:
 	explicit GenericImagesetViewer(QWidget *parent = 0);
 	virtual ~GenericImagesetViewer();
 
-	void setDatasource(std::shared_ptr<ImageDataset> &ds);
+	virtual void setDatasource(std::shared_ptr<ImageDataset> &ds);
 
 public slots:
 	void on_playButton_clicked(bool checked);
@@ -64,10 +64,9 @@ public slots:
 	void on_copyImageBtn_clicked(bool checked);
 	void timeOffsetIndicator_clicked();
 
-private:
-  Ui::GenericImagesetViewer *ui;
-
 protected:
+
+	Ui::GenericImagesetViewer *ui;
 
 	std::shared_ptr<ImageDataset> dataSrc = nullptr;
 
@@ -77,6 +76,7 @@ protected:
 
 	// Identifies current playing position in integer
 	int currentPosition=0;
+	cv::Mat currentImage;
 
 	ClickableLabel *timeOffsetIndicator;
 	enum { OFFSET_INTEGER, OFFSET_TIME } timeOffsetIndicatorMode = OFFSET_TIME;

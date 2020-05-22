@@ -68,6 +68,18 @@ target_link_libraries(
 		${OpenCV_LIBS}
 )
 
+add_executable(
+	bagviewer2
+		bag_viewer/bagviewer2.cpp
+)
+
+target_link_libraries(
+	bagviewer2
+		generic_imageset_viewer
+		random_access_bag
+		${catkin_LIBRARIES}
+)
+
 
 add_executable(bag_viewer
 	bag_viewer/main.cpp

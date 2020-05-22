@@ -1,0 +1,132 @@
+/*
+ * bagviewer2.cpp
+ *
+ *  Created on: May 22, 2020
+ *      Author: sujiwo
+ */
+
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <exception>
+#include <QApplication>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include "GenericImagesetViewer.h"
+#include "RandomAccessBag.h"
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <cv_bridge/cv_bridge.h>
+
+
+using namespace std;
+using namespace DsViewer;
+
+
+/*
+struct ImageBagDatasetObject: public ImageDatasetObject
+{
+	virtual cv::Mat image()
+	{
+		if (bagSrc->messageType() == "sensor_msgs/Image") {
+			sensor_msgs::Image::ConstPtr imageMsg = bagSrc->at<sensor_msgs::Image>(id);
+			return cv_bridge::toCvCopy(imageMsg, sensor_msgs::image_encodings::RGB8)->image;
+		}
+		else if (bagSrc->messageType() == "sensor_msgs/CompressedImage") {
+			sensor_msgs::CompressedImage::ConstPtr imageMsg = bagSrc->at<sensor_msgs::CompressedImage>(id);
+			return cv_bridge::toCvCopy(imageMsg, sensor_msgs::image_encodings::RGB8)->image;
+		}
+	}
+
+	RandomAccessBag::Ptr bagSrc;
+};
+*/
+
+
+class ImageBagDataset : public ImageDataset
+{
+public:
+	void load (const string &bagpath)
+	{
+		bagFdPtr = std::shared_ptr<rosbag::Bag>(new rosbag::Bag(bagpath, rosbag::BagMode::Read));
+		vTopicList = RandomAccessBag::getTopicList(*bagFdPtr);
+		auto imgTopics = getImageTopics();
+		setActiveTopic(imgTopics[0]);
+	}
+
+	void setActiveTopic(const string &tp)
+	{
+		currentActiveTopic = tp;
+		bagSrc.reset(new RandomAccessBag(*bagFdPtr, tp));
+	}
+
+	vector<string> getImageTopics() const
+	{
+		vector<string> imgTopics;
+
+		for (auto &stp: vTopicList) {
+			if (stp.second=="sensor_msgs/Image" or
+					stp.second == "sensor_msgs/CompressedImage")
+				imgTopics.push_back(stp.first);
+		}
+
+		return imgTopics;
+	}
+
+	ImageDatasetObject at(uint i)
+	{
+		ImageDatasetObject igbo;
+		igbo.id = i;
+		igbo.timestamp = bagSrc->timeAt(i).toBoost();
+
+		if (bagSrc->messageType() == "sensor_msgs/Image") {
+			sensor_msgs::Image::ConstPtr imageMsg = bagSrc->at<sensor_msgs::Image>(i);
+			igbo.image = cv_bridge::toCvCopy(imageMsg, sensor_msgs::image_encodings::RGB8)->image;
+		}
+		else if (bagSrc->messageType() == "sensor_msgs/CompressedImage") {
+			sensor_msgs::CompressedImage::ConstPtr imageMsg = bagSrc->at<sensor_msgs::CompressedImage>(i);
+			igbo.image = cv_bridge::toCvCopy(imageMsg, sensor_msgs::image_encodings::RGB8)->image;
+		}
+
+		return igbo;
+	}
+
+	virtual size_t size() const
+	{ return bagSrc->size(); }
+
+	virtual tduration length() const
+	{ return bagSrc->length().toBoost(); }
+
+private:
+	std::shared_ptr<rosbag::Bag> bagFdPtr = nullptr;
+	RandomAccessBag::Ptr bagSrc;
+	map<string,string> vTopicList;
+
+	string currentActiveTopic;
+};
+
+
+class BagViewer2 : public GenericImagesetViewer
+{
+public:
+
+private:
+};
+
+
+int main(int argc, char *argv[])
+{
+	QApplication mainApp(argc, argv);
+	BagViewer2 viewer;
+
+	shared_ptr<ImageBagDataset> imgSet(new ImageBagDataset);
+	imgSet->load(argv[1]);
+	shared_ptr<ImageDataset> imgSetPtr = static_pointer_cast<ImageDataset>(imgSet);
+	viewer.setDatasource(imgSetPtr);
+
+	viewer.show();
+
+	return mainApp.exec();
+}
