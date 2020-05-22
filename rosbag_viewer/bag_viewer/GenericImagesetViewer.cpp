@@ -120,6 +120,8 @@ void
 GenericImagesetViewer::setDatasource(std::shared_ptr<ImageDataset> &ds)
 {
 	dataSrc = ds;
+	ui->playProgress->setRange(0, dataSrc->size()-1);
+	ui->playProgress->setValue(0);
 	updateImage(0);
 }
 

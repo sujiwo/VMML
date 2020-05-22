@@ -12,6 +12,7 @@
 #include <map>
 #include <exception>
 #include <QApplication>
+#include <QComboBox>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include "GenericImagesetViewer.h"
@@ -23,26 +24,6 @@
 
 using namespace std;
 using namespace DsViewer;
-
-
-/*
-struct ImageBagDatasetObject: public ImageDatasetObject
-{
-	virtual cv::Mat image()
-	{
-		if (bagSrc->messageType() == "sensor_msgs/Image") {
-			sensor_msgs::Image::ConstPtr imageMsg = bagSrc->at<sensor_msgs::Image>(id);
-			return cv_bridge::toCvCopy(imageMsg, sensor_msgs::image_encodings::RGB8)->image;
-		}
-		else if (bagSrc->messageType() == "sensor_msgs/CompressedImage") {
-			sensor_msgs::CompressedImage::ConstPtr imageMsg = bagSrc->at<sensor_msgs::CompressedImage>(id);
-			return cv_bridge::toCvCopy(imageMsg, sensor_msgs::image_encodings::RGB8)->image;
-		}
-	}
-
-	RandomAccessBag::Ptr bagSrc;
-};
-*/
 
 
 class ImageBagDataset : public ImageDataset
@@ -111,6 +92,11 @@ private:
 class BagViewer2 : public GenericImagesetViewer
 {
 public:
+	BagViewer2(QWidget *parent = 0):
+		GenericImagesetViewer(parent)
+	{
+
+	}
 
 private:
 };
