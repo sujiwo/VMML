@@ -92,13 +92,22 @@ private:
 class BagViewer2 : public GenericImagesetViewer
 {
 public:
-	BagViewer2(QWidget *parent = 0):
-		GenericImagesetViewer(parent)
+	BagViewer2 (QWidget *parent = 0):
+		GenericImagesetViewer(parent),
+		topicSelector(new QComboBox)
+	{
+//		ui->controlLayout->addWidget(topicSelector);
+	}
+
+/*
+	void setDatasource(std::shared_ptr<ImageDataset> &ds)
 	{
 
 	}
+*/
 
 private:
+	QComboBox *topicSelector;
 };
 
 
