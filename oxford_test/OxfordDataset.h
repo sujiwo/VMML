@@ -56,7 +56,9 @@ public:
 	Vmml::Trajectory getImageGroundTruth() const;
 
 protected:
-	Vmml::Path dirpath;
+	Vmml::Path
+		dirpath,	// Directory for target dataset
+		pkgpath;	// Directory of our package
 
 	// Need to store exact value of timestamp as read from disk
 	std::vector<timestamp_t> stereoTimestamps;

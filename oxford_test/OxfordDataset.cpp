@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <opencv2/highgui.hpp>
+#include <ros/package.h>
 #include "csv.h"
 #include "OxfordDataset.h"
 
@@ -37,7 +38,8 @@ uint64_t toOxfordTimestamp (const ptime &t)
 
 
 OxfordDataset::OxfordDataset(const std::string &path) :
-	dirpath(path)
+	dirpath(path),
+	pkgpath(ros::package::getPath("oxford_test"))
 {
 	loadTimestamps();
 	loadModel();
@@ -72,17 +74,27 @@ OxfordDataset::at(const uint i, bool raw) const
 	OxfordRecord recz;
 	recz.timestamp = fromOxfordTimestamp(stereoTimestamps.at(i));
 
-	if (raw==true)
-		recz.center_image = cv::imread(
-			(dirpath
-				/ "stereo/centre"
-				/ to_string(stereoTimestamps.at(i))).string(),
-			cv::IMREAD_GRAYSCALE);
-	else {
-		// XXX: unfinished
+	auto imgPath = dirpath
+			/ "stereo/centre"
+			/ (to_string(stereoTimestamps.at(i))+".png");
+	recz.center_image = cv::imread(
+		imgPath.string(),
+		cv::IMREAD_GRAYSCALE);
+
+	if (raw==false) {
+		cv::cvtColor(recz.center_image, recz.center_image, CV_BayerGB2RGB);
+		cv::remap(recz.center_image, recz.center_image, distortionLUT_center_x, distortionLUT_center_y, cv::INTER_LINEAR);
 	}
 
 	return recz;
+}
+
+
+tduration
+OxfordDataset::length() const
+{
+	return fromOxfordTimestamp(stereoTimestamps.back()) -
+		fromOxfordTimestamp(stereoTimestamps.front());
 }
 
 
@@ -91,12 +103,12 @@ OxfordDataset::loadModel()
 {
 	// XXX: Find path to these files
 
-	const string
-		centerLut = "/stereo_narrow_left_distortion_lut.bin",
-		centerIntrinsic = "/stereo_narrow_left.txt";
+	const Vmml::Path
+		centerLut = pkgpath/"model"/"stereo_narrow_left_distortion_lut.bin",
+		centerIntrinsic = pkgpath/"model"/"stereo_narrow_left.txt";
 
 	// LUT distortion correction table
-	std::ifstream lutfd (centerLut, ifstream::ate|ifstream::binary);
+	std::ifstream lutfd (centerLut.string(), ifstream::ate|ifstream::binary);
 	const size_t lutfdsize = lutfd.tellg();
 	if (lutfdsize%sizeof(double) != 0)
 		throw runtime_error("File size is not correct");
@@ -109,13 +121,13 @@ OxfordDataset::loadModel()
 	distortionLUT_center.row(1).convertTo(distortionLUT_center_y, CV_32F);
 
 	// Camera intrinsic parameters
-	StringTable intr = create_table(centerIntrinsic);
+	StringTable intr = create_table(centerIntrinsic.string());
 	cameraCenter.fx = stod(intr.get(0,0));
 	cameraCenter.fy = stod(intr.get(0,1));
 	cameraCenter.cx = stod(intr.get(0,2));
 	cameraCenter.cy = stod(intr.get(0,3));
 
-	auto &d0 = at(0, true);
+	auto d0 = at(0, true);
 	cameraCenter.width = d0.center_image.cols;
 	cameraCenter.height = d0.center_image.rows;
 
