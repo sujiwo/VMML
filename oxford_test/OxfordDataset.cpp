@@ -83,7 +83,7 @@ OxfordDataset::at(const uint i, bool raw) const
 		cv::IMREAD_GRAYSCALE);
 
 	if (raw==false) {
-		cv::cvtColor(recz.center_image, recz.center_image, CV_BayerGB2RGB);
+		cv::cvtColor(recz.center_image, recz.center_image, CV_BayerGB2BGR);
 		cv::remap(recz.center_image, recz.center_image, distortionLUT_center_x, distortionLUT_center_y, cv::INTER_LINEAR);
 	}
 

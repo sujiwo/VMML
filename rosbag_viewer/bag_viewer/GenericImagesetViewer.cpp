@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <GenericImagesetViewer.h>
 #include <thread>
 #include <iostream>
 #include <QString>
@@ -12,7 +13,6 @@
 #include <QClipboard>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include "GenericImagesetViewer.h"
 #include "ui_GenericImagesetViewer.h"
 
 

@@ -14,10 +14,10 @@
 #include <opencv2/core.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
-
-#include "ClickableLabel.h"
 #include <QMainWindow>
-#include "ratio_layouted_frame.h"
+#include <ClickableLabel.h>
+#include <ratio_layouted_frame.h>
+
 
 namespace Ui {
 class GenericImagesetViewer;

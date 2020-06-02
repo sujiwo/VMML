@@ -13,6 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_ros
 	rosbag_storage)
 
+# XXX: Make Qt optional.
+# if it's not found,
+# do not compile bag viewer and its library
+
 #find_package(Qt5 REQUIRED Core Widgets)
 find_package (Qt5Core CONFIG REQUIRED)
 find_package (Qt5Widgets CONFIG REQUIRED)
@@ -56,10 +60,12 @@ add_library(
 	generic_imageset_viewer
 		bag_viewer/GenericImagesetViewer.cpp
 		bag_viewer/ratio_layouted_frame.cpp
-#		bag_viewer/ratio_layouted_frame.h
 		bag_viewer/GenericImagesetViewer.ui
 		bag_viewer/ClickableLabel.cpp
-		bag_viewer/ClickableLabel.h
+		# Don't know why must include these header in build command
+		include/GenericImagesetViewer.h
+		include/ratio_layouted_frame.h
+		include/ClickableLabel.h
 )
 
 target_link_libraries(
@@ -80,28 +86,6 @@ target_link_libraries(
 		${catkin_LIBRARIES}
 )
 
-add_executable(bag_viewer
-	bag_viewer/main.cpp
-	bag_viewer/BagViewer.cpp
-	bag_viewer/ClickableLabel.cpp
- 	bag_viewer/ratio_layouted_frame.cpp
-# 	bag_viewer/ratio_layouted_frame.h
-	bag_viewer/BagViewer.ui
-	bag_viewer/ClickableLabel.h
-)
-
-target_link_libraries(
-	bag_viewer
-		random_access_bag
-		${catkin_LIBRARIES}
-		Qt5::Widgets
-		${OpenCV_LIBS}
-)
-
-target_include_directories(bag_viewer
-	PUBLIC bag_viewer
-)
-
 install(
 	FILES include/RandomAccessBag.h 
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
@@ -114,15 +98,14 @@ install(
 )
 
 install(
-	TARGETS bag_viewer
-	RUNTIME
-		DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(
 	TARGETS generic_imageset_viewer
 	LIBRARY
 		DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(
+	FILES include/GenericImagesetViewer.h include/ClickableLabel.h include/ratio_layouted_frame.h
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 install(

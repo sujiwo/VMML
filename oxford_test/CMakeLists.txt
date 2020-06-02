@@ -31,6 +31,18 @@ target_link_libraries(
 		Boost::system
 )
 
+add_executable(viewer
+	viewer.cpp
+	OxfordDataset.cpp
+)
+
+target_link_libraries(
+	viewer
+		generic_imageset_viewer
+		${catkin_LIBRARIES}
+		Boost::system
+)
+
 install(
 	TARGETS oxford_open
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -40,4 +52,9 @@ install(
 	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/model
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 	FILES_MATCHING PATTERN *
+)
+
+install(
+	TARGETS viewer
+		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

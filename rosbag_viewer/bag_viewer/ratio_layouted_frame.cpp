@@ -30,10 +30,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ratio_layouted_frame.h"
-
 #include <QMouseEvent>
 #include <assert.h>
+#include <ratio_layouted_frame.h>
 
 RatioLayoutedFrame::RatioLayoutedFrame(QWidget *parent, Qt::WindowFlags flags)
     : QFrame(), outer_layout_(NULL), aspect_ratio_(4, 3), smoothImage_(false) {

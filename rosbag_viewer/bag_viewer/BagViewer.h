@@ -33,17 +33,16 @@
 #ifndef BAGVIEWER_H
 #define BAGVIEWER_H
 
+#include <ClickableLabel.h>
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "ClickableLabel.h"
 #include <QMainWindow>
-#include "ratio_layouted_frame.h"
-
 #include <rosbag/bag.h>
 
 #include <opencv2/opencv.hpp>
+#include <ratio_layouted_frame.h>
 
 #include "RandomAccessBag.h"
 

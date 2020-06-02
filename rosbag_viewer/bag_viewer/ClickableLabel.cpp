@@ -37,7 +37,7 @@
  *      Author: sujiwo
  */
 
-#include "ClickableLabel.h"
+#include <ClickableLabel.h>
 
 ClickableLabel::ClickableLabel(QWidget *parent, Qt::WindowFlags f)
     : QLabel(parent, f) {}
