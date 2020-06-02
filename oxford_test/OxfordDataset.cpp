@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <algorithm>
 #include <fstream>
 #include <opencv2/highgui.hpp>
 #include <ros/package.h>
@@ -136,6 +137,51 @@ OxfordDataset::loadModel()
 	distortionLUT_center_x = distortionLUT_center_x.reshape(0, cameraCenter.height);
 	distortionLUT_center_y = distortionLUT_center_y.reshape(0, cameraCenter.height);
 }
+
+
+float
+OxfordDataset::hz() const
+{
+	return float(size()) / Vmml::toSeconds(length());
+}
+
+
+std::vector<uint32_t>
+OxfordDataset::desample(const float hz) const
+{
+	vector<uint32_t> resampled;
+
+	const double lengthInSeconds = Vmml::toSeconds(length());
+
+	uint posWk = 0, nextWk;
+	const double tIntrv = 1.0 / hz;
+	for (double twork=0.0; twork<lengthInSeconds; twork+=1.0) {
+		double tMax = min(twork+1.0, lengthInSeconds);
+		double tm = twork+tIntrv;
+		while (tm < tMax) {
+			uint p = getPositionAtDurationSecond(tm);
+			resampled.push_back(p);
+			tm += tIntrv;
+		}
+	}
+
+	return resampled;
+}
+
+
+uint
+OxfordDataset::getPositionAtDurationSecond(const float &tm) const
+{
+	auto td = Vmml::durationFromSeconds(tm);
+	auto ctime = fromOxfordTimestamp(stereoTimestamps.front()) + td;
+	assert (ctime <= fromOxfordTimestamp(stereoTimestamps.back()));
+
+	timestamp_t tx = toOxfordTimestamp(ctime);
+	auto it = std::lower_bound(stereoTimestamps.begin(), stereoTimestamps.end(), tx);
+
+	return it-stereoTimestamps.begin();
+}
+
 
 } /* namespace oxf */
 

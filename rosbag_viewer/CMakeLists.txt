@@ -80,7 +80,6 @@ target_link_libraries(
 		${catkin_LIBRARIES}
 )
 
-
 add_executable(bag_viewer
 	bag_viewer/main.cpp
 	bag_viewer/BagViewer.cpp
@@ -105,7 +104,7 @@ target_include_directories(bag_viewer
 
 install(
 	FILES include/RandomAccessBag.h 
-	DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 install(
@@ -119,6 +118,24 @@ install(
 	RUNTIME
 		DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(
+	TARGETS generic_imageset_viewer
+	LIBRARY
+		DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(
+	TARGETS bagviewer2
+	RUNTIME
+		DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+INSTALL(
+	FILES bag_viewer/GenericImagesetViewer.ui
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 
 #if (CATKIN_ENABLE_TESTING)
 #	find_package(rostest REQUIRED)

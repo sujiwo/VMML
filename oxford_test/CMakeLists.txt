@@ -3,7 +3,7 @@ project(oxford_test)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp rosbag_viewer vision_core)
+find_package(catkin REQUIRED COMPONENTS roscpp rosbag_viewer vision_core cv_bridge)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 catkin_package(

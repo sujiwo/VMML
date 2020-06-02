@@ -52,6 +52,9 @@ public:
 
 	OxfordRecord at(const uint i, bool raw=false) const;
 
+	float hz() const;
+	std::vector<uint32_t> desample(const float hz) const;
+
 	Vmml::Trajectory getGroundTruth() const;
 	Vmml::Trajectory getImageGroundTruth() const;
 
@@ -66,6 +69,8 @@ protected:
 	Vmml::CameraPinholeParams cameraCenter;
 
 	cv::Mat distortionLUT_center_x, distortionLUT_center_y;
+
+	uint getPositionAtDurationSecond(const float &tm) const;
 
 	void loadTimestamps();
 	void loadModel();

@@ -20,6 +20,7 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
+#include "ui_GenericImagesetViewer.h"
 
 
 using namespace std;
@@ -29,6 +30,8 @@ using namespace DsViewer;
 class ImageBagDataset : public ImageDataset
 {
 public:
+	friend class BagViewer2;
+
 	void load (const string &bagpath)
 	{
 		bagFdPtr = std::shared_ptr<rosbag::Bag>(new rosbag::Bag(bagpath, rosbag::BagMode::Read));
@@ -96,18 +99,33 @@ public:
 		GenericImagesetViewer(parent),
 		topicSelector(new QComboBox)
 	{
-//		ui->controlLayout->addWidget(topicSelector);
+		ui->controlLayout->addWidget(topicSelector);
+		this->connect(topicSelector,
+			QOverload<int>::of(&QComboBox::currentIndexChanged),
+			[&](int index){topicSelector_currentIndexChanged(index);});
 	}
 
-/*
-	void setDatasource(std::shared_ptr<ImageDataset> &ds)
+	void setDatasource(std::shared_ptr<ImageBagDataset> &ds)
 	{
-
+		realDataset = ds;
+		imageTopics = realDataset->getImageTopics();
+		shared_ptr<ImageDataset> imgSetPtr = static_pointer_cast<ImageDataset>(ds);
+		GenericImagesetViewer::setDatasource(imgSetPtr);
+		for (auto &tp: imageTopics) {
+			topicSelector->addItem(QString(tp.c_str()));
+		}
 	}
-*/
+
+	void topicSelector_currentIndexChanged(int i)
+	{
+		realDataset->setActiveTopic(imageTopics[i]);
+		updateImage(0);
+	}
 
 private:
+	vector<string> imageTopics;
 	QComboBox *topicSelector;
+	std::shared_ptr<ImageBagDataset> realDataset;
 };
 
 
@@ -119,7 +137,7 @@ int main(int argc, char *argv[])
 	shared_ptr<ImageBagDataset> imgSet(new ImageBagDataset);
 	imgSet->load(argv[1]);
 	shared_ptr<ImageDataset> imgSetPtr = static_pointer_cast<ImageDataset>(imgSet);
-	viewer.setDatasource(imgSetPtr);
+	viewer.setDatasource(imgSet);
 
 	viewer.show();
 
