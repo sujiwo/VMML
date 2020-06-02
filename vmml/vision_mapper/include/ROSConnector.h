@@ -18,6 +18,7 @@
 #include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
 #include <image_transport/camera_publisher.h>
+#include <pcl/common/transforms.h>
 #include <pcl_ros/publisher.h>
 #include "vmml/CameraPinholeParams.h"
 #include "vmml/Pose.h"

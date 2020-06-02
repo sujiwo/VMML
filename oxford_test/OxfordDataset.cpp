@@ -69,25 +69,49 @@ OxfordDataset::loadTimestamps()
 }
 
 
+Vmml::Path
+OxfordDataset::imagePathAt(const uint n) const
+{
+	return dirpath
+		/ "stereo/centre"
+		/ (to_string(stereoTimestamps.at(n))+".png");
+}
+
+
 OxfordRecord
 OxfordDataset::at(const uint i, bool raw) const
 {
 	OxfordRecord recz;
 	recz.timestamp = fromOxfordTimestamp(stereoTimestamps.at(i));
 
-	auto imgPath = dirpath
-			/ "stereo/centre"
-			/ (to_string(stereoTimestamps.at(i))+".png");
+	auto imgPath = imagePathAt(i);
 	recz.center_image = cv::imread(
 		imgPath.string(),
 		cv::IMREAD_GRAYSCALE);
 
-	if (raw==false) {
+	// Skip treatment for invalid images
+	if (raw==false and recz.center_image.empty()==false) {
 		cv::cvtColor(recz.center_image, recz.center_image, CV_BayerGB2BGR);
 		cv::remap(recz.center_image, recz.center_image, distortionLUT_center_x, distortionLUT_center_y, cv::INTER_LINEAR);
 	}
 
 	return recz;
+}
+
+
+std::vector<bool>
+OxfordDataset::checkImages() const
+{
+	vector<bool> hasImages(stereoTimestamps.size(), true);
+
+	for (uint i=0; i<size(); ++i) {
+		auto imgPath = imagePathAt(i);
+		hasImages[i] = boost::filesystem::exists(imgPath);
+//		auto img = cv::imread(imgPath.string(), cv::IMREAD_GRAYSCALE);
+//		hasImages[i] = !img.empty();
+	}
+
+	return hasImages;
 }
 
 

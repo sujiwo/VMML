@@ -55,7 +55,7 @@ void
 ImagePipeline::setFixedFeatureMask(const string &imageMaskPath)
 {
 	cv::Mat mmask = cv::imread(imageMaskPath, cv::IMREAD_GRAYSCALE);
-	if (stdMask.empty()==true)
+	if (mmask.empty()==true)
 		throw runtime_error("Unable to open image ");
 	return setFixedFeatureMask(mmask);
 }

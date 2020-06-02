@@ -30,6 +30,23 @@ struct OxfordViewDataset : public DsViewer::ImageDataset
 		viewObj.id = i;
 		viewObj.image = dsObj.center_image;
 		viewObj.timestamp = dsObj.timestamp;
+
+		if (dsObj.center_image.empty()==true) {
+			// dummy image
+			viewObj.image = cv::Mat(rlDataObj->getCameraParameters().getImageSize(), CV_8UC3, cv::Scalar(0,0,0));
+/*
+			string text("Image not found");
+			int baseline;
+			auto txtsize = cv::getTextSize(text, cv::FONT_HERSHEY_COMPLEX, 1, 1, &baseline);
+			cv::putText(viewObj.image,
+				text,
+				cv::Point((viewObj.image.cols-txtsize.width)/2, (viewObj.image.rows-txtsize.height)/2),
+				cv::FONT_HERSHEY_COMPLEX,
+				1,
+				cv::Scalar(255,255,255), 1);
+*/
+		}
+
 		return viewObj;
 	}
 

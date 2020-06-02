@@ -58,6 +58,11 @@ public:
 	Vmml::Trajectory getGroundTruth() const;
 	Vmml::Trajectory getImageGroundTruth() const;
 
+	Vmml::CameraPinholeParams getCameraParameters() const
+	{ return cameraCenter; }
+
+	std::vector<bool> checkImages() const;
+
 protected:
 	Vmml::Path
 		dirpath,	// Directory for target dataset
@@ -71,6 +76,8 @@ protected:
 	cv::Mat distortionLUT_center_x, distortionLUT_center_y;
 
 	uint getPositionAtDurationSecond(const float &tm) const;
+
+	Vmml::Path imagePathAt(const uint n) const;
 
 	void loadTimestamps();
 	void loadModel();
