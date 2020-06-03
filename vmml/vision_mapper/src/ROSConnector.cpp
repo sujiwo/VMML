@@ -95,13 +95,27 @@ ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholePa
 		return -1;
 
 	ImagePublisher ip;
-	ip.publisher = imageTransport->advertiseCamera(basetopic, 1);
+
+	if (cameraParamsInp.width!=-1)
+		ip.publisherWithInfo = imageTransport->advertiseCamera(basetopic, 1);
+	else
+		ip.publisherNoInfo = imageTransport->advertise(basetopic, 1);
+
 	ip.frameId = frameIdName;
 	ip.cameraParams = createCameraInfoMsg(cameraParamsInp);
 	ip.cameraParams.header.frame_id = ip.frameId;
 	imgPublishers.push_back(ip);
 	auto id=imgPublishers.size()-1;
+
 	return id;
+}
+
+std::string ROSConnector::ImagePublisher::topic() const
+{
+	if (cameraParams.width==-1)
+		return publisherNoInfo.getTopic();
+	else
+		return publisherWithInfo.getTopic();
 }
 
 void
@@ -126,7 +140,7 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 	if (imgPub.cameraParams.width!=-1 and imgPub.cameraParams.width!=imgSrc.cols) {
 		cv::resize(imgSrc, img, cv::Size(imgPub.cameraParams.width, imgPub.cameraParams.height));
 	}
-	else img = imgSrc;
+	else img = imgSrc.clone();
 
 	cv_bridge::CvImage cvImg;
 	if (img.channels()==3)
@@ -137,9 +151,14 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 	cvImg.image = img;
 	cvImg.header.stamp = t;
 	cvImg.header.frame_id = imgPub.frameId;
-	auto camInfo = imgPub.cameraParams;
-	camInfo.header.stamp = t;
-	imgPub.publisher.publish(*cvImg.toImageMsg(), camInfo, t);
+
+	if (imgPub.cameraParams.width!=-1) {
+		auto camInfo = imgPub.cameraParams;
+		camInfo.header.stamp = t;
+		imgPub.publisherWithInfo.publish(*cvImg.toImageMsg(), camInfo);
+	}
+	else
+		imgPub.publisherNoInfo.publish(*cvImg.toImageMsg());
 }
 
 

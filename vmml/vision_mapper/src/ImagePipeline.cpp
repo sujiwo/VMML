@@ -115,6 +115,39 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _
 	semanticSegmentThread.join();
 }
 
+/*
+void
+ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _maskTarget)
+{
+	cv::Mat imageInput;
+
+	if (resizeFactor!=1.0)
+		cv::resize(imageRgb, imageInput, cv::Size(), resizeFactor, resizeFactor);
+	else
+		imageInput = imageRgb;
+
+		if (retinexPrc!=nullptr)
+			imageOut = retinexPrc->run(imageInput);
+		else
+			imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput, gammaMeteringMask);
+
+	if (_maskTarget.needed()) {
+		cv::Mat mask;
+		if (gSegment==NULL)
+			mask = stdMaskResized.clone();
+		else {
+			cv::Mat ssMask = gSegment->buildMask(imageInput);
+			if (stdMaskResized.empty()==false)
+				mask = stdMaskResized & ssMask;
+			else mask = ssMask;
+			cv::resize(mask, mask, imageInput.size(), 0, 0, cv::INTER_NEAREST);
+		}
+		mask.copyTo(_maskTarget);
+	}
+}
+*/
+
+
 
 void
 ImagePipeline::runRaw(const cv::Mat &imageRawSource, cv::Mat &imageOut, cv::Mat &mask)

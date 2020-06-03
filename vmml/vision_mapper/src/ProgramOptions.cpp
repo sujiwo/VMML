@@ -245,7 +245,7 @@ ProgramOptions::openInputs()
 			topicList.push_back(tp.first);
 
 			// Guess image topic
-			if (tp.second=="sensor_msgs/Image" and imageTopic.empty())
+			if ((tp.second=="sensor_msgs/Image" or tp.second=="sensor_msgs/CompressedImage") and imageTopic.empty())
 				imageTopic = tp.first;
 
 			// Guess lidar topic

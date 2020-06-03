@@ -6,7 +6,7 @@ set (CMAKE_MODULE_PATH
 		"${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 set (CMAKE_INCLUDE_CURRENT_DIR		ON)
 
-add_compile_options(-std=c++11 -frtti -fopenmp)
+add_compile_options(-std=c++11 -frtti -fopenmp -pthread)
 
 find_package(catkin REQUIRED COMPONENTS 
 	roscpp

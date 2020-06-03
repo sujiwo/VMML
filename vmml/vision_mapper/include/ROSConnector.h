@@ -54,10 +54,11 @@ public:
 	 * These functions automate publishing of image and corresponding cameraInfo, if any.
 	 */
 	struct ImagePublisher {
-		image_transport::CameraPublisher publisher;
+		image_transport::CameraPublisher publisherWithInfo;
+		image_transport::Publisher publisherNoInfo;
 		sensor_msgs::CameraInfo cameraParams;
 		std::string frameId;
-		std::string topic() const { return publisher.getTopic(); }
+		std::string topic() const;
 	};
 	PublisherId createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams(), const std::string &frameIdName="");
 	void setCameraParam(PublisherId publisherId, const CameraPinholeParams &cam);

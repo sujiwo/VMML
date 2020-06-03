@@ -98,7 +98,9 @@ operator <<( std::ostream &os, const CameraPinholeParams &cam)
 		<< "Width: " << cam.width << endl
 		<< "Height: " << cam.height << endl
 		<< "FX: " << cam.fx << endl
-		<< "FY: " << cam.fy << endl;
+		<< "FY: " << cam.fy << endl
+		<< "CX: " << cam.cx << endl
+		<< "CY: " << cam.cy << endl;
 	return os;
 }
 

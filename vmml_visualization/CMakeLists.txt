@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vmml_visualization)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -pthread)
 
 find_package (OpenCV 3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS

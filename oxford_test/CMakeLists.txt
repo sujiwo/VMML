@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(oxford_test)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -pthread)
 
 find_package(catkin REQUIRED COMPONENTS roscpp rosbag_viewer vision_core vision_mapper)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
@@ -65,6 +65,17 @@ target_link_libraries(
 		Boost::system
 )
 
+add_executable(tobag
+	tobag.cpp
+	OxfordDataset.cpp
+)
+
+target_link_libraries(
+	tobag
+		${catkin_LIBRARIES}
+		Boost::system
+)
+
 
 install(
 	TARGETS oxford_open
@@ -79,5 +90,10 @@ install(
 
 install(
 	TARGETS viewer
+		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(
+	TARGETS oxf_index_mapper
 		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

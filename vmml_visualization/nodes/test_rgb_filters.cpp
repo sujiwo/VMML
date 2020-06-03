@@ -65,17 +65,16 @@ cv::Mat imagePipelineRun (const cv::Mat &srcRgb)
 	imgPipe->run(srcRgb, imageReady, mask);
 	cv::Mat srcRgbResz;
 	cv::resize(srcRgb, srcRgbResz, cv::Size(), imgPipe->getResizeFactor(), imgPipe->getResizeFactor());
-	cv::Mat illImage = ImagePreprocessor::toIlluminatiInvariantRGB(srcRgbResz, alpha);
 
 	// Detector Test
 	std::vector<cv::KeyPoint> kpList;
 	cv::Mat descriptors, drawFrameKeypts;
 	orbDetector->detectAndCompute(
-		illImage,
+			srcRgbResz,
 		mask,
 		kpList,
 		descriptors);
-	cv::drawKeypoints(illImage, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
+	cv::drawKeypoints(srcRgbResz, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
 
 	return drawFrameKeypts;
 }

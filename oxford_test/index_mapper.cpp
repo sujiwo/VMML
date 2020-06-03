@@ -53,10 +53,10 @@ int main (int argc, char *argv[])
 
 	for (int i=0; i<targetFrames.size(); ++i) {
 
+		cv::Mat mask, imageReady, imageBgr;
 		auto oxRecord = dataSrc.at(targetFrames[i]);
-		cv::cvtColor(oxRecord.center_image, oxRecord.center_image, cv::COLOR_RGB2BGR);
+//		cv::cvtColor(oxRecord.center_image, imageBgr, cv::COLOR_RGB2BGR);
 
-		cv::Mat mask, imageReady;
 		imagePipe.run(oxRecord.center_image, imageReady, mask);
 
 		rosPub.publishImage(imageReady, pubId, ros::Time::fromBoost(oxRecord.timestamp));

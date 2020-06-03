@@ -21,7 +21,9 @@ namespace Vmml {
 
 ImageBag::ImageBag(const rosbag::Bag &bag, const std::string &imageTopic) :
 	RandomAccessBag(bag, imageTopic)
-{}
+{
+	isCompressed = messageType()=="sensor_msgs/CompressedImage";
+}
 
 
 ImageBag::~ImageBag()
@@ -31,14 +33,35 @@ ImageBag::~ImageBag()
 cv::Mat
 ImageBag::at(unsigned int position, bool raw)
 {
-	auto bImageMsg = RandomAccessBag::at<sensor_msgs::Image>(position);
-
 	cv_bridge::CvImagePtr imgPtr;
-	if (raw==true)
-		imgPtr = cv_bridge::toCvCopy(*bImageMsg);
-	else
-		imgPtr = cv_bridge::toCvCopy(*bImageMsg, sensor_msgs::image_encodings::BGR8);
+
+	if (!isCompressed) {
+		auto bImageMsg = RandomAccessBag::at<sensor_msgs::Image>(position);
+		if (raw==true)
+			imgPtr = cv_bridge::toCvCopy(*bImageMsg);
+		else
+			imgPtr = cv_bridge::toCvCopy(*bImageMsg, sensor_msgs::image_encodings::BGR8);
+	}
+
+	// Raw does not apply here
+	else {
+		auto cImageMsg = RandomAccessBag::at<sensor_msgs::CompressedImage>(position);
+		imgPtr = cv_bridge::toCvCopy(*cImageMsg, sensor_msgs::image_encodings::BGR8);
+	}
+
 	return imgPtr->image;
+}
+
+
+sensor_msgs::ImageConstPtr ImageBag::getMessage(uint position)
+{
+	if (isCompressed) {
+		auto cImageMsg = RandomAccessBag::at<sensor_msgs::CompressedImage>(position);
+		return cv_bridge::toCvCopy(*cImageMsg)->toImageMsg();
+	}
+	else {
+		return RandomAccessBag::at<sensor_msgs::Image>(position);
+	}
 }
 
 
