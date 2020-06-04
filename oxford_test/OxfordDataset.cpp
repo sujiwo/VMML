@@ -14,6 +14,7 @@
 
 
 using namespace std;
+using Vmml::PoseStamped;
 
 
 namespace oxf {
@@ -44,6 +45,7 @@ OxfordDataset::OxfordDataset(const std::string &path) :
 {
 	loadTimestamps();
 	loadModel();
+	loadGps();
 }
 
 
@@ -75,6 +77,97 @@ OxfordDataset::imagePathAt(const uint n) const
 	return dirpath
 		/ "stereo/centre"
 		/ (to_string(stereoTimestamps.at(n))+".png");
+}
+
+
+static const set<int> GpsColumns ({0,9,8,4,2,3});
+/*
+ * These are the columns of INS pose table that are currently used:
+ * - timestamp
+ * - easting
+ * - northing
+ * - altitude
+ * - roll
+ * - pitch
+ * - yaw
+ * - velocity_east
+ * - velocity_north
+ * - velocity_down
+ * - latitude
+ * - longitude
+ */
+static const set<int> InsColumns ({0,6,5,4,12,13,14,10,9,11,2,3});
+
+void
+OxfordDataset::loadGps()
+{
+	const auto gpsFilePath = dirpath / "gps/gps.csv";
+	StringTable GPS_s = create_table(gpsFilePath.string(), GpsColumns, true);
+	size_t ss = GPS_s.size();
+	gpsPoseTable.resize(ss);
+
+	for (uint i=0; i<ss; i++) {
+		GpsPose ps;
+			ps.timestamp = stoul(GPS_s.get(i, "timestamp"));
+			ps.easting = stod(GPS_s.get(i, "easting"));
+			ps.northing = stod(GPS_s.get(i, "northing"));
+			ps.altitude = stod(GPS_s.get(i, "altitude"));
+			ps.latitude = stod(GPS_s.get(i, "latitude"));
+			ps.longitude = stod(GPS_s.get(i, "longitude"));
+		gpsPoseTable[i] = ps;
+	}
+
+	const auto insFilePath = dirpath / "gps/ins.csv";
+	StringTable INS_s = create_table(insFilePath.string(), InsColumns, true);
+	ss = INS_s.size();
+	insPoseTable.resize(ss);
+
+	for (uint i=0; i<ss; i++) {
+		InsPose is;
+			is.timestamp = stoul(INS_s.get(i, "timestamp"));
+			is.easting = stod(INS_s.get(i, "easting"));
+			is.northing = stod(INS_s.get(i, "northing"));
+			is.altitude = stod(INS_s.get(i, "altitude"));
+			is.latitude = stod(INS_s.get(i, "latitude"));
+			is.longitude = stod(INS_s.get(i, "longitude"));
+			is.roll = stod(INS_s.get(i, "roll"));
+
+			// Correct pitch & yaw rotations to more sensible ROS convention;
+			// otherwise you will have problems later
+			is.pitch = -stod(INS_s.get(i, "pitch"));
+			is.yaw = -stod(INS_s.get(i, "yaw"));
+
+			// Velocity
+			is.velocity_north = stod(INS_s.get(i, "velocity_north"));
+			is.velocity_east = stod(INS_s.get(i, "velocity_east"));
+			is.velocity_up = -stod(INS_s.get(i, "velocity_down"));
+
+		insPoseTable[i] = is;
+	}
+}
+
+
+Vmml::PoseStamped
+OxfordDataset::InsPose::toPose() const
+{
+	Eigen::Vector3d pos(easting, northing, altitude);
+	auto q = Vmml::fromRPY(roll, pitch, yaw);
+	return PoseStamped(pos, q, fromOxfordTimestamp(timestamp));
+}
+
+
+Vmml::Trajectory
+OxfordDataset::getInsTrajectory() const
+{
+	Vmml::Trajectory gpsTrack;
+
+	for (uint i=0; i<insPoseTable.size(); ++i) {
+		auto &psGps = insPoseTable.at(i);
+		PoseStamped pxGps = psGps.toPose();
+		gpsTrack.push_back(pxGps);
+	}
+
+	return gpsTrack;
 }
 
 

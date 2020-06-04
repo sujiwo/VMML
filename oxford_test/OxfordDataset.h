@@ -63,6 +63,37 @@ public:
 
 	std::vector<bool> checkImages() const;
 
+	Vmml::Trajectory getInsTrajectory() const;
+
+	struct GpsPose
+	{
+		timestamp_t timestamp;
+		double
+			easting,
+			northing,
+			altitude,
+			latitude,
+			longitude;
+
+		double
+			velocity_east=0,	// X
+			velocity_north=0,	// Y
+			velocity_up=0;		// Z
+
+		inline Eigen::Vector3d velocity() const
+		{ return Eigen::Vector3d(velocity_east, velocity_north, velocity_up); }
+	};
+
+	struct InsPose : public GpsPose
+	{
+		double
+			roll,
+			pitch,
+			yaw;
+
+		Vmml::PoseStamped toPose() const;
+	};
+
 protected:
 	Vmml::Path
 		dirpath,	// Directory for target dataset
@@ -81,6 +112,11 @@ protected:
 
 	void loadTimestamps();
 	void loadModel();
+	void loadGps();
+
+	std::vector<GpsPose> gpsPoseTable;
+	std::vector<InsPose> insPoseTable;
+
 };
 
 } /* namespace oxf */
