@@ -207,10 +207,6 @@ int main(int argc, char *argv[])
 		ptime imageTimestamp = images.timeAt(imageBagId).toBoost();
 		curFrame->computeFeatures(bFeats, mask);
 
-		auto imagePosByGnss = (imageTimestamp<trackGnss.front().timestamp or imageTimestamp>trackGnss.back().timestamp) ?
-			trackGnss.extrapolate(imageTimestamp) :
-			trackGnss.interpolate(imageTimestamp);
-
 		auto t1 = getCurrentTime();
 		if (keyframeId==0) {
 			// No checks
@@ -222,8 +218,14 @@ int main(int argc, char *argv[])
 		auto t2 = getCurrentTime();
 
 		rosConn.publishKeyPointsInFrame(*curFrame);
-		trackImage.push_back(imagePosByGnss);
-		rosConn.publishTrajectory(trackImage, ros::Time::fromBoost(imageTimestamp));
+
+		if (!trackGnss.empty()) {
+			auto imagePosByGnss = (imageTimestamp<trackGnss.front().timestamp or imageTimestamp>trackGnss.back().timestamp) ?
+				trackGnss.extrapolate(imageTimestamp) :
+				trackGnss.interpolate(imageTimestamp);
+			trackImage.push_back(imagePosByGnss);
+			rosConn.publishTrajectory(trackImage, ros::Time::fromBoost(imageTimestamp));
+		}
 
 		cout << ", " << toSeconds(t2-t1) << endl;
 		imageDb.keyframeIdToBag[keyframeId] = images.getOriginalZeroIndex()+imageBagId;
