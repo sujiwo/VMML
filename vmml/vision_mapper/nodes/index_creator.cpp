@@ -175,9 +175,11 @@ int main(int argc, char *argv[])
 
 	auto camera0 = progOptions.getWorkingCameraParameter();
 
+	Trajectory trackGnss;
+
 	try {
 		auto gnssTopic = selectTopicForGnssLocalization(mybag);
-		auto trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
+		trackGnss = TrajectoryGNSS::fromRosBagSatFix(mybag, gnssTopic);
 		trackGnss.transform(progOptions.getGnssOffset());
 		trackGnss.dump((progOptions.getWorkDir()/"gnss.csv").string());
 		cout << "GNSS dumped to " << (progOptions.getWorkDir()/"gnss.csv").string() << endl;
