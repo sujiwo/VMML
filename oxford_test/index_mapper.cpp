@@ -56,7 +56,7 @@ public:
 		imgPipe.setFixedFeatureMask((packg/"model/oxford_mask.png").string());
 		targetFrames = dataSrc.desample(7.0);
 
-		imgPub = rosCon.createImagePublisher("oxford", Vmml::CameraPinholeParams(), "center");
+		imgPub = rosCon.createImagePublisher("oxford", dataSrc.getCameraParameters(), "center");
 
 		vehicleTrack = dataSrc.getInsTrajectory();
 	}
@@ -69,9 +69,9 @@ public:
 			auto oxRecord = dataSrc.at(targetFrames[i]);
 	//		cv::cvtColor(oxRecord.center_image, imageBgr, cv::COLOR_RGB2BGR);
 
-			imgPipe.run(oxRecord.center_image, imageReady, mask);
+//			imgPipe.run(oxRecord.center_image, imageReady, mask);
 
-//			rosCon.publishImage(imageReady, imgPub, ros::Time::fromBoost(oxRecord.timestamp));
+			rosCon.publishImage(oxRecord.center_image, imgPub, ros::Time::fromBoost(oxRecord.timestamp));
 			cout << targetFrames[i] << endl;
 		}
 	}

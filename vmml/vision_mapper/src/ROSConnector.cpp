@@ -52,8 +52,14 @@ ROSConnector::createCameraInfoMsg (const CameraPinholeParams &c)
 {
 	sensor_msgs::CameraInfo info;
 //	info.distortion_model = "plump_bob";
-	info.width = c.width;
-	info.height = c.height;
+	if (c.width!=-1) {
+		info.width = c.width;
+		info.height = c.height;
+	} else {
+		info.width = 0;
+		info.height = 0;
+	}
+
 	auto K = c.toMatrix3();
 	auto P = c.toMatrix();
 	copyToArray(K, info.K);
@@ -112,7 +118,7 @@ ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholePa
 
 std::string ROSConnector::ImagePublisher::topic() const
 {
-	if (cameraParams.width==-1)
+	if (cameraParams.width==0)
 		return publisherNoInfo.getTopic();
 	else
 		return publisherWithInfo.getTopic();
@@ -121,7 +127,7 @@ std::string ROSConnector::ImagePublisher::topic() const
 void
 ROSConnector::setCameraParam(int publisherId, const CameraPinholeParams &cam)
 {
-	if (cam.width!=-1) {
+	if (cam.width!=0) {
 		imgPublishers.at(publisherId).cameraParams = createCameraInfoMsg(cam);
 	}
 }
@@ -137,7 +143,7 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 
 	auto &imgPub = imgPublishers.at(publisherId);
 	cv::Mat img;
-	if (imgPub.cameraParams.width!=-1 and imgPub.cameraParams.width!=imgSrc.cols) {
+	if (imgPub.cameraParams.width!=0 and imgPub.cameraParams.width!=imgSrc.cols) {
 		cv::resize(imgSrc, img, cv::Size(imgPub.cameraParams.width, imgPub.cameraParams.height));
 	}
 	else img = imgSrc.clone();
@@ -152,7 +158,7 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 	cvImg.header.stamp = t;
 	cvImg.header.frame_id = imgPub.frameId;
 
-	if (imgPub.cameraParams.width!=-1) {
+	if (imgPub.cameraParams.width!=0) {
 		auto camInfo = imgPub.cameraParams;
 		camInfo.header.stamp = t;
 		imgPub.publisherWithInfo.publish(*cvImg.toImageMsg(), camInfo);
