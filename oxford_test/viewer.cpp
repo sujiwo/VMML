@@ -28,7 +28,7 @@ struct OxfordViewDataset : public DsViewer::ImageDataset
 		auto dsObj = rlDataObj->at(i);
 		DsViewer::ImageDatasetObject viewObj;
 		viewObj.id = i;
-		viewObj.image = dsObj.center_image;
+		cv::cvtColor(dsObj.center_image, viewObj.image, cv::COLOR_BGR2RGB);
 		viewObj.timestamp = dsObj.timestamp;
 
 		if (dsObj.center_image.empty()==true) {

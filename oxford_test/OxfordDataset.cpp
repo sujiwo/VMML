@@ -184,7 +184,7 @@ OxfordDataset::at(const uint i, bool raw) const
 
 	// Skip treatment for invalid images
 	if (raw==false and recz.center_image.empty()==false) {
-		cv::cvtColor(recz.center_image, recz.center_image, CV_BayerGB2BGR);
+		cv::cvtColor(recz.center_image, recz.center_image, CV_BayerGB2RGB);
 		cv::remap(recz.center_image, recz.center_image, distortionLUT_center_x, distortionLUT_center_y, cv::INTER_LINEAR);
 	}
 

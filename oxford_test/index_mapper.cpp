@@ -59,6 +59,9 @@ public:
 		imgPub = rosCon.createImagePublisher("oxford", dataSrc.getCameraParameters(), "center");
 
 		vehicleTrack = dataSrc.getInsTrajectory();
+
+		auto cam0 = dataSrc.getCameraParameters();
+		imgPipe.setIntendedInputSize(cam0.getImageSize());
 	}
 
 	void run()
@@ -94,8 +97,21 @@ int main (int argc, char *argv[])
 	OxfordDataset dataSrc(dataSrcPath.string());
 	ROSConnector rosPub(argc, argv, "oxford_index_mapper");
 
+//	XXX: passing reference to this class makes program crash. Why ?
+/*
 	IndexCreator indexImgCreator(rosPub, progOpts.getImagePipeline(), dataSrc);
 	indexImgCreator.run();
+*/
+	auto pubImg = rosPub.createImagePublisher("oxford", Vmml::CameraPinholeParams(), "center");
+	auto &pipeline = progOpts.getImagePipeline();
+	for (int i=0; i<dataSrc.size(); i++) {
+		auto record = dataSrc.at(i);
+		cv::Mat imageReady;
+		pipeline.run(record.center_image, imageReady);
+		rosPub.publishImage(imageReady, pubImg, ros::Time::now());
+		cout << i << " / " << dataSrc.size() << endl;
+	}
+
 
 	return 0;
 }
