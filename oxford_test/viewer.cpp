@@ -56,6 +56,9 @@ struct OxfordViewDataset : public DsViewer::ImageDataset
 	virtual tduration length() const
 	{ return rlDataObj->length(); }
 
+	string getName() const
+	{ return rlDataObj->getId(); }
+
 protected:
 	shared_ptr<OxfordDataset> rlDataObj;
 };
@@ -71,6 +74,8 @@ public:
 		dataSrc->load(path);
 		auto imgSetPtr = static_pointer_cast<DsViewer::ImageDataset>(dataSrc);
 		setDatasource(imgSetPtr);
+
+		setWindowTitle(QString::fromStdString("Oxford Dataset Viewer: "+dataSrc->getName()));
 	}
 
 protected:

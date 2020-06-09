@@ -26,21 +26,21 @@ namespace oxf {
 class IndexCreator
 {
 protected:
-ROSConnector &rosCon;
-Vmml::Mapper::ImagePipeline &imgPipe;
+ROSConnector *rosCon;
+Vmml::Mapper::ImagePipeline *imgPipe;
 vector<uint> targetFrames;
 Vmml::Path packg;
 cv::Ptr<cv::Feature2D> featureDetector;
-OxfordDataset &dataSrc;
+OxfordDataset *dataSrc;
 ROSConnector::PublisherId imgPub;
 Vmml::Trajectory vehicleTrack;
 
 public:
 	IndexCreator(ROSConnector &roscon_, Vmml::Mapper::ImagePipeline &imgPipe_, OxfordDataset &datasrc_):
-		rosCon(roscon_),
-		imgPipe(imgPipe_),
+		rosCon(&roscon_),
+		imgPipe(&imgPipe_),
 		packg(ros::package::getPath("oxford_test")),
-		dataSrc(datasrc_)
+		dataSrc(&datasrc_)
 	{
 		featureDetector = cv::ORB::create(
 			3000,
@@ -53,15 +53,15 @@ public:
 			31,
 			10);
 
-		imgPipe.setFixedFeatureMask((packg/"model/oxford_mask.png").string());
-		targetFrames = dataSrc.desample(7.0);
+		imgPipe->setFixedFeatureMask((packg/"model/oxford_mask.png").string());
+		targetFrames = dataSrc->desample(7.0);
 
-		imgPub = rosCon.createImagePublisher("oxford", dataSrc.getCameraParameters(), "center");
+		imgPub = rosCon->createImagePublisher("oxford", dataSrc->getCameraParameters(), "center");
 
-		vehicleTrack = dataSrc.getInsTrajectory();
+		vehicleTrack = dataSrc->getInsTrajectory();
 
-		auto cam0 = dataSrc.getCameraParameters();
-		imgPipe.setIntendedInputSize(cam0.getImageSize());
+		auto cam0 = dataSrc->getCameraParameters();
+		imgPipe->setIntendedInputSize(cam0.getImageSize());
 	}
 
 	void run()
@@ -69,12 +69,12 @@ public:
 		for (int i=0; i<targetFrames.size(); ++i) {
 
 			cv::Mat mask, imageReady, imageBgr;
-			auto oxRecord = dataSrc.at(targetFrames[i]);
+			auto oxRecord = dataSrc->at(targetFrames[i]);
 	//		cv::cvtColor(oxRecord.center_image, imageBgr, cv::COLOR_RGB2BGR);
 
 //			imgPipe.run(oxRecord.center_image, imageReady, mask);
 
-			rosCon.publishImage(oxRecord.center_image, imgPub, ros::Time::fromBoost(oxRecord.timestamp));
+			rosCon->publishImage(oxRecord.center_image, imgPub, ros::Time::fromBoost(oxRecord.timestamp));
 			cout << targetFrames[i] << endl;
 		}
 	}
@@ -102,6 +102,7 @@ int main (int argc, char *argv[])
 	IndexCreator indexImgCreator(rosPub, progOpts.getImagePipeline(), dataSrc);
 	indexImgCreator.run();
 */
+
 	auto pubImg = rosPub.createImagePublisher("oxford", Vmml::CameraPinholeParams(), "center");
 	auto &pipeline = progOpts.getImagePipeline();
 	for (int i=0; i<dataSrc.size(); i++) {
@@ -111,7 +112,6 @@ int main (int argc, char *argv[])
 		rosPub.publishImage(imageReady, pubImg, ros::Time::now());
 		cout << i << " / " << dataSrc.size() << endl;
 	}
-
 
 	return 0;
 }

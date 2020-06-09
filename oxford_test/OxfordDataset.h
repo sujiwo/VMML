@@ -94,6 +94,9 @@ public:
 		Vmml::PoseStamped toPose() const;
 	};
 
+	std::string getId() const
+	{ return boost::filesystem::basename(dirpath); }
+
 protected:
 	Vmml::Path
 		dirpath,	// Directory for target dataset
