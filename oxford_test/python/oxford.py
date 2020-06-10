@@ -63,9 +63,13 @@ class OxfordDataset:
         img = cv2.remap(img, self.distortion_LUT_center_x, self.distortion_LUT_center_y, cv2.INTER_LINEAR)
         return img
     
-    def getTime(self, i):
-        ts_microsec = int(self.timestamps[i])
+    @staticmethod
+    def timeFromMicrosecond(microsec):
+        ts_microsec = int(microsec)
         return rospy.Time(int(ts_microsec/1e6), nsecs=(ts_microsec%1e6)*1e3)
+    
+    def getTime(self, i):
+        return OxfordDataset.timeFromMicrosecond(self.timestamps[i])
     
     def getRaw(self, i):
         img = cv2.imread(str(self.getImagePath(i)), cv2.IMREAD_GRAYSCALE)
@@ -74,6 +78,19 @@ class OxfordDataset:
     def getImagePath(self, i):
         return self.path / "stereo/centre" / (str(self.timestamps[i])+'.png')
     
+#  * These are the columns of INS pose table that are currently used:
+#  0 - timestamp
+#  1 - easting
+#  2 - northing
+#  3 - altitude
+#  4 - roll
+#  5 - pitch
+#  6 - yaw
+#  7 - velocity_east
+#  8 - velocity_north
+#  9 - velocity_down
+#  10 - latitude
+#  11 - longitude
     def getIns(self, correctOrigin=False):
         insFilePath = self.path / "gps" / "ins.csv"
         insTable = np.loadtxt(str(insFilePath), skiprows=1, usecols=[0,6,5,4,12,13,14,10,9,11,2,3], delimiter=',')
@@ -88,14 +105,31 @@ class OxfordDataset:
         
         return insTable
     
-    def getImagePathFromINS(self, correctOrigin=False):
-        ins = self.getIns(correctOrigin)
+    def getImagePathFromINS(self, correctOrigin=False, source='ins'):
+        if (source=='ins'):
+            ins = self.getIns(correctOrigin)
+        elif (source=='ground_truth'):
+            ins = self.getGroundTruth(correctOrigin)
         
         def createPose(i):
             px = ins[i]
             return {
                 'position': np.array([px[1], px[2], px[3]]), 
-                'orientation': tfx.quaternion_from_euler(px[6], px[7], px[8])}
+                'orientation': tfx.quaternion_from_euler(px[6], px[7], px[8]),
+                'velocity': np.linalg.norm(px[7:10])}
+            
+        def createPoseInterpolate(i, j, ratio):
+            pose_i = createPose(i)
+            pose_j = createPose(j)
+            position = pose_i['position'] + ratio*(pose_j['position']-pose_i['position'])
+            orientation = tfx.quaternion_slerp(pose_i['orientation'], pose_j['orientation'], ratio)
+            v_i = ins[i, 7:10]
+            v_j = ins[j, 7:10]
+            v = v_i + ratio*(v_j - v_i)
+            return {
+                'position': position,
+                'orientation': orientation,
+                'velocity': np.linalg.norm(v)}
         
         poses = []
         for i in range(len(self.timestamps)):
@@ -105,12 +139,8 @@ class OxfordDataset:
                 poses.append(pose)
             else:
                 pt = bisect(ins[:,0], ctimestamp)
-                pose1 = createPose(pt-1)
-                pose2 = createPose(pt)
                 ratio = (ctimestamp-ins[pt-1,0]) / (ins[pt,0]-ins[pt-1,0])
-                position = pose1['position'] + ratio*(pose2['position']-pose1['position'])
-                orientation = tfx.quaternion_slerp(pose1['orientation'], pose2['orientation'], ratio)
-                poses.append({'position': position, 'orientation': orientation}) 
+                poses.append(createPoseInterpolate(pt-1, pt, ratio))
         return poses
         
     def getImagePathFromInsAsArray(self, correctOrigin=False):
@@ -119,16 +149,28 @@ class OxfordDataset:
                   p['orientation'][0],p['orientation'][1],p['orientation'][2],p['orientation'][3]] for p in track__ ]
         return np.array(track)
     
-    def getGroundTruth(self):
-        pass
+    def getGroundTruth(self, correctOrigin=False):
+        rtkPath = (self.path / '..' / 'ground_truth_rtk' / 'rtk' / self.path.name / 'rtk.csv').resolve()
+        if (rtkPath.is_file()==False):
+            raise IOError("Ground truth not available for "+self.path.name)
+        
+        gtTable = np.loadtxt(str(rtkPath), delimiter=',', skiprows=1, usecols=[0,5,4,3,11,12,13,9,8,10,1,2])
+        
+        # Correct for ROS
+        gtTable[:,7] = -gtTable[:,7]
+        gtTable[:,8] = -gtTable[:,8]
+        
+        if (correctOrigin==True):
+            gtTable[:,1] += OxfordDataset.OriginCorrectionEasting
+            gtTable[:,2] += OxfordDataset.OriginCorrectionNorthing
+
+        return gtTable
 
 
 
 if __name__ == "__main__":
     dataset = OxfordDataset("/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-03-17-11-08-44")
-    img1000 = dataset[1000]
-    tm = dataset.getTime(1000)
-    trajectory = dataset.getImagePathFromINS(True)
+    gtrtk = dataset.getGroundTruth()
     pass
     
     
