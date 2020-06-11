@@ -9,6 +9,7 @@ Created on Wed Jun 10 11:28:34 2020
 import numpy as np
 from scipy.stats import randint
 from pylab import plot, scatter
+import bisect
 import oxford
 
 
@@ -24,6 +25,28 @@ def buildSamples(dataset, ratio=0.01):
     scatter(samplePts[:,0], samplePts[:,1], s=9.0, c='Red')
 
     return samples
+
+def buildSamplesUniformDistance(dataset, ratio=0.01):
+    sampleNum = int(np.ceil(len(dataset)*ratio))
+    
+    # calculate total elapsed distance
+    trajectory = dataset.getImagePathFromINS(True)
+    elapsedDistsLst = [0.0]
+    elapsedDist = 0.0
+    for i in range(1, len(trajectory)):
+        d = np.linalg.norm(trajectory[i]['position'] - trajectory[i-1]['position'])
+        elapsedDist += d
+        elapsedDistsLst.append(elapsedDist)
+    
+    averageDist = elapsedDist / float(sampleNum)
+    candidates = []
+    d = 0
+    for i in range(sampleNum-1):
+        d += averageDist
+        j = bisect.bisect(elapsedDistsLst, d)
+        candidates.append(j)
+    
+    return candidates
 
 def searchAround(kdtSource, point, radius=5.0):
     cloudSingle = oxford.makePointCloudSingle(point)
@@ -56,11 +79,7 @@ def getGroundTruthForSamples(datasetTrain, datasetTest):
 
 
 if (__name__=='__main__'):
-    train = oxford.OxfordDataset('/media/sujiwo/VisionMapTest/Oxford-RobotCar/2014-11-18-13-20-12')
     test  = oxford.OxfordDataset('/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-04-24-08-15-07')
-    trainTrack = train.getImagePathFromINS(True)
-    kdtree = train.getOctree2(True)
-    testTrack  = test.getImagePathFromINS(True)
-    x = getGroundTruthForSample(trainTrack, kdtree, testTrack, 880)
+    buildSamplesUniformDistance(test, ratio=0.01)
     
     pass
