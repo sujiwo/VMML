@@ -9,13 +9,19 @@ from pathlib2 import Path as FsPath
 from nav_msgs.msg import Path as Trajectory
 from tf import transformations as tfx
 from bisect import bisect
+from octree import Octree, OctNode
+import pcl
+
+
+def makePointCloudSingle(point):
+    cloud = pcl.PointCloud()
+    cloud.from_list([[point[0], point[1], point[2]]])
+    return cloud
 
 
 class OxfordDataset:
     
-    path = None
     pkgpath = FsPath(rospkg.RosPack().get_path("oxford_test"))
-    timestamps = []
     distortionModel = None
     
     # These values are constants to shift X/Y coordinates to more `reasonable' values
@@ -23,6 +29,7 @@ class OxfordDataset:
     OriginCorrectionNorthing = -5734882.47
 
     def __init__(self, psrc):
+        self.timestamps = []
         self.path = FsPath(psrc)
         if (self.path.exists()==False):
             raise RuntimeError("Oxford dataset not found")
@@ -115,7 +122,7 @@ class OxfordDataset:
             px = ins[i]
             return {
                 'position': np.array([px[1], px[2], px[3]]), 
-                'orientation': tfx.quaternion_from_euler(px[6], px[7], px[8]),
+                'orientation': tfx.quaternion_from_euler(px[4], px[5], px[6]),
                 'velocity': np.linalg.norm(px[7:10])}
             
         def createPoseInterpolate(i, j, ratio):
@@ -134,8 +141,11 @@ class OxfordDataset:
         poses = []
         for i in range(len(self.timestamps)):
             ctimestamp = int(self.timestamps[i])
-            if (ctimestamp<ins[0,0]):
+            if (ctimestamp<=ins[0,0]):
                 pose = createPose(0)
+                poses.append(pose)
+            elif (ctimestamp>=ins[-1,0]):
+                pose = createPose(-1)
                 poses.append(pose)
             else:
                 pt = bisect(ins[:,0], ctimestamp)
@@ -165,12 +175,48 @@ class OxfordDataset:
             gtTable[:,2] += OxfordDataset.OriginCorrectionNorthing
 
         return gtTable
+    
+    def getOctree(self, correctOrigin=False):
+        
+        class FrameNode(object):
+            def __init__(self, id, position):
+                self.id=id
+                self.position = position
+        
+        framePositions = self.getImagePathFromInsAsArray(correctOrigin)
+        
+        # Find limits of coordinate
+        x_max = np.max(framePositions[:,0])
+        x_min = np.min(framePositions[:,0])
+        x_dif = x_max-x_min
+        y_max = np.max(framePositions[:,1])
+        y_min = np.min(framePositions[:,1])
+        y_dif = y_max-y_min
+        z_max = np.max(framePositions[:,2])
+        z_min = np.min(framePositions[:,2])
+        z_dif = z_max-z_min
+        
+        octree = Octree(np.max([x_dif, y_dif, z_dif]), 
+            origin=(x_min+x_dif/2, y_min+y_dif/2, z_min+z_dif/2))
+        for i in range(len(self)):
+            position = (framePositions[i,0], framePositions[i,1], framePositions[i,2])
+            frame = FrameNode(i, position)
+            octree.insertNode(position, frame)
+         
+        return octree 
+    
+    def getOctree2(self, correctOrigin=False):
+        framePositions = self.getImagePathFromInsAsArray(correctOrigin)
+        cloud = pcl.PointCloud()
+        cloud.from_array(np.float32(framePositions[:,0:3]))
+        kdt = cloud.make_kdtree_flann()
+        return kdt
 
 
 
 if __name__ == "__main__":
-    dataset = OxfordDataset("/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-03-17-11-08-44")
-    gtrtk = dataset.getGroundTruth()
+    dataset = OxfordDataset("/media/sujiwo/VisionMapTest/Oxford-RobotCar/2014-11-18-13-20-12")
+    oct = dataset.getImagePathFromINS(True, source='ground_truth')
     pass
     
     
