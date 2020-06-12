@@ -18,11 +18,11 @@ def buildSamples(dataset, ratio=0.01):
     samples = randint.rvs(0, len(dataset), size=sampleNum)
 
     # Try plot
-    ins = dataset.getImagePathFromInsAsArray(True)
-    
-    plot(ins[:,0], ins[:,1])
-    samplePts = np.array([ins[r,0:3] for r in samples ])
-    scatter(samplePts[:,0], samplePts[:,1], s=9.0, c='Red')
+#     ins = dataset.getImagePathFromInsAsArray(True)
+#     
+#     plot(ins[:,0], ins[:,1])
+#     samplePts = np.array([ins[r,0:3] for r in samples ])
+#     scatter(samplePts[:,0], samplePts[:,1], s=9.0, c='Red')
 
     return samples
 
@@ -74,8 +74,22 @@ def getGroundTruthForSample(datasetTrainTrajectory, datasetTrainKdtree, datasetT
     
     return validTargetPoints
 
-def getGroundTruthForSamples(datasetTrain, datasetTest):
-    pass
+def buildSamplesAndGroundTruth(datasetTrain, datasetTest, ratio=0.0075, uniformDistances=True, maxDistance=5.0):
+    trackTrain = datasetTrain.getImagePathFromINS()
+    trackTest  = datasetTest.getImagePathFromINS()
+    kdtTrain = datasetTrain.getOctree2()
+    
+    if uniformDistances:
+        samples = buildSamplesUniformDistance(datasetTest, ratio)
+    else:
+        samples = buildSamples(datasetTest, ratio)
+    
+    groundTruths = {}
+    for s in samples:
+        gt = getGroundTruthForSample(trackTrain, kdtTrain, trackTest, s, maxDistance)
+        groundTruths[s] = gt
+    
+    return samples, groundTruths
 
 
 if (__name__=='__main__'):
