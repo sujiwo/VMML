@@ -953,6 +953,7 @@ void ImageDatabase::purgeDescriptors(const uint curr_img)
 			if (inv_index_[desc].size() < min_feat_apps_) {
 				deleteDescriptor(desc);
 			}
+
 			it = recently_added_.erase(it);
 		} else {
 			// This descriptor should be maintained in the list

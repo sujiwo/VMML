@@ -10,6 +10,7 @@
 #include <exception>
 #include <ros/package.h>
 
+#include <vmml/ImageDatabase.h>
 #include "OxfordDataset.h"
 #include "ROSConnector.h"
 #include "ProgramOptions.h"
@@ -84,6 +85,19 @@ public:
 }	// namespace oxf
 
 
+cv::Ptr<cv::Feature2D> featureDetector =
+	cv::ORB::create(
+		3000,
+		1.2,
+		8,
+		31,
+		0,
+		2,
+		cv::ORB::HARRIS_SCORE,
+		31,
+		10);
+
+
 
 int main (int argc, char *argv[])
 {
@@ -97,7 +111,7 @@ int main (int argc, char *argv[])
 	OxfordDataset dataSrc(dataSrcPath.string());
 	ROSConnector rosPub(argc, argv, "oxford_index_mapper");
 
-//	XXX: passing reference to this class makes program crash. Why ?
+//	XXX: passing reference/pointer to this class makes program crash. Why ?
 /*
 	IndexCreator indexImgCreator(rosPub, progOpts.getImagePipeline(), dataSrc);
 	indexImgCreator.run();
@@ -105,13 +119,41 @@ int main (int argc, char *argv[])
 
 	auto pubImg = rosPub.createImagePublisher("oxford", Vmml::CameraPinholeParams(), "center");
 	auto &pipeline = progOpts.getImagePipeline();
-	for (int i=0; i<dataSrc.size(); i++) {
-		auto record = dataSrc.at(i);
-		cv::Mat imageReady;
-		pipeline.run(record.center_image, imageReady);
-		rosPub.publishImage(imageReady, pubImg, ros::Time::now());
-		cout << i << " / " << dataSrc.size() << endl;
+
+	Vmml::ImageDatabase imageDb;
+
+	auto dsSamples = dataSrc.desample(7.0);
+
+	uint keyframeId = 0;
+	for (auto s: dsSamples) {
+
+		auto record = dataSrc.at(s);
+		cv::Mat imagePrep, imageMask;
+		pipeline.run(record.center_image, imagePrep, imageMask);
+
+		cv::Mat descriptors;
+		vector<cv::KeyPoint> keypoints;
+		featureDetector->detectAndCompute(imagePrep, imageMask, keypoints, descriptors);
+
+		if (keyframeId==0) {
+			// No checks
+			imageDb.addImage(keyframeId, keypoints, descriptors);
+		}
+		else
+			// Perform checks
+			imageDb.addImage2(keyframeId, keypoints, descriptors);
+
+		rosPub.publishImage(imagePrep, pubImg, ros::Time::now());
+		cout << s << " / " << dataSrc.size() << endl;
+
+		imageDb.keyframeIdToBag[keyframeId] = s;
+		keyframeId+=1;
 	}
+
+	cout << "Done mapping\n";
+
+	imageDb.saveToDisk(mapTargetPath.string());
+	cout << "Saved to " << mapTargetPath.string() << endl;
 
 	return 0;
 }

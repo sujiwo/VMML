@@ -78,6 +78,7 @@ ImagePipeline::setSemanticSegmentation(const std::string &modelPath, const std::
 }
 
 
+/*
 void
 ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _maskTarget)
 {
@@ -111,11 +112,13 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _
 		mask.copyTo(_maskTarget);
 	});
 
+	cout << "Trying joining 1\n";
 	imageBrightnessThread.join();
+	cout << "Done joining 1\n";
 	semanticSegmentThread.join();
 }
+*/
 
-/*
 void
 ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _maskTarget)
 {
@@ -145,7 +148,6 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _
 		mask.copyTo(_maskTarget);
 	}
 }
-*/
 
 
 

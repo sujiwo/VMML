@@ -75,9 +75,9 @@ def getGroundTruthForSample(datasetTrainTrajectory, datasetTrainKdtree, datasetT
     return validTargetPoints
 
 def buildSamplesAndGroundTruth(datasetTrain, datasetTest, ratio=0.0075, uniformDistances=True, maxDistance=5.0):
-    trackTrain = datasetTrain.getImagePathFromINS()
-    trackTest  = datasetTest.getImagePathFromINS()
-    kdtTrain = datasetTrain.getOctree2()
+    trackTrain = datasetTrain.getImagePathFromINS(True)
+    trackTest  = datasetTest.getImagePathFromINS(True)
+    kdtTrain = datasetTrain.getOctree2(True)
     
     if uniformDistances:
         samples = buildSamplesUniformDistance(datasetTest, ratio)
@@ -93,7 +93,17 @@ def buildSamplesAndGroundTruth(datasetTrain, datasetTest, ratio=0.0075, uniformD
 
 
 if (__name__=='__main__'):
-    test  = oxford.OxfordDataset('/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-04-24-08-15-07')
-    buildSamplesUniformDistance(test, ratio=0.01)
-    
+    dsTrain = oxford.OxfordDataset('/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-07-29-13-09-26')
+    dsTest = oxford.OxfordDataset('/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-04-24-08-15-07')
+    sampleTest, groundTruth = buildSamplesAndGroundTruth(dsTrain, dsTest, ratio=0.01)
     pass
+
+
+# if (__name__=='__main__'):
+#     test  = oxford.OxfordDataset('/media/sujiwo/VisionMapTest/Oxford-RobotCar/2015-04-24-08-15-07')
+#     buildSamplesUniformDistance(test, ratio=0.01)
+#     
+#     pass
+
+
+
