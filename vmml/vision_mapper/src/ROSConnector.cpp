@@ -91,7 +91,27 @@ ROSConnector::ROSConnector(int argc, char *argv[], const std::string &nodeName, 
 
 ROSConnector::~ROSConnector()
 {
+	for (auto &imp: imgPublishers) {
+		if (imp.cameraParams.width==0)
+			imp.publisherNoInfo.shutdown();
+		else imp.publisherWithInfo.shutdown();
+	}
+
+	for (auto &trackPub: trackPublishers) {
+		trackPub.pub.shutdown();
+	}
+
+	imageTransport.reset();
+	hdl->shutdown();
 }
+
+
+ROSConnector::PublisherId
+ROSConnector::createImagePublisher(const std::string &topic, const std::string &frameIdName)
+{
+	return createImagePublisher(topic, CameraPinholeParams(), frameIdName);
+}
+
 
 int
 ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholeParams cameraParamsInp, const std::string &frameIdName)
@@ -102,13 +122,16 @@ ROSConnector::createImagePublisher(const std::string &basetopic, CameraPinholePa
 
 	ImagePublisher ip;
 
-	if (cameraParamsInp.width!=-1)
-		ip.publisherWithInfo = imageTransport->advertiseCamera(basetopic, 1);
-	else
-		ip.publisherNoInfo = imageTransport->advertise(basetopic, 1);
+	if (cameraParamsInp.width>0) {
+		ip.publisherWithInfo = imageTransport->advertiseCamera(basetopic, 10);
+		ip.cameraParams = createCameraInfoMsg(cameraParamsInp);
+	}
+	else {
+		ip.publisherNoInfo = imageTransport->advertise(basetopic, 10);
+	}
 
 	ip.frameId = frameIdName;
-	ip.cameraParams = createCameraInfoMsg(cameraParamsInp);
+
 	ip.cameraParams.header.frame_id = ip.frameId;
 	imgPublishers.push_back(ip);
 	auto id=imgPublishers.size()-1;
@@ -158,13 +181,15 @@ ROSConnector::publishImage(const cv::Mat &imgSrc, int publisherId, ros::Time t) 
 	cvImg.header.stamp = t;
 	cvImg.header.frame_id = imgPub.frameId;
 
+	auto imgPtr = cvImg.toImageMsg();
+
 	if (imgPub.cameraParams.width!=0) {
 		auto camInfo = imgPub.cameraParams;
 		camInfo.header.stamp = t;
-		imgPub.publisherWithInfo.publish(*cvImg.toImageMsg(), camInfo);
+		imgPub.publisherWithInfo.publish(*imgPtr, camInfo);
 	}
 	else
-		imgPub.publisherNoInfo.publish(*cvImg.toImageMsg());
+		imgPub.publisherNoInfo.publish(*imgPtr);
 }
 
 

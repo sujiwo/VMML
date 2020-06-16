@@ -53,13 +53,13 @@ target_link_libraries(
 		Boost::system
 )
 
-add_executable(oxf_index_mapper
+add_executable(index_mapper
 	index_mapper.cpp
 	OxfordDataset.cpp
 )
 
 target_link_libraries(
-	oxf_index_mapper
+	index_mapper
 		${catkin_LIBRARIES}
 		${Caffe_LIBRARIES}
 		Boost::system
@@ -94,6 +94,6 @@ install(
 )
 
 install(
-	TARGETS oxf_index_mapper
+	TARGETS index_mapper
 		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

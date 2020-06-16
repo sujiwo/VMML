@@ -15,6 +15,16 @@ bridge = CvBridge()
 
 keyframeDir = "./test_dir2/keyframes/"
 
+def runPlaceRecognizerImg(imageArray):
+    msg = bridge.cv2_to_imgmsg(imageArray, "bgr8")
+    t1 = time()
+    server = rospy.ServiceProxy('place_recognizer', place_recognizer)
+    placeResp = server(msg)
+    t2 = time()
+    timeRun = t2-t1
+    return placeResp.keyframeId, timeRun
+
+
 # XXX: The server may need proper image size
 def runPlaceRecognizer(inputFilePath):
     image = cv2.imread(inputFilePath)

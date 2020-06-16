@@ -129,6 +129,23 @@ ProgramOptions::parseCommandLineArgs(int argc, char *argv[])
 
 
 void
+ProgramOptions::removeOptions(const std::string &optName)
+{
+	auto &allOpts = const_cast<std::vector< boost::shared_ptr<boost::program_options::option_description> >&> (_options.options());
+	auto it = allOpts.begin();
+	while (it!=allOpts.end()) {
+		auto x=*it;
+		if (x->long_name()==optName) {
+			allOpts.erase(it);
+			return;
+		}
+		it++;
+	}
+	return;
+}
+
+
+void
 ProgramOptions::openWorkDir(const std::string &f)
 {
 	if (f.empty()) {

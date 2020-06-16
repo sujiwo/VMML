@@ -60,7 +60,9 @@ public:
 		std::string frameId;
 		std::string topic() const;
 	};
-	PublisherId createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams=CameraPinholeParams(), const std::string &frameIdName="");
+	PublisherId createImagePublisher(const std::string &topic, CameraPinholeParams cameraParams, const std::string &frameIdName="");
+	PublisherId createImagePublisher(const std::string &topic, const std::string &frameIdName="");
+
 	void setCameraParam(PublisherId publisherId, const CameraPinholeParams &cam);
 	void publishImage(const cv::Mat &img, PublisherId publisherId, ros::Time t=ros::TIME_MIN) const;
 	static sensor_msgs::CameraInfo createCameraInfoMsg (const CameraPinholeParams &c);

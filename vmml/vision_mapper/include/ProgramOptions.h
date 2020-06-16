@@ -79,8 +79,7 @@ public:
 	inline boost::program_options::options_description_easy_init addOptions()
 	{ return _options.add_options(); }
 
-	inline void removeOptions(const std::string &optName)
-	{ _optionValues.erase(optName); }
+	void removeOptions(const std::string &optName);
 
 	/*
 	 * Add an option. When user sets it, optionally its value will be stored to S

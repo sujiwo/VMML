@@ -5,7 +5,11 @@ import cv2
 import csv
 import rospy
 import rospkg
-from pathlib2 import Path as FsPath
+import sys
+if sys.version_info[0]==2:
+    from pathlib2 import Path as FsPath
+elif sys.version_info[0]==3:
+    from pathlib import Path as FsPath
 from nav_msgs.msg import Path as Trajectory
 from tf import transformations as tfx
 from bisect import bisect
