@@ -41,17 +41,29 @@ int main(int argc, char *argv[])
 	Vmml::Mapper::ProgramOptions progOpts;
 	Path dataSrcDir;
 
+	// Mapping options
+	double offsetStart=0, offsetStop=-1;
+	string mapFilename;
+	progOpts.addSimpleOptions("offset-start", "Start of dataset, default is 0", &offsetStart);
+	progOpts.addSimpleOptions("offset-stop", "Stop of dataset, default is end", &offsetStop);
+	progOpts.addSimpleOptions("map-name", "Filename for result map, stored in work directory; default to basename of datasource", &mapFilename);
+
 	progOpts.removeOptions("bag-file");
 	progOpts.addSimpleOptions("data-dir", "Path to Oxford data source directory", &dataSrcDir, true);
 	progOpts.parseCommandLineArgs(argc, argv);
 
-	auto targetMapfilename = progOpts.getWorkDir() / (boost::filesystem::basename(dataSrcDir) + ".map");
+	// Mapping setup begins
+	Path targetMapfilename;
+	if (mapFilename.empty())
+		targetMapfilename = progOpts.getWorkDir() / (boost::filesystem::basename(dataSrcDir) + ".map");
+	else targetMapfilename = progOpts.getWorkDir() / mapFilename;
 
 	OxfordDataset dataSrc(dataSrcDir.string());
-	auto sampleMaps = dataSrc.desample(6.0);
+	auto sampleMaps = dataSrc.desample(6.0, offsetStart, offsetStop);
 
 	auto &imagePipe = progOpts.getImagePipeline();
 	auto featureDetector = createFeatureDetector(progOpts);
+	// Mapping setup ends
 
 	auto pubId = rosCon.createImagePublisher("oxford", "center");
 	ImageDatabase imageDb;
@@ -83,6 +95,6 @@ int main(int argc, char *argv[])
 
 	cout << "Done mapping" << endl;
 	imageDb.saveToDisk(targetMapfilename.string());
-	cout << "Done saving to " << targetMapfilename.string() << endl;
+	cout << "Done saving to " << boost::filesystem::absolute(targetMapfilename).string() << endl;
 	return 0;
 }

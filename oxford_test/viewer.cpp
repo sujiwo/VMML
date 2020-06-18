@@ -86,9 +86,13 @@ protected:
 int main (int argc, char *argv[])
 {
 	QApplication mainApp(argc, argv);
-	OxfordViewer viewer(argv[1]);
 
-	viewer.show();
-
-	return mainApp.exec();
+	try {
+		OxfordViewer viewer(argv[1]);
+		viewer.show();
+		return mainApp.exec();
+	} catch (boost::filesystem::filesystem_error &e) {
+		cerr << "Unable to open datasource\n";
+		return -1;
+	}
 }

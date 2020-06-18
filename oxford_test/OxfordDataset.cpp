@@ -40,7 +40,7 @@ uint64_t toOxfordTimestamp (const ptime &t)
 
 
 OxfordDataset::OxfordDataset(const std::string &path) :
-	dirpath(path),
+	dirpath(boost::filesystem::canonical(path)),
 	pkgpath(ros::package::getPath("oxford_test"))
 {
 	loadTimestamps();
