@@ -75,8 +75,10 @@ public:
 	/*
 	 * This pipeline is intended for RGB (or BGR) image
 	 */
-//	void run(const cv::Mat &imageRgbSource, cv::Mat &imageOut, cv::Mat &mask);
 	void run(const cv::Mat &imageRgbSource, cv::Mat &imageOut, cv::OutputArray mask=cv::noArray());
+
+	// Single thread
+	void runSt(const cv::Mat &imageRgbSource, cv::Mat &imageOut, cv::OutputArray mask=cv::noArray());
 
 	/*
 	 * This pipeline is intended for RAW image, that needs demosaicing

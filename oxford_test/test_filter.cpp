@@ -1,6 +1,5 @@
 /*
- * index_mapper.cpp,
- * adjusted for Oxford Dataset
+ * test_filter.cpp,
  */
 
 #include <opencv2/features2d.hpp>
@@ -41,14 +40,16 @@ int main(int argc, char *argv[])
 	Vmml::Mapper::ProgramOptions progOpts;
 	Path dataSrcDir;
 
+	double offsetStart=0, offsetStop=-1;
+
 	progOpts.removeOptions("bag-file");
 	progOpts.addSimpleOptions("data-dir", "Path to Oxford data source directory", &dataSrcDir, true);
+	progOpts.addSimpleOptions("offset-start", "Start of dataset, default is 0", &offsetStart);
+	progOpts.addSimpleOptions("offset-stop", "Stop of dataset, default is end", &offsetStop);
 	progOpts.parseCommandLineArgs(argc, argv);
 
-	auto targetMapfilename = progOpts.getWorkDir() / (boost::filesystem::basename(dataSrcDir) + ".map");
-
 	OxfordDataset dataSrc(dataSrcDir.string());
-	auto sampleMaps = dataSrc.desample(6.0);
+	auto sampleMaps = dataSrc.desample(6.0, offsetStart, offsetStop);
 
 	auto &imagePipe = progOpts.getImagePipeline();
 	auto featureDetector = createFeatureDetector(progOpts);
@@ -68,21 +69,12 @@ int main(int argc, char *argv[])
 		vector<cv::KeyPoint> keypoints;
 		featureDetector->detectAndCompute(imageReady, mask, keypoints, descriptors);
 
-		if (imageIdx==0) {
-			imageDb.addImage(imageIdx, keypoints, descriptors);
-		}
-		else {
-			imageDb.addImage2(imageIdx, keypoints, descriptors);
-		}
+		cv::drawKeypoints(imageReady, keypoints, imageReady, cv::Scalar(0,255,0));
 
-		imageDb.keyframeIdToBag[imageIdx] = sampleId;
 		rosCon.publishImage(imageReady, pubId);
 
 		cout << imageIdx+1 << " / " << sampleMaps.size() << endl;
 	}
 
-	cout << "Done mapping" << endl;
-	imageDb.saveToDisk(targetMapfilename.string());
-	cout << "Done saving to " << targetMapfilename.string() << endl;
 	return 0;
 }

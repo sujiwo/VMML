@@ -53,7 +53,7 @@ public:
 	OxfordRecord at(const uint i, bool raw=false) const;
 
 	float hz() const;
-	std::vector<uint32_t> desample(const float hz) const;
+	std::vector<uint32_t> desample(const float hz, double offsetStart=0.0, double offsetStop=-1) const;
 
 	Vmml::Trajectory getGroundTruth() const;
 	Vmml::Trajectory getImageGroundTruth() const;

@@ -264,15 +264,19 @@ OxfordDataset::hz() const
 
 
 std::vector<uint32_t>
-OxfordDataset::desample(const float hz) const
+OxfordDataset::desample(const float hz, double offsetStart, double offsetStop) const
 {
+	if (offsetStop<0)
+		offsetStop = Vmml::toSeconds(length());
+	assert(offsetStart <= offsetStop);
+
 	vector<uint32_t> resampled;
 
 	const double lengthInSeconds = Vmml::toSeconds(length());
 
 	uint posWk = 0, nextWk;
 	const double tIntrv = 1.0 / hz;
-	for (double twork=0.0; twork<lengthInSeconds; twork+=1.0) {
+	for (double twork=offsetStart; twork<offsetStop; twork+=1.0) {
 		double tMax = min(twork+1.0, lengthInSeconds);
 		double tm = twork+tIntrv;
 		while (tm < tMax) {

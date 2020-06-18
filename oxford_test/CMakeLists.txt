@@ -65,6 +65,18 @@ target_link_libraries(
 		Boost::system
 )
 
+add_executable(test_filter
+	test_filter.cpp
+	OxfordDataset.cpp
+)
+
+target_link_libraries(
+	test_filter
+		${catkin_LIBRARIES}
+		${Caffe_LIBRARIES}
+		Boost::system
+)
+
 add_executable(tobag
 	tobag.cpp
 	OxfordDataset.cpp
@@ -97,3 +109,9 @@ install(
 	TARGETS index_mapper
 		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(
+	TARGETS test_filter
+		RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
