@@ -87,7 +87,7 @@ GenericImagesetViewer::on_saveButton_clicked(bool checked)
 
 	else {
 		cv::Mat rgb;
-		cv::cvtColor(currentImage, rgb, CV_RGB2BGR);
+		cv::cvtColor(currentImage, rgb, cv::COLOR_RGB2BGR);
 
 		cv::imwrite(fname, rgb);
 	}
