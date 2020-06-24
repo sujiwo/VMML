@@ -91,8 +91,11 @@ ImagePipeline::run(const cv::Mat &imageRgb, cv::Mat &imageOut, cv::OutputArray _
 	thread imageBrightnessThread ([&,this](){
 		if (retinexPrc!=nullptr)
 			imageOut = retinexPrc->run(imageInput);
-		else
-			imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput, gammaMeteringMask);
+		else {
+			if (doGammaCorrection)
+				imageOut = ImagePreprocessor::autoAdjustGammaRGB(imageInput, gammaMeteringMask);
+			else imageOut = imageInput;
+		}
 	});
 
 	thread semanticSegmentThread ([&,this](){

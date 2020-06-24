@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(libviso2)
 find_package(libopenvslam)
+#find_package(RTABMap REQUIRED)
 
 if(SEGNET_DIR)
 	message("SegNet is set")

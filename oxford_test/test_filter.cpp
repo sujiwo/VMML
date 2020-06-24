@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 	auto sampleMaps = dataSrc.desample(6.0, offsetStart, offsetStop);
 
 	auto &imagePipe = progOpts.getImagePipeline();
+	imagePipe.doGammaCorrection = false;
 	auto featureDetector = createFeatureDetector(progOpts);
 
 	auto pubId = rosCon.createImagePublisher("oxford", "center");

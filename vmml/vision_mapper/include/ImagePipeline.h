@@ -96,6 +96,8 @@ public:
 	bool isSegmentationActivated() const
 	{ return gSegment!=NULL; }
 
+	bool doGammaCorrection = true;
+
 protected:
 
 	std::shared_ptr<Segmentation> gSegment=NULL;
