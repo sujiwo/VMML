@@ -240,5 +240,16 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	imgMsrcp.convertTo(imgMsrcpInt8, CV_8UC3);
 
 	return imgMsrcpInt8;
+}
+
+
+void build_is_histogram(const cv::Mat &image, cv::OutputArray hist_i, cv::OutputArray hist_s)
+{
+
+}
+
+
+cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
+{
 
 }
