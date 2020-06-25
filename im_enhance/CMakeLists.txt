@@ -8,15 +8,20 @@ find_package (PythonLibs REQUIRED)
 find_package (pybind11 REQUIRED)
 
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+	include
+	${OpenCV_INCLUDE_DIRS}
 )
 
 add_library(im_enhance
-	im_enhance.cpp
+	src/im_enhance.cpp
 )
 
 target_link_libraries(
 	im_enhance
 		${OpenCV_LIBS}
+)
+
+pybind11_add_module(
+	ime_py MODULE
+		python/mod.cpp
 )
