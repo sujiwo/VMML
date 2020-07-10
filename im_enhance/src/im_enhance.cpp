@@ -253,3 +253,29 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 {
 
 }
+
+
+
+
+/*
+ * Ying Et Al
+ */
+cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
+{
+	cv::Mat rgbFloat, L, T(rgbImage.size(), CV_32FC1);
+
+	cv::normalize(rgbImage, rgbFloat, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
+	for (uint r=0; r<rgbFloat.rows; ++r) {
+		for (uint c=0; c<rgbFloat.cols; ++c) {
+			auto vc = rgbFloat.at<cv::Vec3f>(r,c);
+			T.at<float>(r,c) = max(vc[0], max(vc[1], vc[2]));
+		}
+	}
+
+	cv::resize(T, T, cv::Size(), 0.5, 0.5, cv::INTER_CUBIC);
+	cv::normalize(T, T, 0.0, 1.0, cv::NORM_MINMAX);
+
+	// Calculate gradient (horizontal & vertical)
+
+}
+

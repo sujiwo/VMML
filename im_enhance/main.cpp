@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <opencv2/highgui.hpp>
+#include <opencv2/hdf.hpp>
 #include "im_enhance.h"
 
 
