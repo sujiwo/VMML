@@ -3,7 +3,7 @@ project(im_enhance)
 
 add_compile_options(-std=c++11)
 
-find_package (OpenCV 3 REQUIRED)
+find_package (OpenCV REQUIRED)
 find_package (PythonLibs REQUIRED)
 find_package (Eigen3 REQUIRED)
 find_package (pybind11 REQUIRED)

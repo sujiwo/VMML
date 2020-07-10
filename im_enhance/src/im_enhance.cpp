@@ -260,6 +260,11 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 /*
  * Ying Et Al
  */
+// Default parameters
+const float sharpness=1e-3;
+const int sigma = 5;
+const auto lambda = 0.5;
+
 cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 {
 	cv::Mat rgbFloat, L, T(rgbImage.size(), CV_32FC1);
@@ -275,7 +280,20 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	cv::resize(T, T, cv::Size(), 0.5, 0.5, cv::INTER_CUBIC);
 	cv::normalize(T, T, 0.0, 1.0, cv::NORM_MINMAX);
 
+	// computeTextureWeights()
 	// Calculate gradient (horizontal & vertical)
+	cv::Mat dt0v, dt0h, gh, gv, Wh, Wv;
+	cv::Sobel(T, dt0v, T.type(), 1, 0, 1);
+	cv::Sobel(T, dt0h, T.type(), 0, 1, 1);
+	cv::filter2D(dt0v, gv, CV_32F, cv::Mat::ones(sigma, 1, CV_32F));
+	cv::filter2D(dt0h, gh, CV_32F, cv::Mat::ones(1, sigma, CV_32F));
+
+	Wh = 1/(cv::abs(gh)*cv::abs(dt0h) + sharpness);
+	Wv = 1/(cv::abs(gv)*cv::abs(dt0v) + sharpness);
+
+	// Solving linear equation for T (in vectorized form)
+	auto dx = -lambda * Wh.reshape(1, Wh.rows*Wh.cols);
+	auto dy = -lambda * Wv.reshape(1, Wv.rows*Wv.cols);
 
 }
 
