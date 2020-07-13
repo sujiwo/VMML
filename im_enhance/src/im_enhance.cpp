@@ -1,6 +1,7 @@
 #include <vector>
 #include <array>
 #include <iostream>
+#include <exception>
 #include <opencv2/imgproc.hpp>
 #include "im_enhance.h"
 
@@ -290,6 +291,27 @@ void shiftRow(cv::Mat &in, cv::Mat &out, int numToBelow)
 }
 
 
+cv::Mat flatten(cv::InputArray src, uchar order)
+{
+	cv::Mat out = cv::Mat::zeros(src.cols()*src.rows(), 1, src.type());
+	cv::Mat in = src.getMat();
+
+	// Row-major
+	if (order==0) {
+		for (int r=0; r<in.rows; ++r) {
+			out.rowRange(r*in.cols, r*in.cols+in.cols) = in.row(r).t();
+		}
+	}
+	else if (order==1) {
+		for (int c=0; c<in.cols; ++c) {
+			in.col(c).copyTo(out.rowRange(c*in.rows, c*in.rows+in.rows));
+		}
+	}
+	else throw runtime_error("Unsupported order");
+
+	return out;
+}
+
 
 /*
  * Ying Et Al
@@ -326,8 +348,14 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	Wv = 1/(cv::abs(gv)*cv::abs(dt0v) + sharpness);
 
 	// Solving linear equation for T (in vectorized form)
+	auto k = T.rows * T.cols;
 	auto dx = -lambda * Wh.reshape(1, Wh.rows*Wh.cols);
 	auto dy = -lambda * Wv.reshape(1, Wv.rows*Wv.cols);
+	auto tempx = shiftCol(Wh, 1);
+	auto tempy = shiftRow(Wv, 1);
+	auto dxa = -lambda * tempx.reshape(1, Wh.rows*Wh.cols);
+	auto dya = -lambda * tempy.reshape(1, Wv.rows*Wv.cols);
+
 
 }
 

@@ -29,11 +29,11 @@ int main(int argc, char *argv[])
 
 	cv::imwrite("./result.png", res);
 */
-	cv::Mat A(5, 5, CV_8UC1), As;
-	for (int i=0; i<A.cols; i++)
-		A.row(i) = i+1;
+	cv::Mat A(3, 3, CV_8UC1);
+	cv::randu(A, cv::Scalar::all(0), cv::Scalar::all(255));
 	cout << A << endl;
-	shiftRow(A, As, 1);
+
+	auto As = flatten(A, 1);
 	cout << As << endl;
 
 	return 0;
