@@ -256,6 +256,40 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 
 
 
+void shiftCol(cv::Mat &in, cv::Mat &out, int numToRight)
+{
+	if (numToRight==0) {
+		in.copyTo(out);
+		return;
+	}
+
+	out.create(in.size(), in.type());
+	numToRight = numToRight % in.cols;
+	if (numToRight<0)
+		numToRight = in.cols + numToRight;
+
+	in(cv::Rect(in.cols-numToRight,0, numToRight,in.rows)).copyTo(out(cv::Rect(0,0,numToRight,in.rows)));
+	in(cv::Rect(0,0, in.cols-numToRight,in.rows)).copyTo(out(cv::Rect(numToRight,0,in.cols-numToRight,in.rows)));
+}
+
+
+void shiftRow(cv::Mat &in, cv::Mat &out, int numToBelow)
+{
+	if (numToBelow==0) {
+		in.copyTo(out);
+		return;
+	}
+
+	out.create(in.size(), in.type());
+	numToBelow = numToBelow % in.rows;
+	if (numToBelow<0)
+		numToBelow = in.rows + numToBelow;
+
+	in(cv::Rect(0,in.rows-numToBelow, in.cols, numToBelow)).copyTo(out(cv::Rect(0,0, in.cols,numToBelow)));
+	in(cv::Rect(0,0, in.cols,in.rows-numToBelow)).copyTo(out(cv::Rect(0,numToBelow, in.cols,in.rows-numToBelow)));
+}
+
+
 
 /*
  * Ying Et Al

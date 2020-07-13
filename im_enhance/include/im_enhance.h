@@ -36,3 +36,10 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
  * Dynamic Histogram Equalization (choice #3)
  */
 cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha=0.5);
+
+
+/*
+ * Matrix utilities
+ */
+void shiftCol(cv::Mat &in, cv::Mat &out, int numToRight=0);
+void shiftRow(cv::Mat &in, cv::Mat &out, int numToBelow=0);

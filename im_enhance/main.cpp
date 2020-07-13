@@ -17,6 +17,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+/*
 	cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
 	cv::Mat res;
 
@@ -27,6 +28,13 @@ int main(int argc, char *argv[])
 	}
 
 	cv::imwrite("./result.png", res);
+*/
+	cv::Mat A(5, 5, CV_8UC1), As;
+	for (int i=0; i<A.cols; i++)
+		A.row(i) = i+1;
+	cout << A << endl;
+	shiftRow(A, As, 1);
+	cout << As << endl;
 
 	return 0;
 }
