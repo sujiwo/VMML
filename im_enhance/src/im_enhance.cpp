@@ -313,6 +313,15 @@ cv::Mat flatten(cv::InputArray src, uchar order)
 }
 
 
+void spdiags(const cv::Mat &_Data, const cv::Mat &_diags, int m, int n, Eigen::SparseMatrix<float>& dst)
+{
+	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Data;
+	Eigen::VectorXi diags;
+	cv::cv2eigen(_Data, Data);
+	cv::cv2eigen(_diags, diags);
+	dst = spdiags(Data, diags, m, n);
+}
+
 /*
  * Ying Et Al
  */
@@ -344,17 +353,29 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	cv::filter2D(dt0v, gv, CV_32F, cv::Mat::ones(sigma, 1, CV_32F));
 	cv::filter2D(dt0h, gh, CV_32F, cv::Mat::ones(1, sigma, CV_32F));
 
-	Wh = 1/(cv::abs(gh)*cv::abs(dt0h) + sharpness);
-	Wv = 1/(cv::abs(gv)*cv::abs(dt0v) + sharpness);
+	Wh = 1/(cv::abs(gh)*cv::abs(dt0h) + sharpness);  // wx
+	Wv = 1/(cv::abs(gv)*cv::abs(dt0v) + sharpness);  // wy
 
 	// Solving linear equation for T (in vectorized form)
 	auto k = T.rows * T.cols;
-	auto dx = -lambda * Wh.reshape(1, Wh.rows*Wh.cols);
-	auto dy = -lambda * Wv.reshape(1, Wv.rows*Wv.cols);
+	auto dx = -lambda * flatten(Wh, 1);
+	auto dy = -lambda * flatten(Wv, 1);
 	auto tempx = shiftCol(Wh, 1);
 	auto tempy = shiftRow(Wv, 1);
-	auto dxa = -lambda * tempx.reshape(1, Wh.rows*Wh.cols);
-	auto dya = -lambda * tempy.reshape(1, Wv.rows*Wv.cols);
+	auto dxa = -lambda * flatten(tempx, 1);
+	auto dya = -lambda * flatten(tempy, 1);
+
+	auto tmp = Wh.col(Wh.cols-1);
+	cv::hconcat(tmp, cv::Mat::zeros(Wh.rows, Wh.cols-1, Wh.type()), tempx);
+	tmp = Wv.row(Wv.rows-1);
+	cv::vconcat(tmp, cv::Mat::zeros(Wv.rows-1, Wv.cols, Wv.type()), tempy);
+	auto dxd1 = -lambda * flatten(tempx, 1);
+	auto dyd1 = -lambda * flatten(tempy, 1);
+
+	Wh.col(Wh.cols-1) = 0;
+	Wv.row(Wv.rows-1) = 0;
+	auto dxd2 = -lambda * flatten(Wh, 1);
+	auto dyd2 = -lambda * flatten(Wv, 1);
 
 
 }

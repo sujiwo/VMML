@@ -7,8 +7,10 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <opencv2/highgui.hpp>
 #include <opencv2/hdf.hpp>
+#include <opencv2/core/mat.hpp>
 #include "im_enhance.h"
 
 
@@ -29,12 +31,16 @@ int main(int argc, char *argv[])
 
 	cv::imwrite("./result.png", res);
 */
-	cv::Mat A(3, 3, CV_8UC1);
-	cv::randu(A, cv::Scalar::all(0), cv::Scalar::all(255));
-	cout << A << endl;
+	Eigen::Matrix<int,2,4> zzz;
+	zzz <<
+		1, 2, 3, 4,
+		-4, -3, -2, -1;
+//	cout << zzz << endl;
 
-	auto As = flatten(A, 1);
-	cout << As << endl;
+	Eigen::Vector2i diagsl;
+	diagsl << 0, 2;
+	auto sps = spdiags(zzz, diagsl, 4, 4);
+	cout << sps << endl;
 
 	return 0;
 }
