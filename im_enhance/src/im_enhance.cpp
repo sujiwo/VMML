@@ -322,6 +322,36 @@ void spdiags(const cv::Mat &_Data, const cv::Mat &_diags, int m, int n, Eigen::S
 	dst = spdiags(Data, diags, m, n);
 }
 
+
+Eigen::SparseMatrix<float>
+spdiags(const std::vector<cv::Mat> &_Data, const std::vector<int> &diags, int m, int n)
+{
+	std::vector<Eigen::Triplet<float>> triplets;
+	triplets.reserve(std::min(m,n)*diags.size());
+
+	for (int k = 0; k < diags.size(); ++k) {
+		auto &Data = _Data[k];
+		assert(Data.cols==_Data[0].cols && Data.rows==_Data[0].rows);
+		int diag = diags[k];	// get diagonal
+		int i_start = std::max(-diag, 0); // get row of 1st element
+		int i_end = std::min(m, m-diag-(m-n)); // get row of last element
+		int j = -std::min(0, -diag); // get col of 1st element
+		int B_i; // start index i in matrix B
+		if(m < n)
+			B_i = std::max(-diag,0); // m < n
+		else
+			B_i = std::max(0,diag); // m >= n
+		for(int i = i_start; i < i_end; ++i, ++j, ++B_i){
+			triplets.push_back( {i, j,  Data.ptr<float>(0)[B_i]} );
+		}
+	}
+
+	Eigen::SparseMatrix<float> A(m, n);
+	A.setFromTriplets(triplets.begin(), triplets.end());
+
+	return A;
+}
+
 /*
  * Ying Et Al
  */
@@ -377,6 +407,14 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	auto dxd2 = -lambda * flatten(Wh, 1);
 	auto dyd2 = -lambda * flatten(Wv, 1);
 
+	vector<cv::Mat> Aconc = {dxd1, dxd2};
+	vector<int> Adgl = {-k+Wh.rows, -Wh.rows};
+	auto Ax = spdiags(Aconc, Adgl, k, k);
 
+	Aconc = {dyd1, dyd2};
+	Adgl = {-Wv.rows+1, -1};
+	auto Ay = spdiags(Aconc, Adgl, k, k);
+
+	auto D = 1 - (dx + dy + dxa + dya);
 }
 

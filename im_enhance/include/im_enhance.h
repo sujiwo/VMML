@@ -110,6 +110,7 @@ void spdiags(const cv::Mat &_Data,
 	const cv::Mat &diags, int m, int n,
 	Eigen::SparseMatrix<float>& dst);
 
-
+Eigen::SparseMatrix<float>
+spdiags(const std::vector<cv::Mat> &Data, const std::vector<int> &diags, int m, int n);
 
 
