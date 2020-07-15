@@ -106,11 +106,12 @@ spdiags(const Eigen::MatrixBase<Derived> &Data, const Eigen::VectorXi &diags, in
 /*
  * Same as above, using Opencv Input
  */
-void spdiags(const cv::Mat &_Data,
-	const cv::Mat &diags, int m, int n,
-	Eigen::SparseMatrix<float>& dst);
+Eigen::SparseMatrix<float>
+spdiags(const cv::Mat &_Data,
+	const cv::Mat &diags, int m, int n);
 
 Eigen::SparseMatrix<float>
 spdiags(const std::vector<cv::Mat> &Data, const std::vector<int> &diags, int m, int n);
 
-
+Eigen::SparseMatrix<float>
+spdiags(const cv::Mat &_Data, const std::vector<int> &diags, int m, int n);

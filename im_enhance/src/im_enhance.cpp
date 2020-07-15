@@ -313,13 +313,27 @@ cv::Mat flatten(cv::InputArray src, uchar order)
 }
 
 
-void spdiags(const cv::Mat &_Data, const cv::Mat &_diags, int m, int n, Eigen::SparseMatrix<float>& dst)
+Eigen::SparseMatrix<float>
+spdiags(const cv::Mat &_Data, const cv::Mat &_diags, int m, int n)
 {
 	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Data;
 	Eigen::VectorXi diags;
 	cv::cv2eigen(_Data, Data);
 	cv::cv2eigen(_diags, diags);
-	dst = spdiags(Data, diags, m, n);
+	return spdiags(Data, diags, m, n);
+}
+
+
+Eigen::SparseMatrix<float>
+spdiags(const cv::Mat &_Data, const std::vector<int> &_diags, int m, int n)
+{
+	assert(_Data.rows==_diags.size());
+	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Data;
+	cv::cv2eigen(_Data, Data);
+	Eigen::VectorXi diags(_diags.size());
+	for (int i=0; i<_diags.size(); ++i)
+		diags[i] = _diags[i];
+	return spdiags(Data, diags, m, n);
 }
 
 
@@ -415,6 +429,17 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	Adgl = {-Wv.rows+1, -1};
 	auto Ay = spdiags(Aconc, Adgl, k, k);
 
-	auto D = 1 - (dx + dy + dxa + dya);
+	cv::Mat D = 1 - (dx + dy + dxa + dya);
+	decltype(Ax) Axyt = (Ax+Ay);
+	Axyt = Axyt.conjugate().transpose();
+
+	decltype(Ay) Dspt = spdiags(D, vector<int>{0}, k, k).transpose();
+	decltype(Ax) A = (Ax+Ay) + Axyt + Dspt;
+
+	auto _tin = flatten(T, 1);
+	Eigen::Matrix<float,-1,-1> tin;
+	cv::cv2eigen(_tin, tin);
+
+
 }
 
