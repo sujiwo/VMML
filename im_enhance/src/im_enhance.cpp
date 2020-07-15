@@ -3,6 +3,7 @@
 #include <iostream>
 #include <exception>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/hdf.hpp>
 #include "im_enhance.h"
 
 
@@ -80,6 +81,17 @@ cv::Mat autoAdjustGammaMono(cv::Mat &grayImg, float *gamma, cv::Mat mask)
 		return cv::Mat();
 	}
 	return setGamma(grayImg, g);
+}
+
+
+/*
+ * PS: don't remove this function
+ */
+void dumpMatrix(const cv::Mat &input, const string &filepath)
+{
+	auto dumpIO = cv::hdf::open(filepath);
+	dumpIO->dswrite(input, "dump");
+	dumpIO->close();
 }
 
 
@@ -291,6 +303,11 @@ void shiftRow(cv::Mat &in, cv::Mat &out, int numToBelow)
 }
 
 
+/*
+ * Order: 0 => row-major
+ *        1 => column-major
+ *
+ */
 cv::Mat flatten(cv::InputArray src, uchar order)
 {
 	cv::Mat out = cv::Mat::zeros(src.cols()*src.rows(), 1, src.type());
@@ -310,6 +327,31 @@ cv::Mat flatten(cv::InputArray src, uchar order)
 	else throw runtime_error("Unsupported order");
 
 	return out;
+}
+
+
+cv::Mat reshape(cv::InputArray _src, int row, int col, uchar order)
+{
+	assert ((_src.cols()==1 or _src.rows()==1) and _src.cols()*_src.rows()==row*col);
+
+	cv::Mat
+		src = _src.getMat(),
+		dst(row, col, _src.type());
+	if (_src.cols()==1) src = src.t();
+
+	if (order==0) {
+		for (int i=0; i<row; ++i) {
+			auto S = src.rowRange(i*col, (i+1)*col);
+
+		}
+	}
+
+	else if (order==1) {
+	}
+
+	else throw runtime_error("Unsupported order");
+
+	return dst;
 }
 
 
@@ -374,7 +416,7 @@ const float sharpness=1e-3;
 const int sigma = 5;
 const auto lambda = 0.5;
 
-cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
+cv::Mat exposureFusion(const cv::Mat &rgbImage)
 {
 	cv::Mat rgbFloat, L, T(rgbImage.size(), CV_32FC1);
 
@@ -397,8 +439,8 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	cv::filter2D(dt0v, gv, CV_32F, cv::Mat::ones(sigma, 1, CV_32F));
 	cv::filter2D(dt0h, gh, CV_32F, cv::Mat::ones(1, sigma, CV_32F));
 
-	Wh = 1/(cv::abs(gh)*cv::abs(dt0h) + sharpness);  // wx
-	Wv = 1/(cv::abs(gv)*cv::abs(dt0v) + sharpness);  // wy
+	Wh = 1.0f / (cv::abs(gh).mul(cv::abs(dt0h)) + sharpness);  // wx
+	Wv = 1.0f / (cv::abs(gv).mul(cv::abs(dt0v)) + sharpness);  // wy
 
 	// Solving linear equation for T (in vectorized form)
 	auto k = T.rows * T.cols;
@@ -433,13 +475,29 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	decltype(Ax) Axyt = (Ax+Ay);
 	Axyt = Axyt.conjugate().transpose();
 
-	decltype(Ay) Dspt = spdiags(D, vector<int>{0}, k, k).transpose();
+	decltype(Ay) Dspt = spdiags(D.t(), vector<int>{0}, k, k).transpose();
 	decltype(Ax) A = (Ax+Ay) + Axyt + Dspt;
 
 	auto _tin = flatten(T, 1);
 	Eigen::Matrix<float,-1,-1> tin;
 	cv::cv2eigen(_tin, tin);
 
-	// XXX: Use SparseLU
+	Eigen::SparseLU<decltype(A)> solver;
+	solver.analyzePattern(A);
+	solver.factorize(A);
+	Eigen::VectorXf out = solver.solve(tin);
+
+	cv::Mat t_vec;
+	cv::eigen2cv(out, t_vec);
+
+	cv::Mat Tx = t_vec.reshape(1, T.cols).t();
+	cv::Mat K = 1.0f / cv::max(Tx, lambda);
+	cv::resize(K, K, cv::Size(), 2.0, 2.0, cv::INTER_CUBIC);
+
+	// XXX: Apply K
+
+	dumpMatrix(Tx, "/tmp/tvec");
+
+	return cv::Mat();
 }
 

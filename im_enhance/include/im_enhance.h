@@ -41,6 +41,10 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
  */
 cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha=0.5);
 
+/*
+ * Exposure Fusion (choice #4)
+ */
+cv::Mat exposureFusion(const cv::Mat &rgbImage);
 
 /*
  * Matrix utilities
@@ -68,6 +72,11 @@ cv::Mat shiftRow(cv::Mat &in, int numToBelow=0)
  *        1 => column-major
  */
 cv::Mat flatten(cv::InputArray src, uchar order=0);
+
+/*
+ * Inverse of the above function:
+ */
+cv::Mat reshape(cv::InputArray src, int row, int col, uchar order=0);
 
 /*
  * Emulating `spdiags' from Scipy

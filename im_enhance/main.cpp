@@ -19,7 +19,8 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-/*
+	Eigen::initParallel();
+
 	cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
 	cv::Mat res;
 
@@ -27,20 +28,10 @@ int main(int argc, char *argv[])
 	switch (ch) {
 	case 1: res = autoAdjustGammaRGB(image); break;
 	case 2: res = multiScaleRetinexCP(image); break;
+	case 4: res = exposureFusion(image); break;
 	}
 
-	cv::imwrite("./result.png", res);
-*/
-	Eigen::Matrix<int,2,4> zzz;
-	zzz <<
-		1, 2, 3, 4,
-		-4, -3, -2, -1;
-//	cout << zzz << endl;
-
-	Eigen::Vector2i diagsl;
-	diagsl << 0, 2;
-	auto sps = spdiags(zzz, diagsl, 4, 4);
-	cout << sps << endl;
+//	cv::imwrite("./result.png", res);
 
 	return 0;
 }
