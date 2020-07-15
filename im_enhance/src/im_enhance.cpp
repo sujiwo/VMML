@@ -440,6 +440,6 @@ cv::Mat calculateWeightInput(const cv::Mat &rgbImage)
 	Eigen::Matrix<float,-1,-1> tin;
 	cv::cv2eigen(_tin, tin);
 
-
+	// XXX: Use SparseLU
 }
 
