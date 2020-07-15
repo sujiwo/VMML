@@ -408,6 +408,21 @@ spdiags(const std::vector<cv::Mat> &_Data, const std::vector<int> &diags, int m,
 	return A;
 }
 
+
+/*
+ * Raises A(x) to power from B(x)
+ */
+void MatPow(cv::Mat &A, const cv::Mat &B)
+{
+	assert(A.size()==B.size() and A.type()==B.type());
+
+	auto bit = B.begin<float>();
+	for (auto ait=A.begin<float>(); ait!=A.end<float>(); ++ait, ++bit) {
+		*ait = cv::pow(*ait, *bit);
+	}
+}
+
+
 /*
  * Ying Et Al
  */
@@ -415,6 +430,9 @@ spdiags(const std::vector<cv::Mat> &_Data, const std::vector<int> &diags, int m,
 const float sharpness=1e-3;
 const int sigma = 5;
 const auto lambda = 0.5;
+const float
+	a_ = 0.3293,
+	b_ = 1.1258;
 
 cv::Mat exposureFusion(const cv::Mat &rgbImage)
 {
@@ -495,9 +513,17 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::resize(K, K, cv::Size(), 2.0, 2.0, cv::INTER_CUBIC);
 
 	// XXX: Apply K
+	cv::pow(K, a_, K);
+	cv::Mat eK;
 
-	dumpMatrix(Tx, "/tmp/tvec");
+	cv::exp(b_*(1-K), eK);
 
-	return cv::Mat();
+	// XXX: MatPow() must handle multi-channel image
+	MatPow(rgbFloat, K);
+	cv::Mat Outf = eK.mul(rgbFloat);
+
+	dumpMatrix(Outf, "/tmp/Outf");
+
+	return Outf;
 }
 
