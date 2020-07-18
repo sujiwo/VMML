@@ -9,6 +9,9 @@
 
 using namespace std;
 
+typedef cv::Mat_<float> Matf;
+typedef cv::Mat_<cv::Vec3f> Matf3;
+
 
 cv::Mat
 histogram (cv::Mat &inputMono, cv::InputArray mask=cv::noArray())
@@ -412,13 +415,15 @@ spdiags(const std::vector<cv::Mat> &_Data, const std::vector<int> &diags, int m,
 /*
  * Raises A(x) to power from B(x)
  */
-void MatPow(cv::Mat &A, const cv::Mat &B)
+void MatPow(Matf3 &A, const Matf &B)
 {
-	assert(A.size()==B.size() and A.type()==B.type());
+	assert(A.size()==B.size());
 
-	auto bit = B.begin<float>();
-	for (auto ait=A.begin<float>(); ait!=A.end<float>(); ++ait, ++bit) {
-		*ait = cv::pow(*ait, *bit);
+	auto bit = B.begin();
+	for (auto ait=A.begin(); ait!=A.end(); ++ait, ++bit) {
+		(*ait)[0] = pow((*ait)[0], *bit);
+		(*ait)[1] = pow((*ait)[1], *bit);
+		(*ait)[2] = pow((*ait)[2], *bit);
 	}
 }
 
@@ -519,11 +524,19 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::exp(b_*(1-K), eK);
 
 	// XXX: MatPow() must handle multi-channel image
-	MatPow(rgbFloat, K);
-	cv::Mat Outf = eK.mul(rgbFloat);
+//	MatPow(rgbFloat, K);
 
-	dumpMatrix(Outf, "/tmp/Outf");
+	auto bit = K.begin<float>();
+	auto cit = eK.begin<float>();
+	for (auto ait=rgbFloat.begin<cv::Vec3f>(); ait!=rgbFloat.end<cv::Vec3f>(); ++ait, ++bit, ++cit) {
+		cv::pow(*ait, *bit, *ait);
+		*ait = *ait * *cit;
+	}
 
-	return Outf;
+	cout << "Here\n";
+
+	dumpMatrix(rgbFloat, "/tmp/Outf");
+
+//	return Outf;
 }
 
