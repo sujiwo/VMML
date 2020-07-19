@@ -4,13 +4,11 @@
 #include <exception>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/hdf.hpp>
+#include <boost/math/tools/minima.hpp>
 #include "im_enhance.h"
 
 
 using namespace std;
-
-typedef cv::Mat_<float> Matf;
-typedef cv::Mat_<cv::Vec3f> Matf3;
 
 
 cv::Mat
@@ -271,46 +269,12 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 }
 
 
-
-void shiftCol(cv::Mat &in, cv::Mat &out, int numToRight)
-{
-	if (numToRight==0) {
-		in.copyTo(out);
-		return;
-	}
-
-	out.create(in.size(), in.type());
-	numToRight = numToRight % in.cols;
-	if (numToRight<0)
-		numToRight = in.cols + numToRight;
-
-	in(cv::Rect(in.cols-numToRight,0, numToRight,in.rows)).copyTo(out(cv::Rect(0,0,numToRight,in.rows)));
-	in(cv::Rect(0,0, in.cols-numToRight,in.rows)).copyTo(out(cv::Rect(numToRight,0,in.cols-numToRight,in.rows)));
-}
-
-
-void shiftRow(cv::Mat &in, cv::Mat &out, int numToBelow)
-{
-	if (numToBelow==0) {
-		in.copyTo(out);
-		return;
-	}
-
-	out.create(in.size(), in.type());
-	numToBelow = numToBelow % in.rows;
-	if (numToBelow<0)
-		numToBelow = in.rows + numToBelow;
-
-	in(cv::Rect(0,in.rows-numToBelow, in.cols, numToBelow)).copyTo(out(cv::Rect(0,0, in.cols,numToBelow)));
-	in(cv::Rect(0,0, in.cols,in.rows-numToBelow)).copyTo(out(cv::Rect(0,numToBelow, in.cols,in.rows-numToBelow)));
-}
-
-
 /*
  * Order: 0 => row-major
  *        1 => column-major
  *
  */
+/*
 cv::Mat flatten(cv::InputArray src, uchar order)
 {
 	cv::Mat out = cv::Mat::zeros(src.cols()*src.rows(), 1, src.type());
@@ -356,10 +320,11 @@ cv::Mat reshape(cv::InputArray _src, int row, int col, uchar order)
 
 	return dst;
 }
+*/
 
 
 Eigen::SparseMatrix<float>
-spdiags(const cv::Mat &_Data, const cv::Mat &_diags, int m, int n)
+spdiags(const Matf &_Data, const Mati &_diags, int m, int n)
 {
 	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Data;
 	Eigen::VectorXi diags;
@@ -370,7 +335,7 @@ spdiags(const cv::Mat &_Data, const cv::Mat &_diags, int m, int n)
 
 
 Eigen::SparseMatrix<float>
-spdiags(const cv::Mat &_Data, const std::vector<int> &_diags, int m, int n)
+spdiags(const Matf &_Data, const std::vector<int> &_diags, int m, int n)
 {
 	assert(_Data.rows==_diags.size());
 	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> Data;
@@ -382,14 +347,15 @@ spdiags(const cv::Mat &_Data, const std::vector<int> &_diags, int m, int n)
 }
 
 
-Eigen::SparseMatrix<float>
-spdiags(const std::vector<cv::Mat> &_Data, const std::vector<int> &diags, int m, int n)
+template<typename Scalar>
+Eigen::SparseMatrix<Scalar>
+spdiags(const std::vector<cv::Mat_<Scalar>> &_Data, const std::vector<int> &diags, int m, int n)
 {
 	std::vector<Eigen::Triplet<float>> triplets;
 	triplets.reserve(std::min(m,n)*diags.size());
 
 	for (int k = 0; k < diags.size(); ++k) {
-		auto &Data = _Data[k];
+		auto Data = _Data[k];
 		assert(Data.cols==_Data[0].cols && Data.rows==_Data[0].rows);
 		int diag = diags[k];	// get diagonal
 		int i_start = std::max(-diag, 0); // get row of 1st element
@@ -401,11 +367,11 @@ spdiags(const std::vector<cv::Mat> &_Data, const std::vector<int> &diags, int m,
 		else
 			B_i = std::max(0,diag); // m >= n
 		for(int i = i_start; i < i_end; ++i, ++j, ++B_i){
-			triplets.push_back( {i, j,  Data.ptr<float>(0)[B_i]} );
+			triplets.push_back( {i, j,  *Data[B_i]} );
 		}
 	}
 
-	Eigen::SparseMatrix<float> A(m, n);
+	Eigen::SparseMatrix<Scalar> A(m, n);
 	A.setFromTriplets(triplets.begin(), triplets.end());
 
 	return A;
@@ -428,6 +394,34 @@ void MatPow(Matf3 &A, const Matf &B)
 }
 
 
+Matb operator < (const Matf &inp, const float X)
+{
+	Matb B(inp.size());
+
+	auto inpIt = inp.begin();
+	auto BIt = B.begin();
+	for (; inpIt!=inp.end(); ++inpIt, ++BIt) {
+		*BIt = *inpIt < X;
+	}
+
+	return B;
+}
+
+
+Matb operator > (const Matf &inp, const float X)
+{
+	Matb B(inp.size());
+
+	auto inpIt = inp.begin();
+	auto BIt = B.begin();
+	for (; inpIt!=inp.end(); ++inpIt, ++BIt) {
+		*BIt = *inpIt > X;
+	}
+
+	return B;
+}
+
+
 /*
  * Ying Et Al
  */
@@ -441,13 +435,14 @@ const float
 
 cv::Mat exposureFusion(const cv::Mat &rgbImage)
 {
-	cv::Mat rgbFloat, L, T(rgbImage.size(), CV_32FC1);
+	Matf L, T(rgbImage.size());
+	Matf3 rgbFloat;
 
 	cv::normalize(rgbImage, rgbFloat, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
 	for (uint r=0; r<rgbFloat.rows; ++r) {
 		for (uint c=0; c<rgbFloat.cols; ++c) {
 			auto vc = rgbFloat.at<cv::Vec3f>(r,c);
-			T.at<float>(r,c) = max(vc[0], max(vc[1], vc[2]));
+			T(r,c) = max(vc[0], max(vc[1], vc[2]));
 		}
 	}
 
@@ -456,7 +451,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 
 	// computeTextureWeights()
 	// Calculate gradient (horizontal & vertical)
-	cv::Mat dt0v, dt0h, gh, gv, Wh, Wv;
+	Matf dt0v, dt0h, gh, gv, Wh, Wv;
 	cv::Sobel(T, dt0v, T.type(), 1, 0, 1);
 	cv::Sobel(T, dt0h, T.type(), 0, 1, 1);
 	cv::filter2D(dt0v, gv, CV_32F, cv::Mat::ones(sigma, 1, CV_32F));
@@ -471,22 +466,22 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	auto dy = -lambda * flatten(Wv, 1);
 	auto tempx = shiftCol(Wh, 1);
 	auto tempy = shiftRow(Wv, 1);
-	auto dxa = -lambda * flatten(tempx, 1);
-	auto dya = -lambda * flatten(tempy, 1);
+	Matf dxa = -lambda * flatten(tempx, 1);
+	Matf dya = -lambda * flatten(tempy, 1);
 
 	auto tmp = Wh.col(Wh.cols-1);
 	cv::hconcat(tmp, cv::Mat::zeros(Wh.rows, Wh.cols-1, Wh.type()), tempx);
 	tmp = Wv.row(Wv.rows-1);
 	cv::vconcat(tmp, cv::Mat::zeros(Wv.rows-1, Wv.cols, Wv.type()), tempy);
-	auto dxd1 = -lambda * flatten(tempx, 1);
-	auto dyd1 = -lambda * flatten(tempy, 1);
+	Matf dxd1 = -lambda * flatten(tempx, 1);
+	Matf dyd1 = -lambda * flatten(tempy, 1);
 
 	Wh.col(Wh.cols-1) = 0;
 	Wv.row(Wv.rows-1) = 0;
 	auto dxd2 = -lambda * flatten(Wh, 1);
 	auto dyd2 = -lambda * flatten(Wv, 1);
 
-	vector<cv::Mat> Aconc = {dxd1, dxd2};
+	vector<Matf> Aconc = {dxd1, dxd2};
 	vector<int> Adgl = {-k+Wh.rows, -Wh.rows};
 	auto Ax = spdiags(Aconc, Adgl, k, k);
 
@@ -494,7 +489,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Adgl = {-Wv.rows+1, -1};
 	auto Ay = spdiags(Aconc, Adgl, k, k);
 
-	cv::Mat D = 1 - (dx + dy + dxa + dya);
+	Matf D = 1 - (dx + dy + dxa + dya);
 	decltype(Ax) Axyt = (Ax+Ay);
 	Axyt = Axyt.conjugate().transpose();
 
@@ -510,32 +505,15 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	solver.factorize(A);
 	Eigen::VectorXf out = solver.solve(tin);
 
-	cv::Mat t_vec;
+	Matf t_vec;
 	cv::eigen2cv(out, t_vec);
 
-	cv::Mat Tx = t_vec.reshape(1, T.cols).t();
-	cv::Mat K = 1.0f / cv::max(Tx, lambda);
-	cv::resize(K, K, cv::Size(), 2.0, 2.0, cv::INTER_CUBIC);
+	Matf Tx = t_vec.reshape(1, T.cols).t();
+	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_CUBIC);
+//	tsmooth() is done
 
-	// XXX: Apply K
-	cv::pow(K, a_, K);
-	cv::Mat eK;
-
-	cv::exp(b_*(1-K), eK);
-
-	// XXX: MatPow() must handle multi-channel image
-//	MatPow(rgbFloat, K);
-
-	auto bit = K.begin<float>();
-	auto cit = eK.begin<float>();
-	for (auto ait=rgbFloat.begin<cv::Vec3f>(); ait!=rgbFloat.end<cv::Vec3f>(); ++ait, ++bit, ++cit) {
-		cv::pow(*ait, *bit, *ait);
-		*ait = *ait * *cit;
-	}
-
-	cout << "Here\n";
-
-	dumpMatrix(rgbFloat, "/tmp/Outf");
+	dumpMatrix(Tx, "/tmp/Outf");
+	cout << "Heres\n";
 
 //	return Outf;
 }

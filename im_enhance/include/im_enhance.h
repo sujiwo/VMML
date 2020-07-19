@@ -1,3 +1,4 @@
+#include <exception>
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <Eigen/Core>
@@ -46,22 +47,63 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha=
  */
 cv::Mat exposureFusion(const cv::Mat &rgbImage);
 
+
+typedef cv::Mat_<float> Matf;
+typedef cv::Mat_<cv::Vec3f> Matf3;
+typedef cv::Mat_<int> Mati;
+typedef cv::Mat_<uint> Matui;
+typedef cv::Mat_<bool> Matb;
+
 /*
  * Matrix utilities
  */
-void shiftCol(cv::Mat &in, cv::Mat &out, int numToRight=0);
-void shiftRow(cv::Mat &in, cv::Mat &out, int numToBelow=0);
 
-cv::Mat shiftCol(cv::Mat &in, int numToRight=0)
+template<typename Scalar>
+void shiftCol(cv::Mat_<Scalar> &in, cv::Mat_<Scalar> &out, int numToRight=0)
 {
-	cv::Mat out;
+	if (numToRight==0) {
+		in.copyTo(out);
+		return;
+	}
+
+	out.create(in.size());
+	numToRight = numToRight % in.cols;
+	if (numToRight<0)
+		numToRight = in.cols + numToRight;
+
+	in(cv::Rect(in.cols-numToRight,0, numToRight,in.rows)).copyTo(out(cv::Rect(0,0,numToRight,in.rows)));
+	in(cv::Rect(0,0, in.cols-numToRight,in.rows)).copyTo(out(cv::Rect(numToRight,0,in.cols-numToRight,in.rows)));
+}
+
+template<typename Scalar>
+void shiftRow(cv::Mat_<Scalar> &in, cv::Mat_<Scalar> &out, int numToBelow)
+{
+	if (numToBelow==0) {
+		in.copyTo(out);
+		return;
+	}
+
+	out.create(in.size());
+	numToBelow = numToBelow % in.rows;
+	if (numToBelow<0)
+		numToBelow = in.rows + numToBelow;
+
+	in(cv::Rect(0,in.rows-numToBelow, in.cols, numToBelow)).copyTo(out(cv::Rect(0,0, in.cols,numToBelow)));
+	in(cv::Rect(0,0, in.cols,in.rows-numToBelow)).copyTo(out(cv::Rect(0,numToBelow, in.cols,in.rows-numToBelow)));
+}
+
+template<typename Scalar>
+cv::Mat_<Scalar> shiftCol(cv::Mat_<Scalar> &in, int numToRight=0)
+{
+	cv::Mat_<Scalar> out;
 	shiftCol(in, out, numToRight);
 	return out;
 }
 
-cv::Mat shiftRow(cv::Mat &in, int numToBelow=0)
+template<typename Scalar>
+cv::Mat_<Scalar> shiftRow(cv::Mat_<Scalar> &in, int numToBelow=0)
 {
-	cv::Mat out;
+	cv::Mat_<Scalar> out;
 	shiftRow(in, out, numToBelow);
 	return out;
 }
@@ -71,12 +113,50 @@ cv::Mat shiftRow(cv::Mat &in, int numToBelow=0)
  * Order: 0 => row-major
  *        1 => column-major
  */
-cv::Mat flatten(cv::InputArray src, uchar order=0);
+//cv::Mat flatten(cv::InputArray src, uchar order=0);
+
+template<typename Scalar>
+cv::Mat_<Scalar>
+flatten(const cv::Mat_<Scalar> &in, uchar order=0)
+{
+	cv::Mat_<Scalar> out = cv::Mat_<Scalar>::zeros(in.rows*in.cols, 1);
+	// Row-major
+	if (order==0) {
+		for (int r=0; r<in.rows; ++r) {
+			out.rowRange(r*in.cols, r*in.cols+in.cols) = in.row(r).t();
+		}
+	}
+	else if (order==1) {
+		for (int c=0; c<in.cols; ++c) {
+			in.col(c).copyTo(out.rowRange(c*in.rows, c*in.rows+in.rows));
+		}
+	}
+	else throw std::runtime_error("Unsupported order");
+
+	return out;
+}
 
 /*
  * Inverse of the above function:
  */
+/*
 cv::Mat reshape(cv::InputArray src, int row, int col, uchar order=0);
+
+template<typename Scalar>
+cv::Mat_<Scalar>
+reshape(const cv::Mat_<Scalar> &in, const int row, const int col, uchar order=0)
+{
+	assert ((in.cols()==1 or in.rows()==1) and in.cols()*in.rows()==row*col);
+
+	cv::Mat_<Scalar> dst(row, col);
+	cv::Mat_<Scalar> src;
+	if (src.cols==1) src = in.t();
+	else src = in;
+
+
+}
+*/
+
 
 /*
  * Emulating `spdiags' from Scipy
@@ -115,6 +195,7 @@ spdiags(const Eigen::MatrixBase<Derived> &Data, const Eigen::VectorXi &diags, in
 /*
  * Same as above, using Opencv Input
  */
+/*
 Eigen::SparseMatrix<float>
 spdiags(const cv::Mat &_Data,
 	const cv::Mat &diags, int m, int n);
@@ -124,3 +205,4 @@ spdiags(const std::vector<cv::Mat> &Data, const std::vector<int> &diags, int m, 
 
 Eigen::SparseMatrix<float>
 spdiags(const cv::Mat &_Data, const std::vector<int> &diags, int m, int n);
+*/
