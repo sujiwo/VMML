@@ -20,6 +20,12 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+/*
+	std::vector<int> V = {0, 1, 2, 3, 5};
+	auto Vx = matFromIterator<float>(V.begin(), V.end());
+	double S = cv::sum(Vx)[0];
+	cout << S << endl;
+*/
 	Eigen::initParallel();
 
 	cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);

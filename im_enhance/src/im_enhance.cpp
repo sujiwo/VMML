@@ -3,6 +3,7 @@
 #include <iostream>
 #include <exception>
 #include <algorithm>
+#include <limits>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/hdf.hpp>
 #include <boost/math/tools/minima.hpp>
@@ -470,6 +471,7 @@ getKeys (const std::map<K, V> &M)
 template<typename K, typename V>
 class MapFun: public std::map<K, V>
 {
+public:
 	vector<K> getKeys()
 	{
 		vector<K> keys;
@@ -494,7 +496,7 @@ template<typename Scalar>
 MapFun<Scalar, int> unique(const cv::Mat_<Scalar> &M)
 {
 	MapFun<Scalar,int> res;
-	for (auto &mit=M.begin(); mit!=M.end(); ++mit) {
+	for (auto mit=M.begin(); mit!=M.end(); ++mit) {
 		auto m = *mit;
 		if (res.find(m)==res.end()) {
 			res[m] = 1;
@@ -514,14 +516,15 @@ double entropy(const cv::Mat_<Scalar> &X)
 	cv::Mat_<Scalar> tmp = X*255;
 	tmp.setTo(255, tmp>255);
 	tmp.setTo(0, tmp<0);
-	Matc tmpd = tmp.convertTo(CV_8UC1);
+	Matc tmpd;
+	tmp.convertTo(tmpd, CV_8UC1);
 	auto __c = unique(tmpd).getValues();
 	auto counts = matFromIterator<float>(__c.begin(), __c.end());
-	counts = counts / double(cv::sum(counts));
+	counts = counts / cv::sum(counts)[0];
 	decltype(counts) countsl;
 	cv::log(counts, countsl);
 	countsl = countsl / log(2);
-	return -cv::sum(counts * countsl);
+	return -(cv::sum(counts * countsl)[0]);
 }
 
 
@@ -649,10 +652,14 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	}
 
 	// define functions
-	auto funEntropy = [&](float k)->double {
+	auto funEntropy = [&](float k)->float {
 		return -entropy(applyK(Yx, k, a_, b_));
 	};
+
 	// call Boost Brent Method
+	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits);
+	cout << "1: " << fmin.first << endl;
+	cout << "2: " << fmin.second << endl;
 
 //	return Outf;
 }
