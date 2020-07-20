@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <opencv2/highgui.hpp>
 #include <opencv2/hdf.hpp>
 #include <opencv2/core/mat.hpp>

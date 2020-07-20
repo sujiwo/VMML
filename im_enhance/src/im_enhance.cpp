@@ -2,6 +2,7 @@
 #include <array>
 #include <iostream>
 #include <exception>
+#include <algorithm>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/hdf.hpp>
 #include <boost/math/tools/minima.hpp>
@@ -394,6 +395,7 @@ void MatPow(Matf3 &A, const Matf &B)
 }
 
 
+/*
 Matb operator < (const Matf &inp, const float X)
 {
 	Matb B(inp.size());
@@ -406,8 +408,10 @@ Matb operator < (const Matf &inp, const float X)
 
 	return B;
 }
+*/
 
 
+/*
 Matb operator > (const Matf &inp, const float X)
 {
 	Matb B(inp.size());
@@ -420,6 +424,105 @@ Matb operator > (const Matf &inp, const float X)
 
 	return B;
 }
+*/
+
+
+template<typename Scalar>
+cv::Mat_<Scalar>
+selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const cv::Mat &mask)
+{
+	assert(input.channels()==1 and mask.channels()==1);
+	assert(input.size()==mask.size());
+
+	vector<Scalar> V;
+	for (int r=0; r<input.rows; ++r)
+		for (int c=0; c<input.cols; ++c) {
+			auto m = mask.at<int>(r,c);
+			if (m!=0)
+				V.push_back(input(r,c));
+		}
+	return cv::Mat_<Scalar>(V.size(), 1, V.data());
+}
+
+
+template<typename Scalar>
+cv::Mat_<Scalar> applyK(const cv::Mat_<Scalar> &input, float k, float a, float b)
+{
+	auto beta = exp((1-pow(k,a)*b));
+	auto gamma = pow(k, a);
+	cv::Mat_<Scalar> _powf;
+	cv::pow(input, gamma, _powf);
+	return _powf * beta;
+}
+
+
+template<typename K, typename V>
+std::vector<K>
+getKeys (const std::map<K, V> &M)
+{
+	vector<K> keys;
+	for (auto &p: M) {
+		keys.push_back(p.first);
+	}
+	return keys;
+}
+
+template<typename K, typename V>
+class MapFun: public std::map<K, V>
+{
+	vector<K> getKeys()
+	{
+		vector<K> keys;
+		for (auto &p: *this) {
+			keys.push_back(p.first);
+		}
+		return keys;
+	}
+
+	vector<V> getValues()
+	{
+		vector<V> vals;
+		for (auto &p: *this) {
+			vals.push_back(p.second);
+		}
+		return vals;
+	}
+};
+
+
+template<typename Scalar>
+MapFun<Scalar, int> unique(const cv::Mat_<Scalar> &M)
+{
+	MapFun<Scalar,int> res;
+	for (auto &mit=M.begin(); mit!=M.end(); ++mit) {
+		auto m = *mit;
+		if (res.find(m)==res.end()) {
+			res[m] = 1;
+		}
+		else res[m] += 1;
+	}
+
+	return res;
+}
+
+
+template<typename Scalar>
+double entropy(const cv::Mat_<Scalar> &X)
+{
+	assert(X.channels()==1);
+
+	cv::Mat_<Scalar> tmp = X*255;
+	tmp.setTo(255, tmp>255);
+	tmp.setTo(0, tmp<0);
+	Matc tmpd = tmp.convertTo(CV_8UC1);
+	auto __c = unique(tmpd).getValues();
+	auto counts = matFromIterator<float>(__c.begin(), __c.end());
+	counts = counts / double(cv::sum(counts));
+	decltype(counts) countsl;
+	cv::log(counts, countsl);
+	countsl = countsl / log(2);
+	return -cv::sum(counts * countsl);
+}
 
 
 /*
@@ -430,7 +533,7 @@ const float sharpness=1e-3;
 const int sigma = 5;
 const auto lambda = 0.5;
 const float
-	a_ = 0.3293,
+	a_ = -0.3293,
 	b_ = 1.1258;
 
 cv::Mat exposureFusion(const cv::Mat &rgbImage)
@@ -439,9 +542,10 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Matf3 rgbFloat;
 
 	cv::normalize(rgbImage, rgbFloat, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
+
 	for (uint r=0; r<rgbFloat.rows; ++r) {
 		for (uint c=0; c<rgbFloat.cols; ++c) {
-			auto vc = rgbFloat.at<cv::Vec3f>(r,c);
+			auto vc = rgbFloat(r,c);
 			T(r,c) = max(vc[0], max(vc[1], vc[2]));
 		}
 	}
@@ -509,11 +613,46 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::eigen2cv(out, t_vec);
 
 	Matf Tx = t_vec.reshape(1, T.cols).t();
+	/*
+	 * XXX: The Tx produced by ours is signficantly different from Python Version.
+	 * Need more verification on the steps
+	 */
 	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_CUBIC);
 //	tsmooth() is done
 
-	dumpMatrix(Tx, "/tmp/Outf");
-	cout << "Heres\n";
+	Matc isBad = Tx < 0.5;
+
+	/* Maximize entrophy */
+	Matf3 rgbTiny;
+	cv::resize(rgbFloat, rgbTiny, cv::Size(50,50), 0, 0, cv::INTER_AREA);
+
+	// rgb2gm
+	cv::normalize(rgbTiny, rgbTiny, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
+	Matf Y(rgbTiny.size());
+	for (int r=0; r<rgbTiny.rows; ++r) {
+		for (int c=0; c<rgbTiny.cols; ++c) {
+			auto ch = rgbTiny(r, c);
+			Y(r,c) = fabsf(cbrtf(ch[0]*ch[1]*ch[2]));
+		}
+	}
+
+	Matf isBadf;
+	isBad.convertTo(isBadf, CV_32FC1);
+	cv::resize(isBadf, isBadf, cv::Size(50,50), 0, 0, cv::INTER_CUBIC);
+
+	isBadf.setTo(0, isBadf<0.5);
+	isBadf.setTo(1, isBadf>=0.5);
+	auto Yx = selectElementsToVectorWithMask(Y, cv::Mat(isBadf==1));
+
+	if (Yx.rows*Yx.cols==0) {
+
+	}
+
+	// define functions
+	auto funEntropy = [&](float k)->double {
+		return -entropy(applyK(Yx, k, a_, b_));
+	};
+	// call Boost Brent Method
 
 //	return Outf;
 }

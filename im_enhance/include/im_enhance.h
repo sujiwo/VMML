@@ -1,4 +1,6 @@
 #include <exception>
+#include <algorithm>
+#include <iterator>
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <Eigen/Core>
@@ -53,6 +55,7 @@ typedef cv::Mat_<cv::Vec3f> Matf3;
 typedef cv::Mat_<int> Mati;
 typedef cv::Mat_<uint> Matui;
 typedef cv::Mat_<bool> Matb;
+typedef cv::Mat_<unsigned char> Matc;
 
 /*
  * Matrix utilities
@@ -191,6 +194,24 @@ spdiags(const Eigen::MatrixBase<Derived> &Data, const Eigen::VectorXi &diags, in
 	return A;
 }
 
+
+/*
+ * Create Vector from iterator
+ */
+template<typename Scalar, class InputIterator>
+cv::Mat_<Scalar>
+matFromIterator (
+	InputIterator begin,
+	InputIterator end)
+{
+	std::vector<Scalar> v;
+	for (auto b=begin; b!=end; ++b) {
+		v.push_back(*b);
+	}
+
+	cv::Mat_<Scalar> _c(v.size(), 1, v.data());
+	return _c.clone();
+}
 
 /*
  * Same as above, using Opencv Input
