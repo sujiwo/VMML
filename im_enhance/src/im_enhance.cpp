@@ -428,106 +428,6 @@ Matb operator > (const Matf &inp, const float X)
 */
 
 
-template<typename Scalar>
-cv::Mat_<Scalar>
-selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const cv::Mat &mask)
-{
-	assert(input.channels()==1 and mask.channels()==1);
-	assert(input.size()==mask.size());
-
-	vector<Scalar> V;
-	for (int r=0; r<input.rows; ++r)
-		for (int c=0; c<input.cols; ++c) {
-			auto m = mask.at<int>(r,c);
-			if (m!=0)
-				V.push_back(input(r,c));
-		}
-	return cv::Mat_<Scalar>(V.size(), 1, V.data());
-}
-
-
-template<typename Scalar>
-cv::Mat_<Scalar> applyK(const cv::Mat_<Scalar> &input, float k, float a, float b)
-{
-	auto beta = exp((1-pow(k,a)*b));
-	auto gamma = pow(k, a);
-	cv::Mat_<Scalar> _powf;
-	cv::pow(input, gamma, _powf);
-	return _powf * beta;
-}
-
-
-template<typename K, typename V>
-std::vector<K>
-getKeys (const std::map<K, V> &M)
-{
-	vector<K> keys;
-	for (auto &p: M) {
-		keys.push_back(p.first);
-	}
-	return keys;
-}
-
-template<typename K, typename V>
-class MapFun: public std::map<K, V>
-{
-public:
-	vector<K> getKeys()
-	{
-		vector<K> keys;
-		for (auto &p: *this) {
-			keys.push_back(p.first);
-		}
-		return keys;
-	}
-
-	vector<V> getValues()
-	{
-		vector<V> vals;
-		for (auto &p: *this) {
-			vals.push_back(p.second);
-		}
-		return vals;
-	}
-};
-
-
-template<typename Scalar>
-MapFun<Scalar, int> unique(const cv::Mat_<Scalar> &M)
-{
-	MapFun<Scalar,int> res;
-	for (auto mit=M.begin(); mit!=M.end(); ++mit) {
-		auto m = *mit;
-		if (res.find(m)==res.end()) {
-			res[m] = 1;
-		}
-		else res[m] += 1;
-	}
-
-	return res;
-}
-
-
-template<typename Scalar>
-double entropy(const cv::Mat_<Scalar> &X)
-{
-	assert(X.channels()==1);
-
-	cv::Mat_<Scalar> tmp = X*255;
-	tmp.setTo(255, tmp>255);
-	tmp.setTo(0, tmp<0);
-	Matc tmpd;
-	tmp.convertTo(tmpd, CV_8UC1);
-	auto __c = unique(tmpd).getValues();
-	auto counts = matFromIterator<float>(__c.begin(), __c.end());
-	counts = counts / cv::sum(counts)[0];
-	decltype(counts) countsl;
-	cv::log(counts, countsl);
-	countsl = countsl / log(2);
-	return -(cv::sum(counts * countsl)[0]);
-}
-
-
 /*
  * Ying Et Al
  */
@@ -647,6 +547,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	isBadf.setTo(1, isBadf>=0.5);
 	auto Yx = selectElementsToVectorWithMask(Y, cv::Mat(isBadf==1));
 
+	// What to do for bad vector?
 	if (Yx.rows*Yx.cols==0) {
 
 	}
@@ -658,9 +559,32 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 
 	// call Boost Brent Method
 	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits);
-	cout << "1: " << fmin.first << endl;
-	cout << "2: " << fmin.second << endl;
+	auto J = applyK(rgbFloat, fmin.first, a_, b_) - 0.01;
 
-//	return Outf;
+	// Combine Tx
+	Matf3 T_all;
+	cv::merge(std::vector<Matf>{Tx,Tx,Tx}, T_all);
+	cv::pow(T_all, lambda, T_all);
+
+	Matf3 I2 = rgbFloat.mul(T_all);
+	Matf3 J2 = J.mul(1-T_all);
+
+	T_all.release();
+	Matf3 result = (I2 + J2)*255;
+
+	for (auto &px: result) {
+		px[0] = (px[0]>255 ? 255 : (px[0]<0 ? 0 : px[0]));
+		px[1] = (px[1]>255 ? 255 : (px[1]<0 ? 0 : px[1]));
+		px[2] = (px[2]>255 ? 255 : (px[2]<0 ? 0 : px[2]));
+	}
+/*
+	result.setTo(255, result>255);
+	result.setTo(0, result<0);
+*/
+
+	cv::Mat Outf;
+	result.convertTo(Outf, CV_8U);
+
+	return Outf;
 }
 

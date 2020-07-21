@@ -21,10 +21,10 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 /*
-	std::vector<int> V = {0, 1, 2, 3, 5};
+	std::vector<int> V = {0, 1, 2, 3, 4, 5};
 	auto Vx = matFromIterator<float>(V.begin(), V.end());
-	double S = cv::sum(Vx)[0];
-	cout << S << endl;
+	Vx = Vx - 1;
+	cout << Vx << endl;
 */
 	Eigen::initParallel();
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	case 4: res = exposureFusion(image); break;
 	}
 
-//	cv::imwrite("./result.png", res);
+	cv::imwrite("./result.png", res);
 
 	return 0;
 }
