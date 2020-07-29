@@ -129,6 +129,25 @@ cv::Mat autoAdjustGammaRGB (const cv::Mat &rgbImg, cv::InputArray mask)
 }
 
 
+cv::Mat toIlluminatiInvariant (const Matc3 &rgbImage, const float alpha)
+{
+	Matc iImage (rgbImage.rows, rgbImage.cols);
+
+	auto oImgIt = iImage.begin();
+	for (auto it=rgbImage.begin(); it!=rgbImage.end(); ++it) {
+		float
+			fb = (*it)[0] / 255.0,
+			fg = (*it)[1] / 255.0,
+			fr = (*it)[2] / 255.0;
+		float iPix = 0.5 + logf(fg) - alpha*logf(fb) - (1-alpha)*logf(fr);
+		(*oImgIt) = (uchar)(iPix*255);
+		oImgIt++;
+	}
+
+	return iImage;
+}
+
+
 /*
  * Retinex Family
  */

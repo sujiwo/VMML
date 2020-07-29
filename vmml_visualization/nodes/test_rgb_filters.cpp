@@ -33,7 +33,7 @@ using cv::xfeatures2d::SIFT;
 image_transport::Publisher imagePub1, imagePub2;
 auto akzDetector = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE, 256, 3, 0.03f, 8);
 auto orbDetector = cv::ORB::create(
-		6000,
+		3000,
 		1.2,
 		8,
 		31,
@@ -63,18 +63,16 @@ cv::Mat imagePipelineRun (const cv::Mat &srcRgb)
 	cv::Mat mask, imageReady;
 
 	imgPipe->run(srcRgb, imageReady, mask);
-	cv::Mat srcRgbResz;
-	cv::resize(srcRgb, srcRgbResz, cv::Size(), imgPipe->getResizeFactor(), imgPipe->getResizeFactor());
 
 	// Detector Test
 	std::vector<cv::KeyPoint> kpList;
 	cv::Mat descriptors, drawFrameKeypts;
 	orbDetector->detectAndCompute(
-			srcRgbResz,
+			imageReady,
 		mask,
 		kpList,
 		descriptors);
-	cv::drawKeypoints(srcRgbResz, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
+	cv::drawKeypoints(imageReady, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
 
 	return drawFrameKeypts;
 }
@@ -207,6 +205,7 @@ int main(int argc, char *argv[])
 
 	progOpts.parseCommandLineArgs(argc, argv);
 	imgPipe = &progOpts.getImagePipeline();
+	imgPipe->doGammaCorrection = false;
 
 	signal(SIGINT, breakHandler);
 

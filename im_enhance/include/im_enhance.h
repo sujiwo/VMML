@@ -8,7 +8,18 @@
 #include <opencv2/core/eigen.hpp>
 
 
+typedef cv::Mat_<float> Matf;
+typedef cv::Mat_<cv::Vec3f> Matf3;
+typedef cv::Mat_<int> Mati;
+typedef cv::Mat_<uint> Matui;
+typedef cv::Mat_<bool> Matb;
+typedef cv::Mat_<unsigned char> Matc;
+typedef cv::Mat_<cv::Vec3b> Matc3;
+
+
 cv::Mat autoAdjustGammaRGB (const cv::Mat &rgbImg, cv::InputArray mask=cv::noArray());
+
+cv::Mat toIlluminatiInvariant (const Matc3 &imageRgb, const float alpha);
 
 /*
  * Retinex Family
@@ -49,13 +60,6 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha=
  */
 cv::Mat exposureFusion(const cv::Mat &rgbImage);
 
-
-typedef cv::Mat_<float> Matf;
-typedef cv::Mat_<cv::Vec3f> Matf3;
-typedef cv::Mat_<int> Mati;
-typedef cv::Mat_<uint> Matui;
-typedef cv::Mat_<bool> Matb;
-typedef cv::Mat_<unsigned char> Matc;
 
 /*
  * Matrix utilities

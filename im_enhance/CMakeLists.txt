@@ -8,6 +8,7 @@ find_package (PythonLibs REQUIRED)
 find_package (Eigen3 REQUIRED)
 find_package (pybind11 REQUIRED)
 find_package (OpenMP REQUIRED)
+find_package (Boost REQUIRED COMPONENTS filesystem)
 
 if (OPENMP_FOUND)
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -47,6 +48,8 @@ add_executable(
 
 target_link_libraries(test_ime
 	im_enhance
+	Boost::system
+	Boost::filesystem
 )
 
 pybind11_add_module(
