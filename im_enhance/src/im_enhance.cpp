@@ -5,9 +5,10 @@
 #include <algorithm>
 #include <limits>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/hdf.hpp>
 #include <boost/math/tools/minima.hpp>
+#include <eigen3/unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -84,17 +85,6 @@ cv::Mat autoAdjustGammaMono(cv::Mat &grayImg, float *gamma, cv::Mat mask)
 		return cv::Mat();
 	}
 	return setGamma(grayImg, g);
-}
-
-
-/*
- * PS: don't remove this function
- */
-void dumpMatrix(const cv::Mat &input, const string &filepath)
-{
-	auto dumpIO = cv::hdf::open(filepath);
-	dumpIO->dswrite(input, "dump");
-	dumpIO->close();
 }
 
 
@@ -428,6 +418,12 @@ Matb operator > (const Matf &inp, const float X)
 */
 
 
+void saveMatNp(const cv::Mat &M, const char *filename)
+{
+	return saveMatNp(M, filename);
+}
+
+
 /*
  * Ying Et Al
  */
@@ -441,7 +437,7 @@ const float
 
 cv::Mat exposureFusion(const cv::Mat &rgbImage)
 {
-	Matf L, T(rgbImage.size());
+	Matf L, imageSmooth(rgbImage.size());
 	Matf3 rgbFloat;
 
 	cv::normalize(rgbImage, rgbFloat, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
@@ -449,26 +445,28 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	for (uint r=0; r<rgbFloat.rows; ++r) {
 		for (uint c=0; c<rgbFloat.cols; ++c) {
 			auto vc = rgbFloat(r,c);
-			T(r,c) = max(vc[0], max(vc[1], vc[2]));
+			imageSmooth(r,c) = max(vc[0], max(vc[1], vc[2]));
 		}
 	}
 
-	cv::resize(T, T, cv::Size(), 0.5, 0.5, cv::INTER_CUBIC);
-	cv::normalize(T, T, 0.0, 1.0, cv::NORM_MINMAX);
+	// XXX: There's difference between OpenCV's Bicubic vs PIL
+	cv::resize(imageSmooth, imageSmooth, cv::Size(), 0.5, 0.5, cv::INTER_CUBIC);
+	cv::normalize(imageSmooth, imageSmooth, 0.0, 1.0, cv::NORM_MINMAX);
 
 	// computeTextureWeights()
 	// Calculate gradient (horizontal & vertical)
 	Matf dt0v, dt0h, gh, gv, Wh, Wv;
-	cv::Sobel(T, dt0v, T.type(), 1, 0, 1);
-	cv::Sobel(T, dt0h, T.type(), 0, 1, 1);
-	cv::filter2D(dt0v, gv, CV_32F, cv::Mat::ones(sigma, 1, CV_32F));
-	cv::filter2D(dt0h, gh, CV_32F, cv::Mat::ones(1, sigma, CV_32F));
+	cv::Sobel(imageSmooth, dt0v, -1, 0, 1, 1);
+	cv::Sobel(imageSmooth, dt0h, -1, 1, 0, 1);
+
+	cv::filter2D(dt0v, gv, -1, cv::Mat::ones(sigma, 1, CV_64F), cv::Point(-1,-1), 0, cv::BORDER_CONSTANT);
+	cv::filter2D(dt0h, gh, -1, cv::Mat::ones(1, sigma, CV_64F), cv::Point(-1,-1), 0, cv::BORDER_CONSTANT);
 
 	Wh = 1.0f / (cv::abs(gh).mul(cv::abs(dt0h)) + sharpness);  // wx
 	Wv = 1.0f / (cv::abs(gv).mul(cv::abs(dt0v)) + sharpness);  // wy
 
 	// Solving linear equation for T (in vectorized form)
-	auto k = T.rows * T.cols;
+	auto k = imageSmooth.rows * imageSmooth.cols;
 	auto dx = -lambda * flatten(Wh, 1);
 	auto dy = -lambda * flatten(Wv, 1);
 	auto tempx = shiftCol(Wh, 1);
@@ -503,7 +501,12 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	decltype(Ay) Dspt = spdiags(D.t(), vector<int>{0}, k, k).transpose();
 	decltype(Ax) A = (Ax+Ay) + Axyt + Dspt;
 
-	auto _tin = flatten(T, 1);
+	// Debugging
+	Eigen::saveMarket(A, "/tmp/Asparse");
+	cout << "A saved\n";
+	exit(1);
+
+	auto _tin = flatten(imageSmooth, 1);
 	Eigen::Matrix<float,-1,-1> tin;
 	cv::cv2eigen(_tin, tin);
 
@@ -515,7 +518,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Matf t_vec;
 	cv::eigen2cv(out, t_vec);
 
-	Matf Tx = t_vec.reshape(1, T.cols).t();
+	Matf Tx = t_vec.reshape(1, imageSmooth.cols).t();
 	/*
 	 * XXX: The Tx produced by ours is signficantly different from Python Version.
 	 * Need more verification on the steps

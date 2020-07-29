@@ -13,6 +13,7 @@
 #include <opencv2/hdf.hpp>
 #include <opencv2/core/mat.hpp>
 #include "im_enhance.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -20,12 +21,6 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-/*
-	std::vector<int> V = {0, 1, 2, 3, 4, 5};
-	auto Vx = matFromIterator<float>(V.begin(), V.end());
-	Vx = Vx - 1;
-	cout << Vx << endl;
-*/
 	Eigen::initParallel();
 
 	cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
