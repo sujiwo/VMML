@@ -98,6 +98,9 @@ public:
 
 	bool doGammaCorrection = true;
 
+	cv::Mat getOriginMask() const
+	{ return stdMaskResized; }
+
 protected:
 
 	std::shared_ptr<Segmentation> gSegment=NULL;
