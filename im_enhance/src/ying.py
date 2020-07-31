@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import scipy, scipy.misc, scipy.signal
 import cv2
 import sys
+#You should have this
+from sksparse.cholmod import cholesky
 
 fDtype = "float32"
 
@@ -65,7 +67,10 @@ def solveLinearEquation(IN, wx, wy, lamda):
     A = ((Ax+Ay) + (Ax+Ay).conj().T + scipy.sparse.spdiags(D, 0, k, k)).T
     
     tin = IN[:,:]
-    tout = scipy.sparse.linalg.spsolve(A, tin.flatten('F'))
+    # This is the hotspot
+#     tout = scipy.sparse.linalg.spsolve(A, tin.flatten('F'))
+    tfactor = cholesky(A)
+    tout = tfactor(tin.flatten('F'))
     OUT = np.reshape(tout, (r, c), order='F')
     
     return OUT
