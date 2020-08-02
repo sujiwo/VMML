@@ -1,6 +1,8 @@
 /*
  * test_rgb_filters.cpp
  *
+ * This program is designed to test image pipeline function
+ *
  *  Created on: Feb 4, 2020
  *      Author: sujiwo
  */
@@ -48,6 +50,7 @@ const float alpha = 0.3975;
 Vmml::Mapper::ImagePipeline *imgPipe;
 
 bool hasBreak = false;
+bool disableFeatures = false;
 
 
 void breakHandler(int sign)
@@ -65,16 +68,22 @@ cv::Mat imagePipelineRun (const cv::Mat &srcRgb)
 	imgPipe->run(srcRgb, imageReady, mask);
 
 	// Detector Test
-	std::vector<cv::KeyPoint> kpList;
-	cv::Mat descriptors, drawFrameKeypts;
-	orbDetector->detectAndCompute(
-			imageReady,
-		mask,
-		kpList,
-		descriptors);
-	cv::drawKeypoints(imageReady, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
+	if (disableFeatures==false) {
+		std::vector<cv::KeyPoint> kpList;
+		cv::Mat descriptors, drawFrameKeypts;
+		orbDetector->detectAndCompute(
+				imageReady,
+			mask,
+			kpList,
+			descriptors);
+		cv::drawKeypoints(imageReady, kpList, drawFrameKeypts, cv::Scalar(0,255,0));
 
-	return drawFrameKeypts;
+		return drawFrameKeypts;
+	}
+
+	else {
+		return imageReady;
+	}
 }
 
 
@@ -202,6 +211,7 @@ int main(int argc, char *argv[])
 	progOpts.addSimpleOptions("resample", "Rate for playing bag", &resample);
 	progOpts.addSimpleOptions("start-time", "Process will start from x seconds", &startTime);
 	progOpts.addSimpleOptions("stop-time", "Maximum seconds from start", &stopTime);
+	progOpts.addSimpleOptions("disable-features", "Do not compute features", &disableFeatures);
 
 	progOpts.parseCommandLineArgs(argc, argv);
 	imgPipe = &progOpts.getImagePipeline();

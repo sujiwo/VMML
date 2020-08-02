@@ -1,3 +1,4 @@
+import multiprocessing
 import cv2
 import rosbag
 import cv_bridge
