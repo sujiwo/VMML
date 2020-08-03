@@ -56,3 +56,8 @@ pybind11_add_module(
 	ime_py MODULE
 		python/mod.cpp
 )
+
+install(
+	FILES src/ying.py
+	DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION}
+)

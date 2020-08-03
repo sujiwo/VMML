@@ -8,14 +8,18 @@ class RandomAccessBag:
     """RandomAccessBag is a wrapper for ROS Bag that allows random access to any message within a single topic"""
     
     def __init__ (self, bagFd, topic, start_time=None, end_time=None):
-        assert(type(bagFd)==rosbag.bag.Bag)
-        self.bagFd = bagFd
+#         assert(type(bagFd)==rosbag.bag.Bag)
+        if (isinstance(bagFd, str)):
+            self.bagFd = rosbag.Bag(bagFd, mode="r")
+        else:
+            assert(type(bagFd)==rosbag.bag.Bag)
+            self.bagFd = bagFd
         for cn in self.bagFd._connections.values():
             if cn.topic==topic:
                 self.connection = cn
                 break
             
-        startTimeR = bagFd._chunks[0].start_time
+        startTimeR = self.bagFd._chunks[0].start_time
         if (isinstance(start_time, float) or isinstance(start_time, int)):
             start_time = startTimeR + rospy.Duration.from_sec(start_time)
         if (isinstance(end_time, float) or isinstance(end_time, int)):
@@ -40,7 +44,11 @@ class RandomAccessBag:
         entry = self.entries[i]
         return self.bagFd._read_message(entry.position).message
     
+    def messageTime(self, i):
+        return self.timestamps[i]
+    
     def hz(self):
+        """Get message frequency"""
         dt = (self.entries[-1].time - self.entries[0].time).to_sec()
         return float(len(self.entries)) / dt
     
@@ -67,6 +75,8 @@ class RandomAccessBag:
     
     @staticmethod
     def getAllConnections(bagFd):
+        if (isinstance(bagFd, str)):
+            bagFd = rosbag.Bag(bagFd, mode="r")
         rdBags = []
         for c in bagFd._connections.values():
             rdBags.append(RandomAccessBag(bagFd, c.topic))
