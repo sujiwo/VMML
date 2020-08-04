@@ -153,19 +153,39 @@ singleScaleRetinex(const cv::Mat &inp, const float sigma)
 	// XXX: log_e or log_10 ?
 	cv::Mat inpLog;
 	cv::log(inp, inpLog);
-	inpLog /= log(10);
+	cv::multiply(cv::Mat::ones(inp.size(), CV_32FC1), inpLog, inpLog, 1/log(10));
 
 	// GaussianBlur() is also a hotspot for large sigma
 	cv::Mat gaussBlur;
-//	auto t1=Vmml::getCurrentTime();
 	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
-//	auto t2=Vmml::getCurrentTime();
-//	cerr << "Time 1s: " << Vmml::toSeconds(t2-t1) << endl;
 
 	cv::log(gaussBlur, gaussBlur);
-	gaussBlur /= log(10);
+	cv::multiply(cv::Mat::ones(inp.size(), CV_32FC1), gaussBlur, gaussBlur, 1/log(10));
 
-	auto R=inpLog - gaussBlur;
+	cv::Mat R;
+	cv::subtract(inpLog, gaussBlur, R);
+	return R;
+}
+
+
+cv::UMat
+singleScaleRetinex(const cv::UMat &inp, const float sigma)
+{
+	assert(inp.type()==CV_32FC1);
+
+	// XXX: log_e or log_10 ?
+	cv::UMat inpLog;
+	cv::log(inp, inpLog);
+	cv::multiply(cv::UMat::ones(inp.size(), CV_32FC1), inpLog, inpLog, 1/log(10));
+
+	cv::UMat gaussBlur;
+	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
+
+	cv::log(gaussBlur, gaussBlur);
+	cv::multiply(cv::UMat::ones(inp.size(), CV_32FC1), gaussBlur, gaussBlur, 1/log(10));
+
+	cv::UMat R;
+	cv::subtract(inpLog, gaussBlur, R);
 	return R;
 }
 
@@ -186,6 +206,31 @@ multiScaleRetinex(const cv::Mat &inp, const float sigma1,
 
 	msrex /= 3;
 	return msrex;
+}
+
+
+cv::Mat
+multiScaleRetinexGpu(const cv::Mat &inp,
+		const float sigma1,
+		const float sigma2,
+		const float sigma3)
+{
+	cv::UMat
+		msrex = cv::UMat::zeros(inp.size(), CV_32FC1),
+		inputg;
+	inp.copyTo(inputg);
+
+	array<float,3> _sigmaList = {sigma1, sigma2, sigma3};
+	for (auto &s: _sigmaList) {
+		cv::UMat ssRetx = singleScaleRetinex(inputg, s);
+		cv::add(msrex, ssRetx, msrex);
+	}
+
+	cv::divide(3, msrex, msrex);
+
+	cv::Mat outp;
+	msrex.copyTo(outp);
+	return outp;
 }
 
 
