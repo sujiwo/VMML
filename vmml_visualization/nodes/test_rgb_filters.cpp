@@ -65,7 +65,10 @@ cv::Mat imagePipelineRun (const cv::Mat &srcRgb)
 {
 	cv::Mat mask, imageReady;
 
+	auto t1=ros::Time::now();
 	imgPipe->run(srcRgb, imageReady, mask);
+	auto t2=ros::Time::now();
+	cout << "T: " << (t2-t1).toSec() << " s\n";
 
 	// Detector Test
 	if (disableFeatures==false) {

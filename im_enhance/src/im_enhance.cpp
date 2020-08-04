@@ -113,15 +113,9 @@ cv::Mat autoAdjustGammaRGB (const cv::Mat &rgbImg, cv::InputArray mask)
 
 	vector<cv::Mat> rgbBuf;
 	cv::split (rgbImg, rgbBuf);
-//	cv::LUT(rgbBuf[0], LUT, rgbBuf[0]);
-//	cv::LUT(rgbBuf[1], LUT, rgbBuf[1]);
-//	cv::LUT(rgbBuf[2], LUT, rgbBuf[2]);
 	rgbBuf[0] = setGamma (rgbBuf[0], gamma);
 	rgbBuf[1] = setGamma (rgbBuf[1], gamma);
 	rgbBuf[2] = setGamma (rgbBuf[2], gamma);
-//	cv::equalizeHist(rgbBuf[0], rgbBuf[0]);
-//	cv::equalizeHist(rgbBuf[1], rgbBuf[1]);
-//	cv::equalizeHist(rgbBuf[2], rgbBuf[2]);
 
 	cv::Mat BGRres;
 	cv::merge (rgbBuf, BGRres);
@@ -240,9 +234,6 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 
 	cv::Mat intensity1 = simpleColorBalance(firstRetinex, lowClip, highClip);
 
-	// XXX: intensMin & max produces zero values. There may be errors in multiScaleRetinex(),
-	// need to dump matrix values to numpy and analyze them using python by imshow(),
-	// because their values are in log domain
 	double intensMin, intensMax;
 	cv::minMaxIdx(intensity1, &intensMin, &intensMax);
 	intensity1 = (intensity1 - intensMin) / (intensMax - intensMin) * 255.0 + 1.0;

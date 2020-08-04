@@ -12,6 +12,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/hdf.hpp>
 #include <opencv2/core/mat.hpp>
+#include <opencv2/core/ocl.hpp>
 #include <boost/filesystem.hpp>
 #include "im_enhance.h"
 #include "npy.hpp"
