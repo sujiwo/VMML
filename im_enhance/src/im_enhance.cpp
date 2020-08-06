@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <limits>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/core/ocl.hpp>
 #include <boost/math/tools/minima.hpp>
 #include <eigen3/unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
@@ -153,17 +154,19 @@ singleScaleRetinex(const cv::Mat &inp, const float sigma)
 	// XXX: log_e or log_10 ?
 	cv::Mat inpLog;
 	cv::log(inp, inpLog);
-	cv::multiply(cv::Mat::ones(inp.size(), CV_32FC1), inpLog, inpLog, 1/log(10));
+	inpLog /= log(10);
 
 	// GaussianBlur() is also a hotspot for large sigma
 	cv::Mat gaussBlur;
+//	auto t1=Vmml::getCurrentTime();
 	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
+//	auto t2=Vmml::getCurrentTime();
+//	cerr << "Time 1s: " << Vmml::toSeconds(t2-t1) << endl;
 
 	cv::log(gaussBlur, gaussBlur);
-	cv::multiply(cv::Mat::ones(inp.size(), CV_32FC1), gaussBlur, gaussBlur, 1/log(10));
+	gaussBlur /= log(10);
 
-	cv::Mat R;
-	cv::subtract(inpLog, gaussBlur, R);
+	auto R=inpLog - gaussBlur;
 	return R;
 }
 
@@ -176,13 +179,13 @@ singleScaleRetinex(const cv::UMat &inp, const float sigma)
 	// XXX: log_e or log_10 ?
 	cv::UMat inpLog;
 	cv::log(inp, inpLog);
-	cv::multiply(cv::UMat::ones(inp.size(), CV_32FC1), inpLog, inpLog, 1/log(10));
+	cv::multiply(1.0/logf(10), inpLog, inpLog);
 
 	cv::UMat gaussBlur;
 	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
 
 	cv::log(gaussBlur, gaussBlur);
-	cv::multiply(cv::UMat::ones(inp.size(), CV_32FC1), gaussBlur, gaussBlur, 1/log(10));
+	cv::multiply(1.0/logf(10), gaussBlur, gaussBlur);
 
 	cv::UMat R;
 	cv::subtract(inpLog, gaussBlur, R);
@@ -226,7 +229,7 @@ multiScaleRetinexGpu(const cv::Mat &inp,
 		cv::add(msrex, ssRetx, msrex);
 	}
 
-	cv::divide(3, msrex, msrex);
+	cv::multiply(1.0/3.0, msrex, msrex);
 
 	cv::Mat outp;
 	msrex.copyTo(outp);
@@ -265,6 +268,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	const float sigma3,
 	const float lowClip, const float highClip)
 {
+	cv::ocl::setUseOpenCL(true);
 	cv::Mat imgf;
 	rgbImage.convertTo(imgf, CV_32FC3, 1.0, 1.0);
 
@@ -275,7 +279,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 			intensity.at<float>(r,c) = (color[0]+color[1]+color[2])/3;
 		}
 
-	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma1, sigma2, sigma3);
+	cv::Mat firstRetinex = multiScaleRetinexGpu(intensity, sigma1, sigma2, sigma3);
 
 	cv::Mat intensity1 = simpleColorBalance(firstRetinex, lowClip, highClip);
 
