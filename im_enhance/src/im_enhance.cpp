@@ -8,11 +8,23 @@
 #include <opencv2/core/ocl.hpp>
 #include <boost/math/tools/minima.hpp>
 #include <eigen3/unsupported/Eigen/SparseExtra>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "im_enhance.h"
 #include "npy.hpp"
 
 
 using namespace std;
+
+
+typedef boost::posix_time::ptime ptime;
+typedef boost::posix_time::time_duration tduration;
+
+inline ptime getCurrentTime ()
+{ return boost::posix_time::microsec_clock::local_time(); }
+
+inline double to_seconds (const tduration &td)
+{ return (double(td.total_microseconds()) / 1e6); }
+
 
 
 cv::Mat
@@ -279,7 +291,10 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 			intensity.at<float>(r,c) = (color[0]+color[1]+color[2])/3;
 		}
 
+	auto t1 = getCurrentTime();
 	cv::Mat firstRetinex = multiScaleRetinexGpu(intensity, sigma1, sigma2, sigma3);
+	auto t2 = getCurrentTime();
+	cout << "MSR: " << to_seconds(t2-t1) << endl;
 
 	cv::Mat intensity1 = simpleColorBalance(firstRetinex, lowClip, highClip);
 
