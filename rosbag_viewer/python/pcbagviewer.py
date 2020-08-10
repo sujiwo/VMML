@@ -1,13 +1,24 @@
 #!/usr/bin/python
 
 import vtk
+from vtk.util.numpy_support import numpy_to_vtk
 import pcl
 import sys
+
+
+def loadPcd (pcdfile):
+    pcd = pcl.PointCloud()
+    pcd.from_file(pcdfile)
+    array = numpy_to_vtk(pcd.to_array(), 1, vtk.VTK_FLOAT)
+    return array
+
 
     
 if __name__ == '__main__':
 
-    pcdfile = sys.argv[1]
+    pcdfile = loadPcd(sys.argv[1])
+    pointsrc = vtk.vtkPoints()
+    pointsrc.SetData(pcdfile)
 
     colors = vtk.vtkNamedColors()
 
@@ -22,6 +33,7 @@ if __name__ == '__main__':
 
     # create source
     src = vtk.vtkPointSource()
+    src2 = vtk.vtkPoints()
     src.SetCenter(0, 0, 0)
     src.SetNumberOfPoints(50)
     src.SetRadius(5)
