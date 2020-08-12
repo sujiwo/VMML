@@ -26,6 +26,27 @@ int main(int argc, char *argv[])
 {
 	Eigen::initParallel();
 
+	if (!cv::ocl::haveOpenCL()) {
+		cout << "OpenCL is not available" << endl;
+		return -1;
+	}
+
+	else {
+		cv::ocl::Context context;
+		context.create(cv::ocl::Device::TYPE_GPU);
+		cout << context.ndevices() << " GPU devices are detected." << endl;
+
+		for (int i = 0; i < context.ndevices(); i++)
+		{
+			cv::ocl::Device device = context.device(i);
+			cout << "name:              " << device.name() << endl;
+			cout << "available:         " << device.available() << endl;
+			cout << "imageSupport:      " << device.imageSupport() << endl;
+			cout << "OpenCL_C_Version:  " << device.OpenCL_C_Version() << endl;
+			cout << endl;
+		}
+	}
+
 	fs::path inputImage(argv[1]);
 
 	cv::Mat image = cv::imread(inputImage.string(), cv::IMREAD_COLOR);
@@ -35,10 +56,10 @@ int main(int argc, char *argv[])
 
 	int ch = stoi(argv[2]);
 	switch (ch) {
-	case 1: res = autoAdjustGammaRGB(image); break;
-	case 2: res = multiScaleRetinexCP(image); break;
-	case 3: res = toIlluminatiInvariant(image, alpha); break;
-	case 4: res = exposureFusion(image); break;
+	case 1: res = ice::autoAdjustGammaRGB(image); break;
+	case 2: res = ice::multiScaleRetinexCP(image); break;
+	case 3: res = ice::toIlluminatiInvariant(image, alpha); break;
+	case 4: res = ice::exposureFusion(image); break;
 	}
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));

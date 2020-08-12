@@ -29,6 +29,7 @@ include_directories(
 
 add_library(im_enhance
 	src/im_enhance.cpp
+	src/retinex.cpp
 )
 
 target_link_libraries(

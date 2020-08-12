@@ -169,6 +169,25 @@ def Ying_2017_CAIP(img, mu=0.5, a=-0.3293, b=1.1258):
     result[result<0] = 0
     return result.astype(np.uint8)
 
+
+# http://blog.ivank.net/fastest-gaussian-blur.html
+def box_for_gauss(radius, n):
+    wIdeal = np.sqrt((12*radius*radius/n) + 1)
+    wl = np.floor(wIdeal)
+    if (wl%2==0):
+        wl-=1
+    wu = wl+2
+    mIdeal = (12*radius*radius - n*wl*wl - 4*n*wl - 3*n) / (-4*wl - 4)
+    m = np.round(mIdeal)
+    sizes = []
+    for i in range(n):
+        if i < m:
+            sizes.append(wl)
+        else:
+            sizes.append(wu)
+    return sizes
+
+
 def main():
     img_name = sys.argv[1]
     img = cv2.imread(img_name)

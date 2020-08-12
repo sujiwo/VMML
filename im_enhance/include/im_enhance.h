@@ -6,7 +6,20 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <opencv2/core/eigen.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
+
+namespace ice {
+
+
+typedef boost::posix_time::ptime ptime;
+typedef boost::posix_time::time_duration tduration;
+
+inline ptime getCurrentTime ()
+{ return boost::posix_time::microsec_clock::local_time(); }
+
+inline double to_seconds (const tduration &td)
+{ return (double(td.total_microseconds()) / 1e6); }
 
 typedef cv::Mat_<float> Matf;
 typedef cv::Mat_<cv::Vec3f> Matf3;
@@ -331,3 +344,8 @@ double entropy(const cv::Mat_<Scalar> &X)
 	countsl = countsl / log(2);
 	return -(cv::sum(counts.mul(countsl))[0]);
 }
+
+}		// namespace ice
+
+
+
