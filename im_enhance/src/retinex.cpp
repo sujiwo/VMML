@@ -11,6 +11,15 @@ using namespace std;
 
 namespace ice {
 
+
+
+cv::Mat fastGaussianBlur (const cv::Mat &input, float r)
+{
+	// create box filter
+}
+
+
+
 /*
  * Retinex Family
  */
