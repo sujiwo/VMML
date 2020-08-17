@@ -103,7 +103,7 @@ cv::Mat fastGaussianBlur (const cv::Mat &input, float r)
  * Retinex Family
  */
 cv::Mat
-singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useBox=false)
+singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useFaster=false)
 {
 	assert(inp.type()==CV_32FC1);
 
@@ -113,13 +113,30 @@ singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useBox=false)
 	inpLog /= log(10);
 
 	// GaussianBlur() is also a hotspot for large sigma
-	cv::Mat gaussBlur;
-	cv::GaussianBlur(inp, gaussBlur, cv::Size(0,0), sigma);
+	cv::Mat blurred;
+	if (useFaster==false)
+		cv::GaussianBlur(inp, blurred, cv::Size(0,0), sigma);
 
-	cv::log(gaussBlur, gaussBlur);
-	gaussBlur /= log(10);
+/*
+	 def boxBlur3(image, radius):
+	    boxes = [int((y-1)) for y in ying.box_for_gauss(radius, 3)]
+	    img = cv2.boxFilter(image, -1, (boxes[0], boxes[0]))
+	    img = cv2.boxFilter(img, -1, (boxes[1], boxes[1]))
+	    img = cv2.boxFilter(img, -1, (boxes[2], boxes[2]))
+	    return img
+*/
 
-	auto R=inpLog - gaussBlur;
+	else {
+		auto boxes = boxesForGauss(sigma, 3);
+		cv::boxFilter( inp, blurred, -1, cv::Size(boxes[0]/2, boxes[0]/2) );
+		cv::boxFilter( blurred, blurred, -1, cv::Size(boxes[1]/2, boxes[1]/2) );
+		cv::boxFilter( blurred, blurred, -1, cv::Size(boxes[2]/2, boxes[2]/2) );
+	}
+
+	cv::log(blurred, blurred);
+	blurred /= log(10);
+
+	auto R=inpLog - blurred;
 	return R;
 }
 
@@ -157,11 +174,20 @@ multiScaleRetinex(const cv::Mat &inp, const float sigma1,
 	cv::Mat msrex = cv::Mat::zeros(inp.size(), CV_32FC1);
 	double mmin, mmax;
 
+/*
 	array<float,3> _sigmaList = {sigma1, sigma2, sigma3};
 	for (auto &s: _sigmaList) {
 		cv::Mat ssRetx = singleScaleRetinex(inp, s);
 		msrex = msrex + ssRetx;
 	}
+*/
+
+	cv::Mat ssRetx = singleScaleRetinex(inp, sigma1);
+	msrex = msrex + ssRetx;
+	ssRetx = singleScaleRetinex(inp, sigma2, true);
+	msrex = msrex + ssRetx;
+	ssRetx = singleScaleRetinex(inp, sigma3, true);
+	msrex = msrex + ssRetx;
 
 	msrex /= 3;
 	return msrex;
