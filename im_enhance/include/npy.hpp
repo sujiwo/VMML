@@ -616,6 +616,24 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
 }
 
 
+template<typename Scalar>
+void doSaveMat(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::string &filename)
+{
+	std::vector<Scalar> data;
+
+	if (mm.isContinuous()) {
+		auto p = (uint8_t*)mm.data;
+		data.assign(p, p+mm.total()*mm.channels());
+	}
+	else {
+		for (auto r=0; r<mm.rows; ++r)
+			data.insert(data.end(), mm.ptr<uint8_t>(r), mm.ptr<uint8_t>(r)+mm.cols*mm.channels());
+	}
+
+	SaveArrayAsNumpy(filename, false, n_dims, shape, data);
+}
+
+
 inline void saveMat(const cv::InputArray &M, const std::string &filename)
 {
 	int n_dims = (M.channels()==1 ? 2 : 3);
@@ -626,48 +644,19 @@ inline void saveMat(const cv::InputArray &M, const std::string &filename)
 		chan    = 1 + (mm.type() >> CV_CN_SHIFT);
 
 	if (matType==cv::DataType<uint8_t>::type) {
-		std::vector<uint8_t> data;
+		doSaveMat<uint8_t>(mm, n_dims, shape, filename);
+	}
 
-		if (mm.isContinuous()) {
-			auto p = (uint8_t*)mm.data;
-			data.assign(p, p+mm.total()*mm.channels());
-		}
-		else {
-			for (auto r=0; r<mm.rows; ++r)
-				data.insert(data.end(), mm.ptr<uint8_t>(r), mm.ptr<uint8_t>(r)+mm.cols*mm.channels());
-		}
-
-		SaveArrayAsNumpy(filename, false, n_dims, shape, data);
+	else if (matType==cv::DataType<int>::type) {
+		doSaveMat<int>(mm, n_dims, shape, filename);
 	}
 
 	else if (matType==cv::DataType<float>::type) {
-		std::vector<float> data;
-
-		if (mm.isContinuous()) {
-			auto p = (float*)mm.data;
-			data.assign(p, p+mm.total()*mm.channels());
-		}
-		else {
-			for (auto r=0; r<mm.rows; ++r)
-				data.insert(data.end(), mm.ptr<float>(r), mm.ptr<float>(r)+mm.cols*mm.channels());
-		}
-
-		SaveArrayAsNumpy(filename, false, n_dims, shape, data);
+		doSaveMat<float>(mm, n_dims, shape, filename);
 	}
 
 	else if (matType==cv::DataType<double>::type) {
-		std::vector<double> data;
-
-		if (mm.isContinuous()) {
-			auto p = (double*)mm.data;
-			data.assign(p, p+mm.total()*mm.channels());
-		}
-		else {
-			for (auto r=0; r<mm.rows; ++r)
-				data.insert(data.end(), mm.ptr<double>(r), mm.ptr<double>(r)+mm.cols*mm.channels());
-		}
-
-		SaveArrayAsNumpy(filename, false, n_dims, shape, data);
+		doSaveMat<double>(mm, n_dims, shape, filename);
 	}
 
 	else throw std::runtime_error("Unsupported Mat type");

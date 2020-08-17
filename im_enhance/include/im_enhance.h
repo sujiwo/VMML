@@ -36,20 +36,7 @@ cv::Mat toIlluminatiInvariant (const Matc3 &imageRgb, const float alpha);
 
 /*
  * Retinex Family
- */
-static cv::Mat
-singleScaleRetinex(const cv::Mat &inp, const float sigma);
-
-static cv::Mat
-multiScaleRetinex(const cv::Mat &inp,
-	const float sigma1,
-	const float sigma2,
-	const float sigma3);
-
-static cv::Mat
-simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip);
-
-/*
+ *
  * Suggested values:
  * Sigmas = { 15, 80, 250 }
  * low clip = 0.01

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <array>
+#include <cmath>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
@@ -11,6 +12,84 @@ using namespace std;
 
 namespace ice {
 
+
+/*
+ * Copied from https://github.com/WurmD/LowPass/blob/master/LowPassV.cpp
+ */
+vector<int> boxesForGauss(float sigma, int n)  // standard deviation, number of boxes
+{
+	auto wIdeal = sqrt((12 * sigma*sigma / n) + 1);  // Ideal averaging filter width
+	int wl = floor(wIdeal);
+	if (wl % 2 == 0)
+		wl--;
+	int wu = wl + 2;
+
+	auto mIdeal = (12 * sigma*sigma - n * wl*wl - 4 * n*wl - 3 * n) / (-4 * wl - 4);
+	int m = round(mIdeal);
+
+	vector<int> sizes(n);
+	for (auto i = 0; i < n; i++)
+		sizes[i] = i < m ? wl : wu;
+	return sizes;
+}
+
+
+void boxBlurH(cv::Mat &src, cv::Mat &dst, int radius)
+{
+	float iarr = 1.f / (2*radius + 1);
+
+	// Point of parallelism
+	for (auto i=0; i<src.rows; ++i) {
+
+		int ti = 0, li = 0;
+		auto ri = int(radius);
+		auto fv = src.at<float>(i, 0), lv = src.at<float>(i, src.cols-1);
+		auto val = (radius+1) * fv;
+
+		for (auto j=0; j<radius; ++j) {
+			val += src.at<float>(i, j);
+		}
+
+		for (auto j=0; j<=radius; ++j) {
+			val += src.at<float>(i, ri++) - fv;
+			dst.at<float>(i, ti++) = val * iarr;
+		}
+
+		for (auto j=radius+1; j<src.cols-radius; ++j) {
+			val += src.at<float>(i, ri++) - src.at<float>(i, li++);
+			dst.at<float>(i, ti++) = val*iarr;
+		}
+
+		for (auto j=src.cols - radius; j<src.cols; ++j) {
+			val+= lv - src.at<float>(i, li++);
+			dst.at<float>(i, ti++) = val*iarr;
+		}
+	}
+}
+
+
+void boxBlurT(cv::Mat &src, cv::Mat &dst, int radius)
+{
+	float iarr = 1.f / (2*radius +1);
+
+	// Point of parallelism
+	for (auto i=0; i<src.cols; ++i) {
+
+		int ti=i, li=i;
+		auto ri = int(radius);
+		auto fv = src.at<float>(0, i), lv = src.at<float>(src.rows-1, i);
+		auto val = (radius+1) * fv;
+
+		for (auto j=0; j<radius; ++j) {
+			val += src.at<float>(j, i);
+		}
+
+		for (auto j=0; j<radius; ++j) {
+			val += src.at<float>(j, ri++) - fv;
+//			dst.at<float>()
+		}
+	}
+}
 
 
 cv::Mat fastGaussianBlur (const cv::Mat &input, float r)
@@ -24,7 +103,7 @@ cv::Mat fastGaussianBlur (const cv::Mat &input, float r)
  * Retinex Family
  */
 cv::Mat
-singleScaleRetinex(const cv::Mat &inp, const float sigma)
+singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useBox=false)
 {
 	assert(inp.type()==CV_32FC1);
 
@@ -162,7 +241,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 		}
 
 	auto t1 = getCurrentTime();
-	cv::Mat firstRetinex = multiScaleRetinexGpu(intensity, sigma1, sigma2, sigma3);
+	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma1, sigma2, sigma3);
 	auto t2 = getCurrentTime();
 	cout << "MSR: " << to_seconds(t2-t1) << endl;
 
