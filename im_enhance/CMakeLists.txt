@@ -10,6 +10,13 @@ find_package (pybind11 REQUIRED)
 find_package (OpenMP REQUIRED)
 find_package (Boost REQUIRED COMPONENTS filesystem)
 
+find_package (catkin COMPONENTS
+	roscpp
+	sensor_msgs
+	cv_bridge
+	image_transport
+)
+
 if (OPENMP_FOUND)
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -25,6 +32,7 @@ include_directories(
 	include
 	${OpenCV_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
+	${catkin_INCLUDE_DIRS}
 )
 
 add_library(im_enhance
@@ -62,3 +70,13 @@ install(
 	FILES src/ying.py
 	DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION}
 )
+
+if (catkin_FOUND)
+	add_executable(ime_ros
+		src/ime_ros.cpp)
+	target_link_libraries(ime_ros
+		im_enhance
+		${catkin_LIBRARIES})
+endif()
+
+

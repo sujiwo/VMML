@@ -117,15 +117,6 @@ singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useFaster=false)
 	if (useFaster==false)
 		cv::GaussianBlur(inp, blurred, cv::Size(0,0), sigma);
 
-/*
-	 def boxBlur3(image, radius):
-	    boxes = [int((y-1)) for y in ying.box_for_gauss(radius, 3)]
-	    img = cv2.boxFilter(image, -1, (boxes[0], boxes[0]))
-	    img = cv2.boxFilter(img, -1, (boxes[1], boxes[1]))
-	    img = cv2.boxFilter(img, -1, (boxes[2], boxes[2]))
-	    return img
-*/
-
 	else {
 		auto boxes = boxesForGauss(sigma, 3);
 		cv::boxFilter( inp, blurred, -1, cv::Size(boxes[0]/2, boxes[0]/2) );
