@@ -622,12 +622,12 @@ void doSaveMat(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::strin
 	std::vector<Scalar> data;
 
 	if (mm.isContinuous()) {
-		auto p = (uint8_t*)mm.data;
+		auto p = (Scalar*)mm.data;
 		data.assign(p, p+mm.total()*mm.channels());
 	}
 	else {
 		for (auto r=0; r<mm.rows; ++r)
-			data.insert(data.end(), mm.ptr<uint8_t>(r), mm.ptr<uint8_t>(r)+mm.cols*mm.channels());
+			data.insert(data.end(), mm.ptr<Scalar>(r), mm.ptr<Scalar>(r)+mm.cols*mm.channels());
 	}
 
 	SaveArrayAsNumpy(filename, false, n_dims, shape, data);

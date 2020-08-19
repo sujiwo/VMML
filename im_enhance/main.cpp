@@ -15,6 +15,7 @@
 #include <opencv2/core/ocl.hpp>
 #include <boost/filesystem.hpp>
 #include "im_enhance.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -26,6 +27,11 @@ int main(int argc, char *argv[])
 	fs::path inputImage(argv[1]);
 
 	cv::Mat image = cv::imread(inputImage.string(), cv::IMREAD_COLOR);
+	ice::Matf3 imagef;
+	cv::normalize(image, imagef, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
+	cout << "Norm: " << cv::norm(imagef) << endl;
+	npy::saveMat(imagef, "/tmp/imagef.npy");
+/*
 	cv::Mat res;
 
 	const float alpha = 0.3975;
@@ -40,6 +46,7 @@ int main(int argc, char *argv[])
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
+*/
 
 	return 0;
 }
