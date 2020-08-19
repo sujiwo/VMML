@@ -3,12 +3,19 @@ project(im_enhance)
 
 add_compile_options(-std=c++11)
 
+set (CMAKE_MODULE_PATH 
+		${CMAKE_MODULE_PATH} 
+		"${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package (OpenCV REQUIRED)
 find_package (PythonLibs REQUIRED)
 find_package (Eigen3 REQUIRED)
 find_package (pybind11 REQUIRED)
 find_package (OpenMP REQUIRED)
 find_package (Boost REQUIRED COMPONENTS filesystem)
+find_package (SuiteSparse REQUIRED)
+
+message("SuiteSparse: ${SUITESPARSE_LIBRARIES}")
 
 find_package (catkin COMPONENTS
 	roscpp
@@ -33,6 +40,7 @@ include_directories(
 	${OpenCV_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
 	${catkin_INCLUDE_DIRS}
+	${SUITESPARSE_INCLUDE_DIRS}
 )
 
 add_library(im_enhance
@@ -44,6 +52,7 @@ add_library(im_enhance
 target_link_libraries(
 	im_enhance
 		${OpenCV_LIBS}
+		${SUITESPARSE_LIBRARIES}
 )
 
 install(
@@ -77,7 +86,8 @@ if (catkin_FOUND)
 		src/ime_ros.cpp)
 	target_link_libraries(ime_ros
 		im_enhance
-		${catkin_LIBRARIES})
+		${catkin_LIBRARIES}
+		${SUITESPARSE_LIBRARIES})
 endif()
 
 

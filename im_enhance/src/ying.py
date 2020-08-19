@@ -19,8 +19,9 @@ def computeTextureWeights(fin, sigma, sharpness):
 # 
 #     W_h = 1/(np.abs(gauker_h)*np.abs(dt0_h)+sharpness)
 #     W_v = 1/(np.abs(gauker_v)*np.abs(dt0_v)+sharpness)
-    dt0_v = cv2.Sobel(fin, -1, 0, 1, 1)
-    dt0_h = cv2.Sobel(fin, -1, 1, 0, 1)
+    # XXX: What is kernel size ? 3 or 1 ?
+    dt0_v = cv2.Sobel(fin, -1, 0, 1, ksize=3)
+    dt0_h = cv2.Sobel(fin, -1, 1, 0, ksize=3)
     gh = cv2.filter2D(dt0_h, -1, np.ones((1,sigma)), borderType=cv2.BORDER_CONSTANT)
     gv = cv2.filter2D(dt0_v, -1, np.ones((sigma,1)), borderType=cv2.BORDER_CONSTANT)
     W_h = 1/(np.abs(gh)*np.abs(dt0_h)+sharpness)

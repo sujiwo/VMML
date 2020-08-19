@@ -6,7 +6,6 @@
 #include <limits>
 #include <opencv2/imgproc.hpp>
 #include "im_enhance.h"
-#include "npy.hpp"
 
 
 using namespace std;

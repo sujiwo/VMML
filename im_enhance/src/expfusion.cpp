@@ -2,8 +2,10 @@
 #include <vector>
 #include <opencv2/imgproc.hpp>
 #include <boost/math/tools/minima.hpp>
-#include <eigen3/unsupported/Eigen/SparseExtra>
+#include <Eigen/CholmodSupport>
+//#include <eigen3/unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -77,6 +79,21 @@ spdiags(const Matf &_Data, const Mati &_diags, int m, int n)
 }
 
 
+/*
+template<typename SrcScalar, typename NewScalar=SrcScalar>
+Eigen::SparseMatrix<NewScalar> spdiags(const cv::Mat_<SrcScalar> &Data, const std::vector<int> &diags, int m, int n)
+{
+	assert(Data.rows==diags.size());
+	Eigen::Matrix<NewScalar, Eigen::Dynamic, Eigen::Dynamic> Data_;
+	cv::cv2eigen(Data, Data_);
+	Eigen::VectorXi diags_(diags.size());
+	for (int i=0; i<diags.size(); ++i)
+		diags[i] = _diags[i];
+	return spdiags(Data_, diags_, m, n);
+}
+*/
+
+
 Eigen::SparseMatrix<float>
 spdiags(const Matf &_Data, const std::vector<int> &_diags, int m, int n)
 {
@@ -90,11 +107,11 @@ spdiags(const Matf &_Data, const std::vector<int> &_diags, int m, int n)
 }
 
 
-template<typename Scalar>
-Eigen::SparseMatrix<Scalar>
-spdiags(const std::vector<cv::Mat_<Scalar>> &_Data, const std::vector<int> &diags, int m, int n)
+template<typename DstScalar, typename SrcScalar>
+Eigen::SparseMatrix<DstScalar>
+spdiags(const std::vector<cv::Mat_<SrcScalar>> &_Data, const std::vector<int> &diags, int m, int n)
 {
-	std::vector<Eigen::Triplet<float>> triplets;
+	std::vector<Eigen::Triplet<DstScalar>> triplets;
 	triplets.reserve(std::min(m,n)*diags.size());
 
 	for (int k = 0; k < diags.size(); ++k) {
@@ -114,10 +131,42 @@ spdiags(const std::vector<cv::Mat_<Scalar>> &_Data, const std::vector<int> &diag
 		}
 	}
 
-	Eigen::SparseMatrix<Scalar> A(m, n);
+	Eigen::SparseMatrix<DstScalar> A(m, n);
 	A.setFromTriplets(triplets.begin(), triplets.end());
 
 	return A;
+}
+
+
+/*
+ * Create sparse diagonal matrix using single vector
+ */
+template<typename DstScalar, typename SrcScalar>
+Eigen::SparseMatrix<DstScalar>
+spdiags(cv::Mat_<SrcScalar> &_Data, int m, int n)
+{
+	std::vector<Eigen::Triplet<DstScalar>> triplets;
+	int diagonalLength = std::min(m, n);
+	assert (_Data.rows * _Data.cols == diagonalLength);
+	triplets.reserve(diagonalLength);
+
+	auto vit = _Data.begin();
+	for (int i=0; i<diagonalLength; ++i, ++vit) {
+		triplets.push_back( {i, i, *vit} );
+	}
+
+	Eigen::SparseMatrix<DstScalar> A(m, n);
+	A.setFromTriplets(triplets.begin(), triplets.end());
+
+	return A;
+}
+
+
+template<typename SrcScalar>
+Eigen::SparseMatrix<SrcScalar>
+spdiags(const std::vector<cv::Mat_<SrcScalar>> &_Data, const std::vector<int> &diags, int m, int n)
+{
+	return spdiags<SrcScalar, SrcScalar>(_Data, diags, m, n);
 }
 
 
@@ -169,12 +218,6 @@ Matb operator > (const Matf &inp, const float X)
 */
 
 
-void saveMatNp(const cv::Mat &M, const char *filename)
-{
-	return saveMatNp(M, filename);
-}
-
-
 /*
  * Ying Et Al
  */
@@ -200,15 +243,15 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 		}
 	}
 
-	// XXX: There's difference between OpenCV's Bicubic vs PIL
 	cv::resize(imageSmooth, imageSmooth, cv::Size(), 0.5, 0.5, cv::INTER_CUBIC);
 	cv::normalize(imageSmooth, imageSmooth, 0.0, 1.0, cv::NORM_MINMAX);
 
 	// computeTextureWeights()
 	// Calculate gradient (horizontal & vertical)
 	Matf dt0v, dt0h, gh, gv, Wh, Wv;
-	cv::Sobel(imageSmooth, dt0v, -1, 0, 1, 1);
-	cv::Sobel(imageSmooth, dt0h, -1, 1, 0, 1);
+	const int ksize = 3;
+	cv::Sobel(imageSmooth, dt0v, -1, 0, 1, ksize);
+	cv::Sobel(imageSmooth, dt0h, -1, 1, 0, ksize);
 
 	cv::filter2D(dt0v, gv, -1, cv::Mat::ones(sigma, 1, CV_64F), cv::Point(-1,-1), 0, cv::BORDER_CONSTANT);
 	cv::filter2D(dt0h, gh, -1, cv::Mat::ones(1, sigma, CV_64F), cv::Point(-1,-1), 0, cv::BORDER_CONSTANT);
@@ -239,41 +282,32 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 
 	vector<Matf> Aconc = {dxd1, dxd2};
 	vector<int> Adgl = {-k+Wh.rows, -Wh.rows};
-	auto Ax = spdiags(Aconc, Adgl, k, k);
+	auto Ax = spdiags<double>(Aconc, Adgl, k, k);
 
 	Aconc = {dyd1, dyd2};
 	Adgl = {-Wv.rows+1, -1};
-	auto Ay = spdiags(Aconc, Adgl, k, k);
+	auto Ay = spdiags<double>(Aconc, Adgl, k, k);
 
 	Matf D = 1 - (dx + dy + dxa + dya);
 	decltype(Ax) Axyt = (Ax+Ay);
 	Axyt = Axyt.conjugate().transpose();
 
-	decltype(Ay) Dspt = spdiags(D.t(), vector<int>{0}, k, k).transpose();
-	decltype(Ax) A = (Ax+Ay) + Axyt + Dspt;
-
-	// Debugging
-	Eigen::saveMarket(A, "/tmp/Asparse");
-	cout << "A saved\n";
-	exit(1);
+	auto Dspt = spdiags<double>(D, k, k);
+	Eigen::SparseMatrix<double> A = (Ax+Ay) + Axyt + Dspt;
 
 	auto _tin = flatten(imageSmooth, 1);
-	Eigen::Matrix<float,-1,-1> tin;
+	Eigen::Matrix<double,-1,-1> tin;
 	cv::cv2eigen(_tin, tin);
 
-	Eigen::SparseLU<decltype(A)> solver;
+	Eigen::CholmodSupernodalLLT<decltype(A)> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
-	Eigen::VectorXf out = solver.solve(tin);
+	Eigen::VectorXd out = solver.solve(tin);
 
 	Matf t_vec;
 	cv::eigen2cv(out, t_vec);
 
 	Matf Tx = t_vec.reshape(1, imageSmooth.cols).t();
-	/*
-	 * XXX: The Tx produced by ours is signficantly different from Python Version.
-	 * Need more verification on the steps
-	 */
 	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_CUBIC);
 //	tsmooth() is done
 

@@ -15,7 +15,6 @@
 #include <opencv2/core/ocl.hpp>
 #include <boost/filesystem.hpp>
 #include "im_enhance.h"
-#include "npy.hpp"
 
 
 using namespace std;
@@ -24,29 +23,6 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
-	Eigen::initParallel();
-
-	if (!cv::ocl::haveOpenCL()) {
-		cout << "OpenCL is not available" << endl;
-		return -1;
-	}
-
-	else {
-		cv::ocl::Context context;
-		context.create(cv::ocl::Device::TYPE_GPU);
-		cout << context.ndevices() << " GPU devices are detected." << endl;
-
-		for (int i = 0; i < context.ndevices(); i++)
-		{
-			cv::ocl::Device device = context.device(i);
-			cout << "name:              " << device.name() << endl;
-			cout << "available:         " << device.available() << endl;
-			cout << "imageSupport:      " << device.imageSupport() << endl;
-			cout << "OpenCL_C_Version:  " << device.OpenCL_C_Version() << endl;
-			cout << endl;
-		}
-	}
-
 	fs::path inputImage(argv[1]);
 
 	cv::Mat image = cv::imread(inputImage.string(), cv::IMREAD_COLOR);
