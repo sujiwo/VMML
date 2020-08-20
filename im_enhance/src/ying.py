@@ -153,6 +153,7 @@ def Ying_2017_CAIP(img, mu=0.5, a=-0.3293, b=1.1258):
     
     # Apply camera model with k(exposure ratio)
     isBad = t_our < 0.5
+    np.save('/tmp/isBadpy', isBad)
     J = maxEntropyEnhance(I, isBad)
 
     # W: Weight Matrix

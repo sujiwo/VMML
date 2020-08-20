@@ -211,6 +211,12 @@ template<> struct has_typestring<std::complex<long double>>{
 };
 constexpr dtype_t has_typestring<std::complex<long double>>::dtype;
 
+template<> struct has_typestring<bool>{
+  static const bool value=true;
+  static constexpr dtype_t dtype = {no_endian_char, 'b', 1};
+};
+constexpr dtype_t has_typestring<bool>::dtype;
+
 
 // helpers
 inline bool is_digits(const std::string &str) {
@@ -574,6 +580,42 @@ inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, u
     stream.write(reinterpret_cast<const char*>(data.data()), sizeof(Scalar) * size);
 }
 
+template<>
+inline void SaveArrayAsNumpy<bool>( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<bool>& data)
+{
+	dtype_t booltype = has_typestring<bool>::dtype;
+    std::ofstream stream( filename, std::ofstream::binary);
+    if(!stream) {
+        throw std::runtime_error("io error: failed to open a file.");
+    }
+
+    std::vector<ndarray_len_t> shape_v(shape, shape+n_dims);
+    header_t header {booltype, fortran_order, shape_v};
+    write_header(stream, header);
+
+    std::vector<uint8_t> booldata;
+    std::transform(data.begin(), data.end(),
+    	std::back_inserter(booldata),
+		[](bool b)
+			{ return b ? 1 : 0; }
+    );
+    stream.write(reinterpret_cast<const char*>(booldata.data()), booldata.size()*sizeof(uint8_t));
+}
+
+inline void SaveArrayAsNumpyBool( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<uint8_t>& data)
+{
+	dtype_t booltype = has_typestring<bool>::dtype;
+    std::ofstream stream( filename, std::ofstream::binary);
+    if(!stream) {
+        throw std::runtime_error("io error: failed to open a file.");
+    }
+
+    std::vector<ndarray_len_t> shape_v(shape, shape+n_dims);
+    header_t header {booltype, fortran_order, shape_v};
+    write_header(stream, header);
+
+    stream.write(reinterpret_cast<const char*>(data.data()), data.size()*sizeof(uint8_t));
+}
 
 template<typename Scalar>
 inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>& shape, std::vector<Scalar>& data)
@@ -634,7 +676,28 @@ void doSaveMat(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::strin
 }
 
 
-inline void saveMat(const cv::InputArray &M, const std::string &filename)
+template<>
+void doSaveMat<bool>(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::string &filename)
+{
+	std::vector<uint8_t> data;
+
+	if (mm.isContinuous()) {
+		auto p = (uint8_t*)mm.data;
+		data.assign(p, p+mm.total()*mm.channels());
+	}
+	else {
+		for (auto r=0; r<mm.rows; ++r)
+			data.insert(data.end(), mm.ptr<uint8_t>(r), mm.ptr<uint8_t>(r)+mm.cols*mm.channels());
+	}
+
+	SaveArrayAsNumpyBool(filename, false, n_dims, shape, data);
+}
+
+
+/*
+ * Store OpenCV Matrix to a file in Numpy format
+ */
+inline void saveMat(const cv::InputArray &M, const std::string &filename, bool isBool=false)
 {
 	int n_dims = (M.channels()==1 ? 2 : 3);
 	unsigned long shape[3] = {M.rows(), M.cols(), M.channels()};
@@ -643,7 +706,11 @@ inline void saveMat(const cv::InputArray &M, const std::string &filename)
 	int matType = mm.type() & CV_MAT_DEPTH_MASK,
 		chan    = 1 + (mm.type() >> CV_CN_SHIFT);
 
-	if (matType==cv::DataType<uint8_t>::type) {
+	if (isBool==true) {
+		return doSaveMat<bool>(mm, n_dims, shape, filename);
+	}
+
+	else if (matType==cv::DataType<uint8_t>::type) {
 		doSaveMat<uint8_t>(mm, n_dims, shape, filename);
 	}
 

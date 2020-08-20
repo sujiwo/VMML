@@ -335,7 +335,8 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_CUBIC);
 //	tsmooth() is done
 
-	Matc isBad = Tx < 0.5;
+	Matb isBad = Tx < 0.5;
+//	npy::saveMat(isBad, "/tmp/isBadc.npy"); exit(-1);
 
 	/* Maximize entrophy */
 	Matf3 rgbTiny;
