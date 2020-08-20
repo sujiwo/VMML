@@ -196,35 +196,6 @@ matFromIterator (
 }
 
 
-template<typename Scalar>
-cv::Mat_<Scalar>
-selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const cv::Mat &mask)
-{
-	assert(input.channels()==1 and mask.channels()==1);
-	assert(input.size()==mask.size());
-
-	std::vector<Scalar> V;
-	for (int r=0; r<input.rows; ++r)
-		for (int c=0; c<input.cols; ++c) {
-			auto m = mask.at<int>(r,c);
-			if (m!=0)
-				V.push_back(input(r,c));
-		}
-	return cv::Mat_<Scalar>(V.size(), 1, V.data());
-}
-
-
-template<typename Scalar>
-cv::Mat_<Scalar> applyK(const cv::Mat_<Scalar> &input, float k, float a, float b)
-{
-	auto beta = exp((1-pow(k,a)*b));
-	auto gamma = pow(k, a);
-	cv::Mat_<Scalar> _powf;
-	cv::pow(input, gamma, _powf);
-	return _powf * beta;
-}
-
-
 template<typename K, typename V>
 std::vector<K>
 getKeys (const std::map<K, V> &M)
@@ -273,6 +244,26 @@ MapFun<Scalar, int> unique(const cv::Mat_<Scalar> &M)
 	}
 
 	return res;
+}
+
+
+template<typename Scalar>
+double entropy(const cv::Mat_<Scalar> &X)
+{
+	assert(X.channels()==1);
+
+	cv::Mat_<Scalar> tmp = X*255;
+	tmp.setTo(255, tmp>255);
+	tmp.setTo(0, tmp<0);
+	Matc tmpd;
+	tmp.convertTo(tmpd, CV_8UC1);
+	auto __c = unique(tmpd).getValues();
+	auto counts = matFromIterator<float>(__c.begin(), __c.end());
+	counts = counts / cv::sum(counts)[0];
+	decltype(counts) countsl;
+	cv::log(counts, countsl);
+	countsl = countsl / log(2);
+	return -(cv::sum(counts.mul(countsl))[0]);
 }
 
 

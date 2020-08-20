@@ -730,6 +730,29 @@ inline void saveMat(const cv::InputArray &M, const std::string &filename, bool i
 }
 
 
+inline cv::Mat loadMat(const std::string &filename)
+{
+	std::ifstream stream(filename, std::ifstream::binary);
+	if(!stream) {
+		throw std::runtime_error("io error: failed to open a file.");
+	}
+
+	std::string header_s = read_header(stream);
+
+	// parse header
+	header_t header = parse_header(header_s);
+
+	switch (header.dtype.kind) {
+	case 'i':
+	case 'u':
+	case 'f':
+	case 'd':
+	}
+
+	// XXX: Unfinished
+}
+
+
 } // namespace npy
 
 #endif // NPY_H

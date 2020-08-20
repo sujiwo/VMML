@@ -1,9 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <type_traits>
 #include <opencv2/imgproc.hpp>
 #include <boost/math/tools/minima.hpp>
 #include <Eigen/CholmodSupport>
-//#include <eigen3/unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
 #include "npy.hpp"
 
@@ -15,23 +15,31 @@ namespace ice {
 
 
 template<typename Scalar>
-double entropy(const cv::Mat_<Scalar> &X)
+cv::Mat_<Scalar> applyK(const cv::Mat_<Scalar> &input, float k, float a, float b)
 {
-	assert(X.channels()==1);
+	auto beta = exp((1-pow(k,a))*b);
+	auto gamma = pow(k, a);
+	cv::Mat_<Scalar> _powf;
+	cv::pow(input, gamma, _powf);
+	return _powf * beta;
+}
 
-	cv::Mat_<Scalar> tmp = X*255;
-	tmp.setTo(255, tmp>255);
-	tmp.setTo(0, tmp<0);
-	Matc tmpd;
-	cv::Mat tmpc;
-	tmp.convertTo(tmpd, CV_8UC1);
-	auto __c = unique(tmpd).getValues();
-	auto counts = matFromIterator<float>(__c.begin(), __c.end());
-	counts = counts / cv::sum(counts)[0];
-	decltype(counts) countsl;
-	cv::log(counts, countsl);
-	countsl = countsl / log(2);
-	return -(cv::sum(counts.mul(countsl))[0]);
+
+template<typename Scalar>
+cv::Mat_<Scalar>
+selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const Matb &mask)
+{
+	assert(input.channels()==1 and mask.channels()==1);
+	assert(input.size()==mask.size());
+
+	std::vector<Scalar> V;
+	for (int r=0; r<input.rows; ++r)
+		for (int c=0; c<input.cols; ++c) {
+			auto m = mask(r,c);
+			if (m==true)
+				V.push_back(input(r,c));
+		}
+	return cv::Mat_<Scalar>(V.size(), 1, V.data());
 }
 
 
@@ -64,7 +72,23 @@ cv::Mat flatten(cv::InputArray src, uchar order)
 
 
 cv::Mat reshape(cv::InputArray _src, int row, int col, uchar order)
+{template<typename Scalar>
+cv::Mat_<Scalar>
+selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const cv::Mat &mask)
 {
+	assert(input.channels()==1 and mask.channels()==1);
+	assert(input.size()==mask.size());
+
+	std::vector<Scalar> V;
+	for (int r=0; r<input.rows; ++r)
+		for (int c=0; c<input.cols; ++c) {
+			auto m = mask.at<int>(r,c);
+			if (m!=0)
+				V.push_back(input(r,c));
+		}
+	return cv::Mat_<Scalar>(V.size(), 1, V.data());
+}
+
 	assert ((_src.cols()==1 or _src.rows()==1) and _src.cols()*_src.rows()==row*col);
 
 	cv::Mat
@@ -336,7 +360,6 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 //	tsmooth() is done
 
 	Matb isBad = Tx < 0.5;
-//	npy::saveMat(isBad, "/tmp/isBadc.npy"); exit(-1);
 
 	/* Maximize entrophy */
 	Matf3 rgbTiny;
@@ -347,7 +370,10 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Matf Y(rgbTiny.size());
 	for (int r=0; r<rgbTiny.rows; ++r) {
 		for (int c=0; c<rgbTiny.cols; ++c) {
-			auto ch = rgbTiny(r, c);
+			auto &ch = rgbTiny(r, c);
+			if (ch[0]<0) ch[0]=0;
+			if (ch[1]<0) ch[1]=0;
+			if (ch[2]<0) ch[2]=0;
 			Y(r,c) = fabsf(cbrtf(ch[0]*ch[1]*ch[2]));
 		}
 	}
@@ -358,7 +384,8 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 
 	isBadf.setTo(0, isBadf<0.5);
 	isBadf.setTo(1, isBadf>=0.5);
-	auto Yx = selectElementsToVectorWithMask(Y, cv::Mat(isBadf==1));
+	auto Yx = selectElementsToVectorWithMask(Y, Matb(isBadf==1));
+	cout << Yx.size() << endl;
 
 	// What to do for bad vector?
 	if (Yx.rows*Yx.cols==0) {
@@ -369,8 +396,10 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 		return -entropy(applyK(Yx, k, a_, b_));
 	};
 
+#define BOOST_MATH_INSTRUMENT
 	// call Boost Brent Method
-	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits);
+	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits10);
+	cout << "K: " << fmin.first << endl;
 	auto J = applyK(rgbFloat, fmin.first, a_, b_) - 0.01;
 
 	// Combine Tx
