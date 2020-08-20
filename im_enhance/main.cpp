@@ -22,6 +22,7 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
+/*
 	fs::path inputImage(argv[1]);
 
 	cv::Mat image = cv::imread(inputImage.string(), cv::IMREAD_COLOR);
@@ -39,6 +40,10 @@ int main(int argc, char *argv[])
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
+*/
+
+	ice::Matc M = npy::loadMat(argv[1]);
+	cout << M << endl;
 
 	return 0;
 }

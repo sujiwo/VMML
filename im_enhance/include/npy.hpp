@@ -741,12 +741,66 @@ inline cv::Mat loadMat(const std::string &filename)
 
 	// parse header
 	header_t header = parse_header(header_s);
+	std::vector<unsigned long> shape = header.shape;
+	int rows = shape[0];
+	int cols = (shape.size()>=2 ? shape[1] : 1);
+	int channel = (shape.size()==3 ? shape[2] : 1);
+	auto size = static_cast<size_t>(comp_size(shape));
 
 	switch (header.dtype.kind) {
-	case 'i':
-	case 'u':
-	case 'f':
-	case 'd':
+	case 'i': {
+		if (header.dtype.itemsize==1) {
+			cv::Mat M(rows, cols, CV_8SC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(char)*size);
+			return M;
+		}
+		else if (header.dtype.itemsize==2) {
+			cv::Mat M(rows, cols, CV_16SC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(short)*size);
+			return M;
+		}
+		else if (header.dtype.itemsize==4) {
+			cv::Mat M(rows, cols, CV_32SC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(int)*size);
+			return M;
+		}
+		else if (header.dtype.itemsize==8) {
+			throw std::runtime_error("64-bit integer not supported by OpenCV");
+		}
+	} break;
+	case 'u': {
+		if (header.dtype.itemsize==1) {
+			cv::Mat M(rows, cols, CV_8UC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(unsigned char)*size);
+			return M;
+		}
+		else if (header.dtype.itemsize==2) {
+			cv::Mat M(rows, cols, CV_16UC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(unsigned short)*size);
+			return M;
+		}
+		else if (header.dtype.itemsize==4) {
+			throw std::runtime_error("Unsigned 32-bit integer not supported by OpenCV");
+		}
+		else if (header.dtype.itemsize==8) {
+			throw std::runtime_error("64-bit integer not supported by OpenCV");
+		}
+	} break;
+	case 'f': {
+		if (header.dtype.itemsize==4) {
+			cv::Mat M(rows, cols, CV_32FC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(float)*size);
+			return M;
+		}
+		else if (header.dtype.itemsize==8) {
+			cv::Mat M(rows, cols, CV_64FC(channel));
+			stream.read(reinterpret_cast<char*>(M.data), sizeof(double)*size);
+			return M;
+		}
+	} break;
+	case 'c': {
+		throw std::runtime_error("Complex type not supported yet");
+	} break;
 	}
 
 	// XXX: Unfinished
