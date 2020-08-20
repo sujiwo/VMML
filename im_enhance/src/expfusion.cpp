@@ -14,6 +14,27 @@ using namespace std;
 namespace ice {
 
 
+template<typename Scalar>
+double entropy(const cv::Mat_<Scalar> &X)
+{
+	assert(X.channels()==1);
+
+	cv::Mat_<Scalar> tmp = X*255;
+	tmp.setTo(255, tmp>255);
+	tmp.setTo(0, tmp<0);
+	Matc tmpd;
+	cv::Mat tmpc;
+	tmp.convertTo(tmpd, CV_8UC1);
+	auto __c = unique(tmpd).getValues();
+	auto counts = matFromIterator<float>(__c.begin(), __c.end());
+	counts = counts / cv::sum(counts)[0];
+	decltype(counts) countsl;
+	cv::log(counts, countsl);
+	countsl = countsl / log(2);
+	return -(cv::sum(counts.mul(countsl))[0]);
+}
+
+
 /*
  * Order: 0 => row-major
  *        1 => column-major
@@ -280,6 +301,9 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	auto dxd2 = -lambda * flatten(Wh, 1);
 	auto dyd2 = -lambda * flatten(Wv, 1);
 
+	/*
+	 * Note: Cholmod requires input matrices in double precision
+	 */
 	vector<Matf> Aconc = {dxd1, dxd2};
 	vector<int> Adgl = {-k+Wh.rows, -Wh.rows};
 	auto Ax = spdiags<double>(Aconc, Adgl, k, k);
@@ -337,7 +361,6 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 
 	// What to do for bad vector?
 	if (Yx.rows*Yx.cols==0) {
-
 	}
 
 	// define functions

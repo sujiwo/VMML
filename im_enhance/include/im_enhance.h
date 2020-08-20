@@ -144,28 +144,6 @@ flatten(const cv::Mat_<Scalar> &in, uchar order=0)
 }
 
 /*
- * Inverse of the above function:
- */
-/*
-cv::Mat reshape(cv::InputArray src, int row, int col, uchar order=0);
-
-template<typename Scalar>
-cv::Mat_<Scalar>
-reshape(const cv::Mat_<Scalar> &in, const int row, const int col, uchar order=0)
-{
-	assert ((in.cols()==1 or in.rows()==1) and in.cols()*in.rows()==row*col);
-
-	cv::Mat_<Scalar> dst(row, col);
-	cv::Mat_<Scalar> src;
-	if (src.cols==1) src = in.t();
-	else src = in;
-
-
-}
-*/
-
-
-/*
  * Emulating `spdiags' from Scipy
  * Data: matrix diagonals stored row-wise
  */
@@ -217,20 +195,6 @@ matFromIterator (
 	return _c.clone();
 }
 
-/*
- * Same as above, using Opencv Input
- */
-/*
-Eigen::SparseMatrix<float>
-spdiags(const cv::Mat &_Data,
-	const cv::Mat &diags, int m, int n);
-
-Eigen::SparseMatrix<float>
-spdiags(const std::vector<cv::Mat> &Data, const std::vector<int> &diags, int m, int n);
-
-Eigen::SparseMatrix<float>
-spdiags(const cv::Mat &_Data, const std::vector<int> &diags, int m, int n);
-*/
 
 template<typename Scalar>
 cv::Mat_<Scalar>
@@ -312,25 +276,6 @@ MapFun<Scalar, int> unique(const cv::Mat_<Scalar> &M)
 }
 
 
-template<typename Scalar>
-double entropy(const cv::Mat_<Scalar> &X)
-{
-	assert(X.channels()==1);
-
-	cv::Mat_<Scalar> tmp = X*255;
-	tmp.setTo(255, tmp>255);
-	tmp.setTo(0, tmp<0);
-	Matc tmpd;
-	cv::Mat tmpc;
-	tmp.convertTo(tmpd, CV_8UC1);
-	auto __c = unique(tmpd).getValues();
-	auto counts = matFromIterator<float>(__c.begin(), __c.end());
-	counts = counts / cv::sum(counts)[0];
-	decltype(counts) countsl;
-	cv::log(counts, countsl);
-	countsl = countsl / log(2);
-	return -(cv::sum(counts.mul(countsl))[0]);
-}
 
 }		// namespace ice
 
