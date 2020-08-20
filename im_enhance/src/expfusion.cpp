@@ -15,17 +15,6 @@ namespace ice {
 
 
 template<typename Scalar>
-cv::Mat_<Scalar> applyK(const cv::Mat_<Scalar> &input, float k, float a, float b)
-{
-	auto beta = exp((1-pow(k,a))*b);
-	auto gamma = pow(k, a);
-	cv::Mat_<Scalar> _powf;
-	cv::pow(input, gamma, _powf);
-	return _powf * beta;
-}
-
-
-template<typename Scalar>
 cv::Mat_<Scalar>
 selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const Matb &mask)
 {

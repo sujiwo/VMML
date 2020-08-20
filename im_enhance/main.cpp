@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
 	cv::imwrite(outputImage.string(), res);
 */
 
-	ice::Matc M = npy::loadMat(argv[1]);
-	cout << M << endl;
+	ice::Matf M = npy::loadMat(argv[1]);
+	auto ent = ice::entropy(M);
 
 	return 0;
 }
