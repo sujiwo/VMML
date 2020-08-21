@@ -116,10 +116,20 @@ def maxEntropyEnhance(I, isBad, a=-0.3293, b=1.1258):
     tmp = tmp.real
     Y = rgb2gm(tmp)
     
-    isBad = isBad * 1
-    isBad = scipy.misc.imresize(isBad, (50,50), interp='bicubic', mode='F')
+    isBad = (isBad * 1.0).astype(np.float32)
+#     isBad = scipy.misc.imresize(isBad, (50,50), interp='bicubic', mode='F')
+    isBad = cv2.resize(isBad, (50,50), interpolation=cv2.INTER_CUBIC)
     isBad[isBad<0.5] = 0
     isBad[isBad>=0.5] = 1
+    
+    isBadf = isBad.flatten()
+    Yf = Y.flatten()
+    Yx = []
+    for i in range(len(Yf)):
+        if (isBadf[i]!=0):
+            Yx.append(Yf[i])
+    Yx = np.array(Yx)
+    
     #Select Y only those who satisfy this requirement
     Y = Y[isBad==1]
     
@@ -128,7 +138,7 @@ def maxEntropyEnhance(I, isBad, a=-0.3293, b=1.1258):
        return J
     
     f = lambda k: -entropy(applyK(Y, k))
-    opt_k = scipy.optimize.fminbound(f, 1, 7, full_output=True)
+    opt_k = scipy.optimize.fminbound(f, 1, 7)
     
     # Apply k
     J = applyK(I, opt_k, a, b) - 0.01

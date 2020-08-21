@@ -12,6 +12,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/hdf.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/math/tools/minima.hpp>
 #include "im_enhance.h"
 #include "npy.hpp"
 
@@ -22,7 +23,6 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
-/*
 	fs::path inputImage(argv[1]);
 
 	cv::Mat image = cv::imread(inputImage.string(), cv::IMREAD_COLOR);
@@ -40,10 +40,19 @@ int main(int argc, char *argv[])
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
-*/
+/*
+	const float
+		a_ = -0.3293,
+		b_ = 1.1258;
 
-	ice::Matf M = npy::loadMat(argv[1]);
-	auto ent = ice::entropy(M);
+	ice::Matf Yx = npy::loadMat("/tmp/Y.npy");
+
+	// define functions
+	auto funEntropy = [&](float k)->float {
+		return -ice::entropy(ice::applyK(Yx, k, a_, b_));
+	};
+	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits10);
+*/
 
 	return 0;
 }

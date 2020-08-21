@@ -22,6 +22,7 @@ inline double to_seconds (const tduration &td)
 { return (double(td.total_microseconds()) / 1e6); }
 
 typedef cv::Mat_<float> Matf;
+typedef cv::Mat_<double> Matd;
 typedef cv::Mat_<cv::Vec3f> Matf3;
 typedef cv::Mat_<int> Mati;
 typedef cv::Mat_<uint> Matui;

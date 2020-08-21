@@ -16,16 +16,17 @@ namespace ice {
 
 template<typename Scalar>
 cv::Mat_<Scalar>
-selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const Matb &mask)
+selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, cv::InputArray mask_)
 {
-	assert(input.channels()==1 and mask.channels()==1);
-	assert(input.size()==mask.size());
+	assert(input.channels()==1);
+	assert(input.size()==mask_.size());
+	auto mask = mask_.getMat();
 
 	std::vector<Scalar> V;
 	for (int r=0; r<input.rows; ++r)
 		for (int c=0; c<input.cols; ++c) {
-			auto m = mask(r,c);
-			if (m==true)
+			auto m = mask.at<int>(r,c);
+			if (m!=0)
 				V.push_back(input(r,c));
 		}
 	return cv::Mat_<Scalar>(V.size(), 1, V.data());
@@ -345,7 +346,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::eigen2cv(out, t_vec);
 
 	Matf Tx = t_vec.reshape(1, imageSmooth.cols).t();
-	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_CUBIC);
+	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_AREA);
 //	tsmooth() is done
 
 	Matb isBad = Tx < 0.5;
@@ -354,8 +355,17 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Matf3 rgbTiny;
 	cv::resize(rgbFloat, rgbTiny, cv::Size(50,50), 0, 0, cv::INTER_AREA);
 
+	Matf isBadf;
+	isBad.convertTo(isBadf, CV_32F);
+	cv::normalize(isBadf, isBadf, 0.0, 1.0, cv::NORM_MINMAX);
+	cv::resize(isBadf, isBadf, cv::Size(50,50), 0, 0, cv::INTER_CUBIC);
+
+	isBadf.setTo(0, isBadf<0.5);
+	isBadf.setTo(1, isBadf>=0.5);
+
 	// rgb2gm
 	cv::normalize(rgbTiny, rgbTiny, 0.0, 1.0, cv::NORM_MINMAX, CV_32F);
+	vector<float> Yv;
 	Matf Y(rgbTiny.size());
 	for (int r=0; r<rgbTiny.rows; ++r) {
 		for (int c=0; c<rgbTiny.cols; ++c) {
@@ -364,31 +374,27 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 			if (ch[1]<0) ch[1]=0;
 			if (ch[2]<0) ch[2]=0;
 			Y(r,c) = fabsf(cbrtf(ch[0]*ch[1]*ch[2]));
+			if (isBadf(r,c)!=0)
+				Yv.push_back(Y(r,c));
 		}
 	}
 
-	Matf isBadf;
-	isBad.convertTo(isBadf, CV_32FC1);
-	cv::resize(isBadf, isBadf, cv::Size(50,50), 0, 0, cv::INTER_CUBIC);
-
-	isBadf.setTo(0, isBadf<0.5);
-	isBadf.setTo(1, isBadf>=0.5);
-	auto Yx = selectElementsToVectorWithMask(Y, Matb(isBadf==1));
-	cout << Yx.size() << endl;
+	Matf Yx(Yv.size(), 1, Yv.data());
+	npy::saveMat(Y, "/tmp/rgbgmc.npy");
+	npy::saveMat(rgbTiny, "/tmp/rgbTinyc.npy");
+	npy::saveMat(Yx, "/tmp/Yc.npy");
 
 	// What to do for bad vector?
 	if (Yx.rows*Yx.cols==0) {
 	}
 
 	// define functions
-	auto funEntropy = [&](float k)->float {
+	auto funEntropy = [&](float k)->double {
 		return -entropy(applyK(Yx, k, a_, b_));
 	};
 
-#define BOOST_MATH_INSTRUMENT
-	// call Boost Brent Method
-	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits10);
-	cout << "K: " << fmin.first << endl;
+	// XXX: Boost's Brent Method implementation is different from Numpy
+	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<double>::digits10);
 	auto J = applyK(rgbFloat, fmin.first, a_, b_) - 0.01;
 
 	// Combine Tx
@@ -397,7 +403,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::pow(T_all, lambda, T_all);
 
 	Matf3 I2 = rgbFloat.mul(T_all);
-	Matf3 J2 = J.mul(1-T_all);
+	Matf3 J2 = J.mul(cv::Vec3f(1,1,1)-T_all);
 
 	T_all.release();
 	Matf3 result = (I2 + J2)*255;
@@ -407,13 +413,9 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 		px[1] = (px[1]>255 ? 255 : (px[1]<0 ? 0 : px[1]));
 		px[2] = (px[2]>255 ? 255 : (px[2]<0 ? 0 : px[2]));
 	}
-/*
-	result.setTo(255, result>255);
-	result.setTo(0, result<0);
-*/
 
 	cv::Mat Outf;
-	result.convertTo(Outf, CV_8U);
+	result.convertTo(Outf, CV_8UC(3));
 
 	return Outf;
 }
