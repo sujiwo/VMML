@@ -14,6 +14,7 @@ find_package (pybind11 REQUIRED)
 find_package (OpenMP REQUIRED)
 find_package (Boost REQUIRED COMPONENTS filesystem)
 find_package (SuiteSparse REQUIRED)
+find_package (MPI REQUIRED)
 
 message("SuiteSparse: ${SUITESPARSE_LIBRARIES}")
 
@@ -41,6 +42,7 @@ include_directories(
 	${EIGEN3_INCLUDE_DIRS}
 	${catkin_INCLUDE_DIRS}
 	${SUITESPARSE_INCLUDE_DIRS}
+	${MPI_CXX_INCLUDE_DIRS}
 )
 
 add_library(im_enhance
@@ -53,6 +55,8 @@ target_link_libraries(
 	im_enhance
 		${OpenCV_LIBS}
 		${SUITESPARSE_LIBRARIES}
+		dmumps
+		${MPI_CXX_LIBRARIES}
 )
 
 install(

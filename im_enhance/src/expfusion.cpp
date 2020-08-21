@@ -4,6 +4,7 @@
 #include <opencv2/imgproc.hpp>
 #include <boost/math/tools/minima.hpp>
 #include <Eigen/CholmodSupport>
+#include "MUMPSSupport"
 #include "im_enhance.h"
 #include "npy.hpp"
 
@@ -337,10 +338,16 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Eigen::Matrix<double,-1,-1> tin;
 	cv::cv2eigen(_tin, tin);
 
-	Eigen::CholmodSupernodalLLT<decltype(A)> solver;
+	Eigen::CholmodSupernodalLLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
 	Eigen::VectorXd out = solver.solve(tin);
+/*
+	Eigen::MUMPSLDLT<decltype(A), Eigen::Upper> solver;
+	solver.analyzePattern(A);
+	solver.factorize(A);
+	Eigen::VectorXd out = solver.solve(tin);
+*/
 
 	Matf t_vec;
 	cv::eigen2cv(out, t_vec);

@@ -13,6 +13,7 @@
 #include <opencv2/hdf.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/math/tools/minima.hpp>
+#include "mpi.h"
 #include "im_enhance.h"
 #include "npy.hpp"
 
@@ -23,6 +24,8 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
+	MPI_Init(&argc, &argv);
+
 	fs::path inputImage(argv[1]);
 
 	cv::Mat image = cv::imread(inputImage.string(), cv::IMREAD_COLOR);
