@@ -14,6 +14,7 @@ find_package (pybind11 REQUIRED)
 find_package (OpenMP REQUIRED)
 find_package (Boost REQUIRED COMPONENTS filesystem)
 find_package (SuiteSparse REQUIRED)
+
 find_package (MPI REQUIRED)
 
 message("SuiteSparse: ${SUITESPARSE_LIBRARIES}")

@@ -3,8 +3,10 @@
 #include <type_traits>
 #include <opencv2/imgproc.hpp>
 #include <boost/math/tools/minima.hpp>
-#include <Eigen/CholmodSupport>
+#include <Eigen/SparseCholesky>
+//#include <Eigen/CholmodSupport>
 #include "MUMPSSupport"
+#include <unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
 #include "npy.hpp"
 
@@ -338,10 +340,19 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Eigen::Matrix<double,-1,-1> tin;
 	cv::cv2eigen(_tin, tin);
 
+	auto t1 = getCurrentTime();
+
+	Eigen::SimplicialLDLT<decltype(A)> solver;
+	solver.analyzePattern(A);
+	solver.factorize(A);
+	Eigen::VectorXd out = solver.solve(tin);
+
+/*
 	Eigen::CholmodSupernodalLLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
 	Eigen::VectorXd out = solver.solve(tin);
+*/
 /*
 	Eigen::MUMPSLDLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);
@@ -349,12 +360,20 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Eigen::VectorXd out = solver.solve(tin);
 */
 
+	auto t2 = getCurrentTime();
+	cout << "DT: " << to_seconds(t2-t1) << endl;
+
 	Matf t_vec;
 	cv::eigen2cv(out, t_vec);
 
 	Matf Tx = t_vec.reshape(1, imageSmooth.cols).t();
 	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_AREA);
 //	tsmooth() is done
+
+	// XXX: Sparse solver sanity check
+	Eigen::saveMarket(A, "/tmp/A.smat");
+	npy::saveMat(t_vec, "/tmp/x.npy");
+	npy::saveMat(_tin, "/tmp/b.npy");
 
 	Matb isBad = Tx < 0.5;
 
@@ -387,9 +406,6 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	}
 
 	Matf Yx(Yv.size(), 1, Yv.data());
-	npy::saveMat(Y, "/tmp/rgbgmc.npy");
-	npy::saveMat(rgbTiny, "/tmp/rgbTinyc.npy");
-	npy::saveMat(Yx, "/tmp/Yc.npy");
 
 	// What to do for bad vector?
 	if (Yx.rows*Yx.cols==0) {
