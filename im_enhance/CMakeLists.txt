@@ -50,6 +50,7 @@ add_library(im_enhance
 	src/im_enhance.cpp
 	src/retinex.cpp
 	src/expfusion.cpp
+	src/dhe.cpp
 )
 
 target_link_libraries(

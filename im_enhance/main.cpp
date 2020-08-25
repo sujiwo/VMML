@@ -24,6 +24,8 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
+/*
+	// This line may not be required outside MUMPS
 	MPI_Init(&argc, &argv);
 
 	fs::path inputImage(argv[1]);
@@ -43,19 +45,11 @@ int main(int argc, char *argv[])
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
-/*
-	const float
-		a_ = -0.3293,
-		b_ = 1.1258;
-
-	ice::Matf Yx = npy::loadMat("/tmp/Y.npy");
-
-	// define functions
-	auto funEntropy = [&](float k)->float {
-		return -ice::entropy(ice::applyK(Yx, k, a_, b_));
-	};
-	auto fmin = boost::math::tools::brent_find_minima(funEntropy, 1.0, 7.0, numeric_limits<float>::digits10);
 */
+
+
+	const auto M = npy::loadMat("/tmp/mattest.npy");
+	cout << M << endl;
 
 	return 0;
 }

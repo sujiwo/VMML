@@ -5,6 +5,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
 #include "im_enhance.h"
+#include "timer.h"
 
 
 using namespace std;

@@ -3,12 +3,14 @@
 #include <type_traits>
 #include <opencv2/imgproc.hpp>
 #include <boost/math/tools/minima.hpp>
-#include <Eigen/SparseCholesky>
-//#include <Eigen/CholmodSupport>
-#include "MUMPSSupport"
+//#include <Eigen/SparseCholesky>
+#include <Eigen/CholmodSupport>
+//#include "MUMPSSupport"
 #include <unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
 #include "npy.hpp"
+#include "matutils.h"
+#include "timer.h"
 
 
 using namespace std;
@@ -34,76 +36,6 @@ selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, cv::InputArray mas
 		}
 	return cv::Mat_<Scalar>(V.size(), 1, V.data());
 }
-
-
-/*
- * Order: 0 => row-major
- *        1 => column-major
- *
- */
-/*
-cv::Mat flatten(cv::InputArray src, uchar order)
-{
-	cv::Mat out = cv::Mat::zeros(src.cols()*src.rows(), 1, src.type());
-	cv::Mat in = src.getMat();
-
-	// Row-major
-	if (order==0) {
-		for (int r=0; r<in.rows; ++r) {
-			out.rowRange(r*in.cols, r*in.cols+in.cols) = in.row(r).t();
-		}
-	}
-	else if (order==1) {
-		for (int c=0; c<in.cols; ++c) {
-			in.col(c).copyTo(out.rowRange(c*in.rows, c*in.rows+in.rows));
-		}
-	}
-	else throw runtime_error("Unsupported order");
-
-	return out;
-}
-
-
-cv::Mat reshape(cv::InputArray _src, int row, int col, uchar order)
-{template<typename Scalar>
-cv::Mat_<Scalar>
-selectElementsToVectorWithMask(const cv::Mat_<Scalar> &input, const cv::Mat &mask)
-{
-	assert(input.channels()==1 and mask.channels()==1);
-	assert(input.size()==mask.size());
-
-	std::vector<Scalar> V;
-	for (int r=0; r<input.rows; ++r)
-		for (int c=0; c<input.cols; ++c) {
-			auto m = mask.at<int>(r,c);
-			if (m!=0)
-				V.push_back(input(r,c));
-		}
-	return cv::Mat_<Scalar>(V.size(), 1, V.data());
-}
-
-	assert ((_src.cols()==1 or _src.rows()==1) and _src.cols()*_src.rows()==row*col);
-
-	cv::Mat
-		src = _src.getMat(),
-		dst(row, col, _src.type());
-	if (_src.cols()==1) src = src.t();
-
-	if (order==0) {
-		for (int i=0; i<row; ++i) {
-			auto S = src.rowRange(i*col, (i+1)*col);
-
-		}
-	}
-
-	else if (order==1) {
-	}
-
-	else throw runtime_error("Unsupported order");
-
-	return dst;
-}
-*/
 
 
 Eigen::SparseMatrix<float>
@@ -342,17 +274,18 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 
 	auto t1 = getCurrentTime();
 
+/*
 	Eigen::SimplicialLDLT<decltype(A)> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
 	Eigen::VectorXd out = solver.solve(tin);
+*/
 
-/*
 	Eigen::CholmodSupernodalLLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
 	Eigen::VectorXd out = solver.solve(tin);
-*/
+
 /*
 	Eigen::MUMPSLDLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);

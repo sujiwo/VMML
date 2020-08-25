@@ -6,6 +6,7 @@
 #include <limits>
 #include <opencv2/imgproc.hpp>
 #include "im_enhance.h"
+#include "matutils.h"
 
 
 using namespace std;
@@ -122,15 +123,16 @@ cv::Mat autoAdjustGammaRGB (const cv::Mat &rgbImg, cv::InputArray mask)
 }
 
 
-cv::Mat toIlluminatiInvariant (const Matc3 &rgbImage, const float alpha)
+cv::Mat toIlluminatiInvariant (const cv::Mat &rgbImage, const float alpha)
 {
-	Matc iImage (rgbImage.rows, rgbImage.cols);
+	Matc3 rgbc (rgbImage);
+	Matc3 iImage (rgbImage.rows, rgbImage.cols);
 
 	auto oImgIt = iImage.begin();
-	for (auto it=rgbImage.begin(); it!=rgbImage.end(); ++it) {
-		float
-			fb = (*it)[0] / 255.0,
-			fg = (*it)[1] / 255.0,
+	for (auto it=rgbc.begin(); it!=rgbc.end(); ++it) {
+		float fb, fg, fr;
+			fb = (*it)[0] / 255.0;
+			fg = (*it)[1] / 255.0;
 			fr = (*it)[2] / 255.0;
 		float iPix = 0.5 + logf(fg) - alpha*logf(fb) - (1-alpha)*logf(fr);
 		(*oImgIt) = (uchar)(iPix*255);
@@ -143,16 +145,8 @@ cv::Mat toIlluminatiInvariant (const Matc3 &rgbImage, const float alpha)
 
 
 
-void build_is_histogram(const cv::Mat &image, cv::OutputArray hist_i, cv::OutputArray hist_s)
-{
-
-}
 
 
-cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
-{
-
-}
 
 
 
