@@ -235,21 +235,46 @@ double entropy(const cv::Mat_<Scalar> &X)
 
 
 template<typename Scalar>
-cv::Mat_<Scalar> subMat(const cv::Mat_<Scalar> &input, const cv::Point &anchor, int width, int height)
+cv::Mat_<Scalar> subMat(const cv::Mat_<Scalar> &input, const cv::Point &anchor, int width, int height, int borderType=cv::BORDER_REPLICATE, const cv::Scalar &value=cv::Scalar())
 {
-	assert(width<=input.rows and height<=input.cols);
+	int top_left_x = anchor.x-width/2;
+	int top_left_y = anchor.y-width/2;
+	int bottom_right_x = top_left_x + width;
+	int bottom_right_y = top_left_y + height;
 
-	cv::Mat_<Scalar> blocksub(height, width);
-	int startx=std::max(anchor.x-width/2, 0);
-	int starty=std::max(anchor.y-height/2, 0);
-	int stopx = std::min(anchor.x+width/2, width);
-	int stopy = std::min(anchor.y+height/2, height);
+	cv::Mat_<Scalar> output;
+	if (top_left_x < 0 || top_left_y < 0 || bottom_right_x > input.cols || bottom_right_y > input.rows) {
+		// border padding will be required
+		int border_left = 0, border_right = 0, border_top = 0, border_bottom = 0;
 
-/*
-	if (anchor.x<width/2 or anchor.y<width/2) {
+		if (top_left_x < 0) {
+			width = width + top_left_x;
+			border_left = -1 * top_left_x;
+			top_left_x = 0;
+		}
+		if (top_left_y < 0) {
+			height = height + top_left_y;
+			border_top = -1 * top_left_y;
+			top_left_y = 0;
+		}
+		if (bottom_right_x > input.cols) {
+			width = width - (bottom_right_x - input.cols);
+			border_right = bottom_right_x - input.cols;
+		}
+		if (bottom_right_y > input.rows) {
+			height = height - (bottom_right_y - input.rows);
+			border_bottom = bottom_right_y - input.rows;
+		}
 
+		cv::Rect R(top_left_x, top_left_y, width, height);
+		copyMakeBorder(input(R), output, border_top, border_bottom, border_left, border_right, borderType, value);
 	}
-*/
+	else {
+		// no border padding required
+		cv::Rect R(top_left_x, top_left_y, width, height);
+		output = input(R);
+	}
+	return output;
 }
 
 

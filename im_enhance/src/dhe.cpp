@@ -11,10 +11,32 @@
 #include "timer.h"
 
 
+using namespace std;
+
+
 namespace ice {
 
 cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 {
+
+}
+
+
+cv::Mat matlab_covar(const cv::Mat A, const cv::Mat B)
+{
+	assert(A.cols*A.rows == B.cols*B.rows);
+//	const vector<cv::Mat> Inp = {A.reshape(0, A.cols*A.rows).t(), B.reshape(0, B.cols*B.rows).t()};
+	cv::Mat Az, covar, mean;
+	cv::vconcat(A.reshape(0, A.cols*A.rows).t(), B.reshape(0, B.cols*B.rows).t(), Az);
+	cv::calcCovarMatrix(Az, covar, mean, cv::COVAR_COLS|cv::COVAR_NORMAL);
+	covar /= (Az.cols-1);
+	return covar;
+}
+
+
+double corrcoeff (cv::InputArray M1, cv::InputArray M2)
+{
+	assert(M1.channels()==1 and M2.channels()==2);
 
 }
 
@@ -80,6 +102,10 @@ void build_is_histogram(const cv::Mat &bgrImage, cv::OutputArray hist_i, cv::Out
 	Matf Rho = Matf::zeros(bgrImage.size());
 	for (auto r=0; r<Rho.rows; ++r) {
 		for (auto c=0; c<Rho.cols; ++c) {
+			auto tmpI = subMat(I, cv::Point(c,r), 5, 5);
+			auto tmpS = subMat(S, cv::Point(c,r), 5, 5);
+			tmpI = flatten(tmpI, 1);
+			tmpS = flatten(tmpS, 1);
 
 		}
 	}
