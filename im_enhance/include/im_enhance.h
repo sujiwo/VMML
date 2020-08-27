@@ -45,7 +45,9 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha=
 cv::Mat exposureFusion(const cv::Mat &rgbImage);
 
 
-
+// Testing only, need to used only internally
+cv::Mat matlab_covar(const cv::Mat &A, const cv::Mat &B);
+cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2);
 
 
 }		// namespace ice

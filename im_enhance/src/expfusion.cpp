@@ -8,7 +8,6 @@
 //#include "MUMPSSupport"
 #include <unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
-#include "npy.hpp"
 #include "matutils.h"
 #include "timer.h"
 
@@ -302,11 +301,6 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Matf Tx = t_vec.reshape(1, imageSmooth.cols).t();
 	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_AREA);
 //	tsmooth() is done
-
-	// XXX: Sparse solver sanity check
-	Eigen::saveMarket(A, "/tmp/A.smat");
-	npy::saveMat(t_vec, "/tmp/x.npy");
-	npy::saveMat(_tin, "/tmp/b.npy");
 
 	Matb isBad = Tx < 0.5;
 

@@ -659,7 +659,7 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
 
 
 template<typename Scalar>
-void doSaveMat(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::string &filename)
+inline void doSaveMat(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::string &filename)
 {
 	std::vector<Scalar> data;
 
@@ -677,7 +677,7 @@ void doSaveMat(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::strin
 
 
 template<>
-void doSaveMat<bool>(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::string &filename)
+inline void doSaveMat<bool>(cv::Mat &mm, int n_dims, unsigned long shape[3], const std::string &filename)
 {
 	std::vector<uint8_t> data;
 

@@ -26,6 +26,7 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
+/*
 	// This line may not be required outside MUMPS
 	MPI_Init(&argc, &argv);
 
@@ -46,6 +47,11 @@ int main(int argc, char *argv[])
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
+*/
+	ice::Matd X = npy::loadMat("/tmp/x.npy");
+	ice::Matd Y = npy::loadMat("/tmp/y.npy");
+
+	auto corr = ice::corrcoeff(X, Y);
 
 	return 0;
 }

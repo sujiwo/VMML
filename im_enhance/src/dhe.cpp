@@ -9,6 +9,7 @@
 #include "im_enhance.h"
 #include "matutils.h"
 #include "timer.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -22,22 +23,38 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 }
 
 
-cv::Mat matlab_covar(const cv::Mat A, const cv::Mat B)
+/*
+ * Compute Covariance matrix ala Matlab & NumPy.
+ * XXX: Answer is different
+ */
+cv::Mat matlab_covar(const cv::Mat &A, const cv::Mat &B)
 {
 	assert(A.cols*A.rows == B.cols*B.rows);
 //	const vector<cv::Mat> Inp = {A.reshape(0, A.cols*A.rows).t(), B.reshape(0, B.cols*B.rows).t()};
 	cv::Mat Az, covar, mean;
 	cv::vconcat(A.reshape(0, A.cols*A.rows).t(), B.reshape(0, B.cols*B.rows).t(), Az);
+	npy::saveMat(Az, "/tmp/XY.npy");
 	cv::calcCovarMatrix(Az, covar, mean, cv::COVAR_COLS|cv::COVAR_NORMAL);
-	covar /= (Az.cols-1);
 	return covar;
 }
 
 
-double corrcoeff (cv::InputArray M1, cv::InputArray M2)
+cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2)
 {
-	assert(M1.channels()==1 and M2.channels()==2);
+	assert(M1.channels()==1 and M2.channels()==1);
 
+	auto cov = matlab_covar(M1, M2);
+	auto d = cov.diag();
+	cv::sqrt(d, d);
+
+	for (int i=0; i<cov.rows; ++i)
+		cov.row(i) /= d.t();
+	for (int i=0; i<cov.cols; ++i)
+		cov.col(i) /= d;
+	cov.setTo(-1, cov<-1);
+	cov.setTo(1, cov>1);
+
+	return cov;
 }
 
 
@@ -106,9 +123,33 @@ void build_is_histogram(const cv::Mat &bgrImage, cv::OutputArray hist_i, cv::Out
 			auto tmpS = subMat(S, cv::Point(c,r), 5, 5);
 			tmpI = flatten(tmpI, 1);
 			tmpS = flatten(tmpS, 1);
-
+			auto f = corrcoeff(tmpI, tmpS).at<float>(0,1);
+			f = fabsf(f);
+			if (isnan(f)) f=0;
+			Rho(r,c) = f;
 		}
 	}
+
+	cv::Mat rd = Rho.mul(dS);
+	rd.convertTo(rd, CV_32S);
+
+	hist_i.create(256,1, CV_32FC1);
+	hist_s.create(256,1, CV_32FC1);
+
+	Mati Intensity;
+	I.convertTo(Intensity, CV_32SC1);
+	auto hist_i_m = hist_i.getMat();
+	auto hist_s_m = hist_s.getMat();
+	for (auto n=0; n<255; ++n) {
+		cv::Mat temp = Mati::zeros(dIint.size());
+		dIint.copyTo(temp, Intensity==n);
+		hist_i_m.at<double>(n+1) = cv::sum(temp).val[0];
+		temp.setTo(0);
+		rd.copyTo(temp, Intensity==n);
+		hist_s_m.at<double>(n+1) = cv::sum(temp).val[0];
+	}
+
+	// Done?
 }
 
 
