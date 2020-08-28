@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/hdf.hpp>
 #include <boost/filesystem.hpp>
@@ -26,7 +28,6 @@ namespace fs=boost::filesystem;
 
 int main(int argc, char *argv[])
 {
-/*
 	// This line may not be required outside MUMPS
 	MPI_Init(&argc, &argv);
 
@@ -43,15 +44,13 @@ int main(int argc, char *argv[])
 	case 2: res = ice::multiScaleRetinexCP(image); break;
 	case 3: res = ice::toIlluminatiInvariant(image, alpha); break;
 	case 4: res = ice::exposureFusion(image); break;
+	case 5: res = ice::dynamicHistogramEqualization(image); break;
 	}
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
-*/
-	ice::Matd X = npy::loadMat("/tmp/x.npy");
-	ice::Matd Y = npy::loadMat("/tmp/y.npy");
 
-	auto corr = ice::corrcoeff(X, Y);
+
 
 	return 0;
 }

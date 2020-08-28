@@ -5,7 +5,7 @@
 #include <boost/math/tools/minima.hpp>
 //#include <Eigen/SparseCholesky>
 #include <Eigen/CholmodSupport>
-//#include "MUMPSSupport"
+#include "MUMPSSupport"
 #include <unsupported/Eigen/SparseExtra>
 #include "im_enhance.h"
 #include "matutils.h"
@@ -280,17 +280,17 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	Eigen::VectorXd out = solver.solve(tin);
 */
 
+/*
 	Eigen::CholmodSupernodalLLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
 	Eigen::VectorXd out = solver.solve(tin);
+*/
 
-/*
 	Eigen::MUMPSLDLT<decltype(A), Eigen::Upper> solver;
 	solver.analyzePattern(A);
 	solver.factorize(A);
 	Eigen::VectorXd out = solver.solve(tin);
-*/
 
 	auto t2 = getCurrentTime();
 	cout << "DT: " << to_seconds(t2-t1) << endl;
