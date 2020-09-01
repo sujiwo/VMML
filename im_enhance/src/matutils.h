@@ -11,6 +11,7 @@ typedef cv::Mat_<float> Matf;
 typedef cv::Mat_<double> Matd;
 typedef cv::Mat_<cv::Vec3f> Matf3;
 typedef cv::Mat_<int> Mati;
+// Unsigned 32-bit Integer is not supported by OpenCV
 typedef cv::Mat_<uint> Matui;
 typedef cv::Mat_<bool> Matb;
 typedef cv::Mat_<unsigned char> Matc;

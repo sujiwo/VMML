@@ -18,14 +18,32 @@ using namespace std;
 namespace ice {
 
 
-void build_is_histogram(const cv::Mat &bgrImage, cv::OutputArray hist_i, cv::OutputArray hist_s);
+void build_is_histogram(const cv::Mat &bgrImage, Matf &hist_i, Matf &hist_s);
+cv::Mat matlab_covar(const cv::Mat &A, const cv::Mat &B);
+cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2);
+
+
+/*
+ * Notes: Comparison of OpenCV vs Matplotlib RGB->HSV conversion
+ */
+
+
 
 
 cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
 {
-	cv::Mat hist_i, hist_s;
+	// Work in HSV
+	Matf3 rgbf, hsv;
+	rgbImage.convertTo(rgbf, CV_32FC3);
+	cv::cvtColor(rgbf, hsv, cv::COLOR_BGR2HSV);
+	Matf HSI[3];
+	cv::split(hsv, HSI);
+	Matf I = HSI[2], S = HSI[1], H = HSI[0];
+
+	Matf hist_i, hist_s;
 	build_is_histogram(rgbImage, hist_i, hist_s);
-	cout << hist_i << endl;
+
+
 
 	// XXX: Unfinished
 	exit(-1);
@@ -67,7 +85,7 @@ cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2)
 }
 
 
-void build_is_histogram(const cv::Mat &bgrImage, cv::OutputArray hist_i, cv::OutputArray hist_s)
+void build_is_histogram(const cv::Mat &bgrImage, Matf &hist_i, Matf &hist_s)
 {
 	const int
 		height = bgrImage.rows,
@@ -102,10 +120,8 @@ void build_is_histogram(const cv::Mat &bgrImage, cv::OutputArray hist_i, cv::Out
 	cv::pow(dIv, 2, dIv);
 	dI = dIh+dIv;
 	cv::sqrt(dI, dI);
-	Matui dIint(dI.size());
-	std::transform(dI.begin(), dI.end(), dIint.begin(),
-		[](const float &f){ return uint32_t(f); }
-	);
+	Mati dIint(dI.size());
+	dI.convertTo(dIint, CV_32SC1);
 
 	Matf dSh, dSv, dS;
 	cv::filter2D(S, dSh, CV_32F, fhr, cv::Point(-1,-1), 0, cv::BORDER_DEFAULT);
@@ -146,20 +162,18 @@ void build_is_histogram(const cv::Mat &bgrImage, cv::OutputArray hist_i, cv::Out
 	cv::Mat rd = Rho.mul(dS);
 	rd.convertTo(rd, CV_32S);
 
-	hist_i.create(256,1, CV_32FC1);
-	hist_s.create(256,1, CV_32FC1);
+	hist_i = Matf::zeros(256,1);
+	hist_s = Matf::zeros(256,1);
 
 	Mati Intensity;
 	I.convertTo(Intensity, CV_32SC1);
-	auto hist_i_m = hist_i.getMat();
-	auto hist_s_m = hist_s.getMat();
 	for (auto n=0; n<255; ++n) {
 		cv::Mat temp;
 		dIint.copyTo(temp, Intensity==n);
-		hist_i_m.at<float>(n+1) = cv::sum(temp).val[0];
+		hist_i(n+1,0) = float(cv::sum(temp).val[0]);
 		temp.setTo(0);
 		rd.copyTo(temp, Intensity==n);
-		hist_s_m.at<float>(n+1) = cv::sum(temp).val[0];
+		hist_s(n+1,0) = float(cv::sum(temp).val[0]);
 	}
 
 	// Done?
