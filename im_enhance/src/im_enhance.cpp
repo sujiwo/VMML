@@ -43,7 +43,7 @@ cv::Mat setGamma (const cv::Mat &grayImage, const float gamma, bool LUT_only=fal
 }
 
 
-cv::Mat cdf (cv::Mat &grayImage, cv::Mat mask)
+Matf cdf (cv::Mat &grayImage, cv::Mat mask, bool normalized)
 {
 	cv::Mat rcdf = cv::Mat::zeros(1,256,CV_32F);
 	cv::MatND hist;
@@ -57,7 +57,8 @@ cv::Mat cdf (cv::Mat &grayImage, cv::Mat mask)
 		rcdf.at<float>(i) = rcdf.at<float>(i-1) + hist.at<float>(i);
 	}
 
-	rcdf = rcdf / cv::sum(hist)[0];
+	if (normalized)
+		rcdf = rcdf / cv::sum(hist)[0];
 	return rcdf;
 }
 

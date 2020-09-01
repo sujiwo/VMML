@@ -18,32 +18,37 @@ using namespace std;
 namespace ice {
 
 
-void build_is_histogram(const cv::Mat &bgrImage, Matf &hist_i, Matf &hist_s);
+void build_is_histogram(vector<Matf> &HSV, Matf &hist_i, Matf &hist_s);
 cv::Mat matlab_covar(const cv::Mat &A, const cv::Mat &B);
 cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2);
+Matf3 mpl_bgr2hsv(const Matc3 &bgrImage);
+void mpl_bgr2hsv(const Matc3 &bgrImage, vector<Matf> &hsvf);
 
 
 /*
  * Notes: Comparison of OpenCV vs Matplotlib RGB->HSV conversion
+ * Category				CV					MPL
+ * ------------------------------------------------
+ * Output dtype			uint8				float32
+ * Range
+ *
  */
 
 
 
 
-cv::Mat dynamicHistogramEqualization(const cv::Mat &rgbImage, const float alpha)
+cv::Mat dynamicHistogramEqualization(const cv::Mat &bgrImage, const float alpha)
 {
 	// Work in HSV
-	Matf3 rgbf, hsv;
-	rgbImage.convertTo(rgbf, CV_32FC3);
-	cv::cvtColor(rgbf, hsv, cv::COLOR_BGR2HSV);
-	Matf HSI[3];
-	cv::split(hsv, HSI);
-	Matf I = HSI[2], S = HSI[1], H = HSI[0];
+	vector<Matf> HSV;
+	mpl_bgr2hsv(bgrImage, HSV);
 
-	Matf hist_i, hist_s;
-	build_is_histogram(rgbImage, hist_i, hist_s);
+	Matf hist_i, hist_s, hist_c;
+	build_is_histogram(HSV, hist_i, hist_s);
+	hist_c = alpha*hist_s + (1-alpha)*hist_i;
 
-
+	Matd hist_cdf;
+	cumulativeSum(hist_c, hist_cdf, true);
 
 	// XXX: Unfinished
 	exit(-1);
@@ -85,20 +90,9 @@ cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2)
 }
 
 
-void build_is_histogram(const cv::Mat &bgrImage, Matf &hist_i, Matf &hist_s)
+void build_is_histogram(vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 {
-	const int
-		height = bgrImage.rows,
-		width = bgrImage.cols,
-		channel = bgrImage.channels();
-
-	Matf3 rgbf, hsv;
-	bgrImage.convertTo(rgbf, CV_32FC3);
-	cv::cvtColor(rgbf, hsv, cv::COLOR_BGR2HSV);
-
-	Matf HSI[3];
-	cv::split(hsv, HSI);
-	Matf I = HSI[2], S = HSI[1], H = HSI[0];
+	Matf I = HSV[2], S = HSV[1], H = HSV[0];
 	H *= 255.0;
 	S *= 255.0;
 
@@ -142,7 +136,7 @@ void build_is_histogram(const cv::Mat &bgrImage, Matf &hist_i, Matf &hist_s)
 	cv::boxFilter(S, Smean, CV_32F, cv::Size(5,5), cv::Point(-1,-1), true);
 
 	auto t1=getCurrentTime();
-	Matf Rho = Matf::zeros(bgrImage.size());
+	Matf Rho = Matf::zeros(I.size());
 	for (auto r=0; r<Rho.rows; ++r) {
 		for (auto c=0; c<Rho.cols; ++c) {
 			auto tmpI = subMat(I, cv::Point(c,r), 5, 5);
@@ -177,6 +171,31 @@ void build_is_histogram(const cv::Mat &bgrImage, Matf &hist_i, Matf &hist_s)
 	}
 
 	// Done?
+}
+
+
+void mpl_bgr2hsv(const Matc3 &bgrImage, vector<Matf> &hsv_split)
+{
+	hsv_split.clear();
+
+	Matf3 bgrf, hsv1;
+	bgrImage.convertTo(bgrf, CV_32F);
+	cv::cvtColor(bgrf, hsv1, cv::COLOR_BGR2HSV);
+
+	cv::split(hsv1, hsv_split);
+	hsv_split[0] /= 360.0;
+}
+
+
+Matf3 mpl_bgr2hsv(const Matc3 &bgrImage)
+{
+	Matf3 hsv2;
+
+	vector<Matf> hsvspl;
+	mpl_bgr2hsv(bgrImage, hsvspl);
+	cv::merge(hsvspl, hsv2);
+
+	return hsv2;
 }
 
 

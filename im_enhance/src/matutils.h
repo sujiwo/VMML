@@ -279,4 +279,30 @@ cv::Mat_<Scalar> subMat(const cv::Mat_<Scalar> &input, const cv::Point &anchor, 
 }
 
 
+template<typename Scalar>
+void cumulativeSum(const cv::Mat_<Scalar> &input, Matd& accum, bool normalized=false)
+{
+	assert(input.channels()==1);
+
+	auto accumSize = cv::Size(input.cols*input.rows, 1);
+	if (accum.size() != accumSize)
+		Matd accum = Matd::zeros(accumSize);
+	else accum.setTo(0);
+
+	auto r=1;
+	for (auto it=input.begin(); it!=input.end(); it++) {
+		accum(r,1) = accum(r-1,1) + *it;
+		r++;
+	}
+
+	if (normalized) {
+		double nm = cv::sum(input)[0];
+		accum /= nm;
+	}
+}
+
+
+Matf cdf (cv::Mat &grayImage, cv::Mat mask, bool normalized=true);
+
+
 }		// namespace ice
