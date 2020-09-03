@@ -235,6 +235,10 @@ double entropy(const cv::Mat_<Scalar> &X)
 }
 
 
+/*
+ * Create a submatrix from input with a center point specified in anchor.
+ * If anchor is nearby input border, apply border padding.
+ */
 template<typename Scalar>
 cv::Mat_<Scalar> subMat(const cv::Mat_<Scalar> &input, const cv::Point &anchor, int width, int height, int borderType=cv::BORDER_REPLICATE, const cv::Scalar &value=cv::Scalar())
 {

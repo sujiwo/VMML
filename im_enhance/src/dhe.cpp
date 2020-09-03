@@ -110,7 +110,7 @@ cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2)
 
 void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 {
-	Matf I = HSV[2], S = HSV[1], H = HSV[0];
+	const Matf &I = HSV[2], &S = HSV[1], &H = HSV[0];
 	// Channel H is not required
 //	H *= 255.0;
 	// Assume S has been rescaled
@@ -147,14 +147,13 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 	dS = dSh+dSv;
 	cv::sqrt(dS, dS);
 
-	auto t1=getCurrentTime();
 	Matf Rho = Matf::zeros(I.size());
 	for (auto r=0; r<Rho.rows; ++r) {
 		for (auto c=0; c<Rho.cols; ++c) {
 			auto tmpI = subMat(I, cv::Point(c,r), 5, 5);
 			auto tmpS = subMat(S, cv::Point(c,r), 5, 5);
-			tmpI = flatten(tmpI, 1);
-			tmpS = flatten(tmpS, 1);
+			tmpI = flatten(tmpI, 0);
+			tmpS = flatten(tmpS, 0);
 			auto corrv = corrcoeff(tmpI, tmpS);
 			auto f = corrv.at<double>(0,1);
 			f = fabs(f);
@@ -162,8 +161,6 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 			Rho(r,c) = f;
 		}
 	}
-	auto t2=getCurrentTime();
-	cout << "Correlations: " << to_seconds(t2-t1) << endl;
 
 	cv::Mat rd = Rho.mul(dS);
 	rd.convertTo(rd, CV_32S);
