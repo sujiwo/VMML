@@ -50,16 +50,5 @@ int main(int argc, char *argv[])
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
 
-/*
-	ice::Matui In(3,3);
-	In << 3,2,1,
-			1,2,3,
-			0,0,5;
-
-	auto c = In.channels();
-	// XXX: this line crash because 32-bit unsigned integer is not supported by OpenCV
-	auto s = cv::sum(In).val[0];
-*/
-
 	return 0;
 }

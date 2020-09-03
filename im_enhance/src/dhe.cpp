@@ -18,22 +18,19 @@ using namespace std;
 namespace ice {
 
 
-void build_is_histogram(vector<Matf> &HSV, Matf &hist_i, Matf &hist_s);
+void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s);
 cv::Mat matlab_covar(const cv::Mat &A, const cv::Mat &B);
 cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2);
-Matf3 mpl_bgr2hsv(const Matc3 &bgrImage);
-void mpl_bgr2hsv(const Matc3 &bgrImage, vector<Matf> &hsvf);
-
 
 /*
- * Notes: Comparison of OpenCV vs Matplotlib RGB->HSV conversion
- * Category				CV					MPL
- * ------------------------------------------------
- * Output dtype			uint8				float32
- * Range
- *
+ * Output of BGR -> HSV:
+ * Channel 0(H) -> [0...1]
+ * Channel 1(S) -> [0...1]
+ * Channel 2(V) -> [0...255]
+ * All channels are single precision
  */
-
+void mpl_bgr2hsv(const Matc3 &bgrImage, Matf3 &hsv);
+void mpl_bgr2hsv(const Matc3 &bgrImage, vector<Matf> &hsvf);
 
 
 
@@ -42,16 +39,37 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &bgrImage, const float alpha)
 	// Work in HSV
 	vector<Matf> HSV;
 	mpl_bgr2hsv(bgrImage, HSV);
+	HSV[0] *= 360.0;
+	HSV[1] *= 255.0;
 
 	Matf hist_i, hist_s, hist_c;
+	Matf Iscaled = Matf::zeros(bgrImage.size());
+	Matc Iint(bgrImage.size());
+	Matc Imask = Matc::zeros(Iint.size());
+
 	build_is_histogram(HSV, hist_i, hist_s);
 	hist_c = alpha*hist_s + (1-alpha)*hist_i;
+	HSV[1] /= 255.0;
 
-	Matd hist_cdf;
-	cumulativeSum(hist_c, hist_cdf, true);
+	Matd s_r;
+	cumulativeSum(hist_c, s_r, true);
+	s_r *= 255.0;
 
-	// XXX: Unfinished
-	exit(-1);
+	HSV[2].convertTo(Iint, CV_8UC1);
+	for (auto n=0; n<255; ++n) {
+		Imask = (Iint==n);
+		Iscaled.setTo(s_r(n+1,0)/255.0, Imask);
+	}
+	Iscaled.setTo(1, Iint==255);
+	Iscaled *= 255.0;
+
+	cv::Mat bgr, hsv;
+	cv::merge(vector<Matf> {HSV[0], HSV[1], Iscaled}, hsv);
+	cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
+
+	cv::Mat bgr8;
+	bgr.convertTo(bgr8, CV_8U);
+	return bgr8;
 }
 
 
@@ -90,11 +108,13 @@ cv::Mat corrcoeff (const cv::Mat &M1, const cv::Mat &M2)
 }
 
 
-void build_is_histogram(vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
+void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 {
 	Matf I = HSV[2], S = HSV[1], H = HSV[0];
-	H *= 255.0;
-	S *= 255.0;
+	// Channel H is not required
+//	H *= 255.0;
+	// Assume S has been rescaled
+//	S *= 255.0;
 
 	// fh and fv are already rotated and flipped
 	Matf fhr(3,3), fvr(3,3);
@@ -126,14 +146,6 @@ void build_is_histogram(vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 	cv::pow(dSv, 2, dSv);
 	dS = dSh+dSv;
 	cv::sqrt(dS, dS);
-	Matui dSint(dS.size());
-	std::transform(dS.begin(), dS.end(), dSint.begin(),
-		[](const float &f){ return uint32_t(f); }
-	);
-
-	Matf Imean, Smean;
-	cv::boxFilter(I, Imean, CV_32F, cv::Size(5,5), cv::Point(-1,-1), true);
-	cv::boxFilter(S, Smean, CV_32F, cv::Size(5,5), cv::Point(-1,-1), true);
 
 	auto t1=getCurrentTime();
 	Matf Rho = Matf::zeros(I.size());
@@ -169,8 +181,6 @@ void build_is_histogram(vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 		rd.copyTo(temp, Intensity==n);
 		hist_s(n+1,0) = float(cv::sum(temp).val[0]);
 	}
-
-	// Done?
 }
 
 
@@ -187,15 +197,11 @@ void mpl_bgr2hsv(const Matc3 &bgrImage, vector<Matf> &hsv_split)
 }
 
 
-Matf3 mpl_bgr2hsv(const Matc3 &bgrImage)
+void mpl_bgr2hsv(const Matc3 &bgrImage, Matf3 &hsv2)
 {
-	Matf3 hsv2;
-
 	vector<Matf> hsvspl;
 	mpl_bgr2hsv(bgrImage, hsvspl);
 	cv::merge(hsvspl, hsv2);
-
-	return hsv2;
 }
 
 
