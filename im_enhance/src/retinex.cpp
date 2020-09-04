@@ -6,6 +6,8 @@
 #include <opencv2/core/ocl.hpp>
 #include "im_enhance.h"
 #include "timer.h"
+#include "matutils.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -176,9 +178,9 @@ multiScaleRetinex(const cv::Mat &inp, const float sigma1,
 
 	cv::Mat ssRetx = singleScaleRetinex(inp, sigma1);
 	msrex = msrex + ssRetx;
-	ssRetx = singleScaleRetinex(inp, sigma2, true);
+	ssRetx = singleScaleRetinex(inp, sigma2, false);
 	msrex = msrex + ssRetx;
-	ssRetx = singleScaleRetinex(inp, sigma3, true);
+	ssRetx = singleScaleRetinex(inp, sigma3, false);
 	msrex = msrex + ssRetx;
 
 	msrex /= 3;
@@ -247,16 +249,24 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	const float sigma3,
 	const float lowClip, const float highClip)
 {
-	cv::ocl::setUseOpenCL(true);
-	cv::Mat imgf;
+//	cv::ocl::setUseOpenCL(true);
+	Matf3 imgf;
 	rgbImage.convertTo(imgf, CV_32FC3, 1.0, 1.0);
 
-	cv::Mat intensity (imgf.size(), CV_32FC1);
+	Matf intensity (imgf.size(), CV_32FC1);
+	auto bit = intensity.begin();
+	for (auto ait=imgf.begin(); ait!=imgf.end(); ++ait) {
+		auto color = *ait;
+		*bit = (color[0] + color[1] + color[2]) / 3;
+		++bit;
+	}
+/*
 	for (uint r=0; r<imgf.rows; ++r)
 		for (uint c=0; c<imgf.cols; ++c) {
 			auto color = imgf.at<cv::Vec3f>(r,c);
 			intensity.at<float>(r,c) = (color[0]+color[1]+color[2])/3;
 		}
+*/
 
 	auto t1 = getCurrentTime();
 	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma1, sigma2, sigma3);
@@ -272,7 +282,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	cv::Mat imgMsrcp (imgf.size(), imgf.type());
 	for (uint r=0; r<imgf.rows; ++r)
 		for (uint c=0; c<imgf.cols; ++c) {
-			auto _B = imgf.at<cv::Vec3f>(r, c);
+			auto _B = imgf(r, c);
 			auto B = max({_B[0], _B[1], _B[2]});
 			auto A = min(float(256.0)/B, intensity1.at<float>(r,c) / intensity.at<float>(r,c));
 			cv::Vec3f color;

@@ -78,6 +78,20 @@ cv::Mat_<Scalar> shiftRow(cv::Mat_<Scalar> &in, int numToBelow=0)
  *        1 => column-major
  */
 //cv::Mat flatten(cv::InputArray src, uchar order=0);
+template<typename Scalar>
+void flatten(const cv::Mat_<Scalar> &in, cv::Mat_<Scalar> &out, uchar order=0)
+{
+	if (order==0) {
+		out = in.reshape(0, in.rows*in.cols);
+	}
+	else if (order==1) {
+		out.create(in.rows*in.cols, 1);
+		for (int c=0; c<in.cols; ++c) {
+			in.col(c).copyTo(out.rowRange(c*in.rows, c*in.rows+in.rows));
+		}
+	}
+}
+
 
 template<typename Scalar>
 cv::Mat_<Scalar>
@@ -240,14 +254,22 @@ double entropy(const cv::Mat_<Scalar> &X)
  * If anchor is nearby input border, apply border padding.
  */
 template<typename Scalar>
-cv::Mat_<Scalar> subMat(const cv::Mat_<Scalar> &input, const cv::Point &anchor, int width, int height, int borderType=cv::BORDER_REPLICATE, const cv::Scalar &value=cv::Scalar())
+void subMat(const cv::Mat_<Scalar> &input,
+	const cv::Point &anchor,
+	cv::Mat_<Scalar> &output,
+	int width=-1, int height=-1,
+	int borderType=cv::BORDER_REPLICATE, const cv::Scalar &value=cv::Scalar())
 {
+	if (width==-1)
+		width = output.cols;
+	if (height==-1)
+		height = output.rows;
+
 	int top_left_x = anchor.x-width/2;
 	int top_left_y = anchor.y-width/2;
 	int bottom_right_x = top_left_x + width;
 	int bottom_right_y = top_left_y + height;
 
-	cv::Mat_<Scalar> output;
 	if (top_left_x < 0 || top_left_y < 0 || bottom_right_x > input.cols || bottom_right_y > input.rows) {
 		// border padding will be required
 		int border_left = 0, border_right = 0, border_top = 0, border_bottom = 0;
@@ -277,10 +299,10 @@ cv::Mat_<Scalar> subMat(const cv::Mat_<Scalar> &input, const cv::Point &anchor, 
 	else {
 		// no border padding required
 		cv::Rect R(top_left_x, top_left_y, width, height);
-		output = input(R);
+		input(R).copyTo(output);
 	}
-	return output;
 }
+
 
 
 template<typename Scalar>

@@ -9,7 +9,6 @@
 #include "im_enhance.h"
 #include "matutils.h"
 #include "timer.h"
-#include "npy.hpp"
 
 
 using namespace std;
@@ -56,10 +55,21 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &bgrImage, const float alpha)
 	s_r *= 255.0;
 
 	HSV[2].convertTo(Iint, CV_8UC1);
+/*
 	for (auto n=0; n<255; ++n) {
 		Imask = (Iint==n);
 		Iscaled.setTo(s_r(n+1,0)/255.0, Imask);
 	}
+*/
+
+	auto bit = Iscaled.begin();
+	for (auto ait=Iint.begin(); ait!=Iint.end(); ++ait) {
+		auto av = *ait;
+		auto bv = s_r(av+1,0)/255.0;
+		*bit = bv;
+		++bit;
+	}
+
 	Iscaled.setTo(1, Iint==255);
 	Iscaled *= 255.0;
 
@@ -150,10 +160,11 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 	Matf Rho = Matf::zeros(I.size());
 	for (auto r=0; r<Rho.rows; ++r) {
 		for (auto c=0; c<Rho.cols; ++c) {
-			auto tmpI = subMat(I, cv::Point(c,r), 5, 5);
-			auto tmpS = subMat(S, cv::Point(c,r), 5, 5);
-			tmpI = flatten(tmpI, 0);
-			tmpS = flatten(tmpS, 0);
+			Matf tmpI, tmpS;
+			subMat(I, cv::Point(c,r), tmpI, 5, 5);
+			subMat(S, cv::Point(c,r), tmpS, 5, 5);
+			flatten(tmpI, tmpI, 0);
+			flatten(tmpS, tmpS, 0);
 			auto corrv = corrcoeff(tmpI, tmpS);
 			auto f = corrv.at<double>(0,1);
 			f = fabs(f);
