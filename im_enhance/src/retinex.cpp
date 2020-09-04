@@ -215,27 +215,29 @@ multiScaleRetinexGpu(const cv::Mat &inp,
 }
 
 
-cv::Mat
-simpleColorBalance(const cv::Mat &inp, const float lowClip, const float highClip)
+Matf
+simpleColorBalance(const Matf &inp, const float lowClip, const float highClip)
 {
-	assert(inp.type()==CV_32F);
-
-	const uint total = inp.total();
 	uint current = 0;
+	const uint total = inp.total();
 	double low_val, high_val;
 
-	// This part is hotspot
-	auto t1 = getCurrentTime();
-	std::vector<float> uniquez(inp.begin<float>(), inp.end<float>());
-	std::sort(uniquez.begin(), uniquez.end());
-	auto t2 = getCurrentTime();
-	cout << "Unique: " << to_seconds(t2-t1) << endl;
-	int clow = floor(float(lowClip) * float(total));
-	int chigh = floor(float(highClip) * float(total));
-	low_val = uniquez[clow];
-	high_val = uniquez[chigh];
+	auto mUnique = unique(inp);
+	auto uniqVals = mUnique.getKeys();
+	auto uniqCounts = mUnique.getValues();
+	float f1 = uniqVals.front(), f2 = uniqVals.back();
 
-	cv::Mat minImg, maxImg;
+	for (int i=0; i<uniqVals.size(); ++i) {
+		auto u = uniqVals.at(i);
+		auto c = uniqCounts.at(i);
+		if (float(current) / total < lowClip)
+			low_val = u;
+		if (float(current) / total < highClip)
+			high_val = u;
+		current += c;
+	}
+
+	Matf minImg, maxImg;
 	cv::min(inp, high_val, minImg);
 	cv::max(minImg, low_val, maxImg);
 
@@ -260,24 +262,18 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 		*bit = (color[0] + color[1] + color[2]) / 3;
 		++bit;
 	}
-/*
-	for (uint r=0; r<imgf.rows; ++r)
-		for (uint c=0; c<imgf.cols; ++c) {
-			auto color = imgf.at<cv::Vec3f>(r,c);
-			intensity.at<float>(r,c) = (color[0]+color[1]+color[2])/3;
-		}
-*/
 
 	auto t1 = getCurrentTime();
-	cv::Mat firstRetinex = multiScaleRetinex(intensity, sigma1, sigma2, sigma3);
+	Matf firstRetinex = multiScaleRetinex(intensity, sigma1, sigma2, sigma3);
 	auto t2 = getCurrentTime();
 	cout << "MSR: " << to_seconds(t2-t1) << endl;
 
-	cv::Mat intensity1 = simpleColorBalance(firstRetinex, lowClip, highClip);
+	Matf intensity1 = simpleColorBalance(firstRetinex, lowClip, highClip);
 
 	double intensMin, intensMax;
 	cv::minMaxIdx(intensity1, &intensMin, &intensMax);
-	intensity1 = (intensity1 - intensMin) / (intensMax - intensMin) * 255.0 + 1.0;
+	intensity1 = ((intensity1 - intensMin) / (intensMax - intensMin)) * 255.0 + 1.0;
+	npy::saveMat(intensity1, "/tmp/intensity1c.npy");
 
 	cv::Mat imgMsrcp (imgf.size(), imgf.type());
 	for (uint r=0; r<imgf.rows; ++r)

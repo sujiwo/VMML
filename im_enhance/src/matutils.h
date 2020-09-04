@@ -1,3 +1,6 @@
+#ifndef __MATUTILS_H__
+#define __MATUTILS_H__ 1
+
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <Eigen/Core>
@@ -332,3 +335,5 @@ Matf cdf (cv::Mat &grayImage, cv::Mat mask, bool normalized=true);
 
 
 }		// namespace ice
+
+#endif	// __MATUTILS_H__
