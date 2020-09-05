@@ -32,7 +32,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	const float sigma2=80.0,
 	const float sigma3=250.0,
 	const float lowClip=0.01,
-	const float highClip=0.99999999999);
+	const float highClip=0.99);
 
 /*
  * Dynamic Histogram Equalization (choice #3)

@@ -101,22 +101,30 @@ cv::Mat fastGaussianBlur (const cv::Mat &input, float r)
 }
 
 
+void log10(const Matf &A, Matf &B)
+{
+	if (B.size()!=A.size())
+		B.create(A.size());
+
+	auto Bit = B.begin();
+	for (auto Ait=A.begin(); Ait!=A.end(); ++Ait) {
+		*Bit = log10f(*Ait);
+		Bit++;
+	}
+}
+
 
 /*
  * Retinex Family
  */
-cv::Mat
-singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useFaster=false)
+Matf
+singleScaleRetinex(const Matf &inp, const float sigma, bool useFaster=false)
 {
-	assert(inp.type()==CV_32FC1);
-
-	// XXX: log_e or log_10 ?
-	cv::Mat inpLog;
-	cv::log(inp, inpLog);
-	inpLog /= log(10);
+	Matf inpLog;
+	log10(inp, inpLog);
 
 	// GaussianBlur() is also a hotspot for large sigma
-	cv::Mat blurred;
+	Matf blurred;
 	if (useFaster==false)
 		cv::GaussianBlur(inp, blurred, cv::Size(0,0), sigma);
 
@@ -127,8 +135,7 @@ singleScaleRetinex(const cv::Mat &inp, const float sigma, bool useFaster=false)
 		cv::boxFilter( blurred, blurred, -1, cv::Size(boxes[2]/2, boxes[2]/2) );
 	}
 
-	cv::log(blurred, blurred);
-	blurred /= log(10);
+	log10(blurred, blurred);
 
 	auto R=inpLog - blurred;
 	return R;
@@ -184,6 +191,7 @@ multiScaleRetinex(const cv::Mat &inp, const float sigma1,
 	msrex = msrex + ssRetx;
 
 	msrex /= 3;
+//	npy::saveMat(msrex, "/tmp/retinexac.npy"); exit(-1);
 	return msrex;
 }
 
@@ -273,7 +281,6 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	double intensMin, intensMax;
 	cv::minMaxIdx(intensity1, &intensMin, &intensMax);
 	intensity1 = ((intensity1 - intensMin) / (intensMax - intensMin)) * 255.0 + 1.0;
-	npy::saveMat(intensity1, "/tmp/intensity1c.npy");
 
 	cv::Mat imgMsrcp (imgf.size(), imgf.type());
 	for (uint r=0; r<imgf.rows; ++r)
