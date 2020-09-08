@@ -88,19 +88,21 @@ int main(int argc, char *argv[])
 		// preload messages
 		for (int p=0; p<max_par_msg; ++p) {
 			PreprocWorkers w;
-			w.msgTime = inputImageStream.timeAt(p);
-			auto imageInputMsg = inputImageStream.at<sensor_msgs::Image>(p);
+			auto t = iteration*numcpu + p;
+			w.msgTime = inputImageStream.timeAt(t);
+			auto imageInputMsg = inputImageStream.at<sensor_msgs::Image>(t);
 			w.image = cv_bridge::toCvCopy(imageInputMsg, "bgr8")->image;
 			w.header = imageInputMsg->header;
 			imageResults.push_back(w);
 		}
 
-#pragma omp parallel for
+		cv_bridge::CvImage newImg;
+		cv::Mat image, res;
+#pragma omp parallel for private(image, res, newImg)
 		for (int p=0; p<max_par_msg; ++p) {
-			cv::Mat image = imageResults[p].image;
+			image = imageResults[p].image;
 
 			// Do preprocess
-			cv::Mat res;
 			switch (ch) {
 				case 1: res = ice::autoAdjustGammaRGB(image); break;
 				case 2: res = ice::multiScaleRetinexCP(image); break;
@@ -109,12 +111,12 @@ int main(int argc, char *argv[])
 				case 5: res = ice::dynamicHistogramEqualization(image); break;
 			}
 
-			cv_bridge::CvImage newImg;
 			newImg.image = res;
 			newImg.encoding = sensor_msgs::image_encodings::BGR8;
 			newImg.header = imageResults[p].header;
 			newImg.toCompressedImageMsg(imageResults[p].imageOutputMsg, cv_bridge::Format::PNG);
 		}
+#pragma omp barrier
 
 		for (int p=0; p<max_par_msg; ++p)
 			outputBagFd.write(topic, imageResults[p].msgTime, imageResults[p].imageOutputMsg);
