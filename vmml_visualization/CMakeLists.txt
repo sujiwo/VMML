@@ -3,6 +3,7 @@ project(vmml_visualization)
 
 add_compile_options(-std=c++11 -pthread)
 
+find_package (Boost REQUIRED COMPONENTS filesystem)
 find_package (OpenCV 3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
@@ -17,10 +18,10 @@ find_package(catkin REQUIRED COMPONENTS
 	pcl_conversions
 	vision_core
 	vision_mapper
+	im_enhance
 )
 find_package(libviso2)
 find_package(libopenvslam)
-#find_package(RTABMap REQUIRED)
 
 if(SEGNET_DIR)
 	message("SegNet is set")

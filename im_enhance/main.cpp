@@ -14,7 +14,6 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/hdf.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/math/tools/minima.hpp>
 #include "mpi.h"
 #include "im_enhance.h"
 #include "npy.hpp"

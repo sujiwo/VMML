@@ -18,6 +18,7 @@ namespace ice {
 
 /*
  * Copied from https://github.com/WurmD/LowPass/blob/master/LowPassV.cpp
+ * Also from : https://github.com/RoyiAvital/FastGuassianBlur.git
  */
 vector<int> boxesForGauss(float sigma, int n)  // standard deviation, number of boxes
 {

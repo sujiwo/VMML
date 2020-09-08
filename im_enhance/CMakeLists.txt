@@ -10,7 +10,6 @@ set (CMAKE_MODULE_PATH
 find_package (OpenCV REQUIRED)
 find_package (PythonLibs REQUIRED)
 find_package (Eigen3 REQUIRED)
-find_package (pybind11 REQUIRED)
 find_package (OpenMP REQUIRED)
 find_package (Boost REQUIRED COMPONENTS filesystem)
 find_package (SuiteSparse REQUIRED)
@@ -77,23 +76,22 @@ target_link_libraries(test_ime
 	Boost::filesystem
 )
 
-pybind11_add_module(
-	ime_py MODULE
-		python/mod.cpp
-)
-
 install(
 	FILES src/ying.py
 	DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION}
 )
 
 if (catkin_FOUND)
+	
 	add_executable(ime_ros
 		src/ime_ros.cpp)
+	
 	target_link_libraries(ime_ros
 		im_enhance
 		${catkin_LIBRARIES}
 		${SUITESPARSE_LIBRARIES})
+		
+#	catkin_python_setup()
 endif()
 
 
