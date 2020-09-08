@@ -32,6 +32,7 @@ if (OPENMP_FOUND)
 endif()
 
 catkin_package(
+	INCLUDE_DIRS include
 	LIBRARIES im_enhance
 	DEPENDS OpenCV
 )
@@ -76,10 +77,10 @@ target_link_libraries(test_ime
 	Boost::filesystem
 )
 
-install(
-	FILES src/ying.py
-	DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION}
-)
+#install(
+#	FILES src/ying.py
+#	DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION}
+#)
 
 if (catkin_FOUND)
 	

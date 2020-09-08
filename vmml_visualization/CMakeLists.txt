@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(vmml_visualization)
 
-add_compile_options(-std=c++11 -pthread)
+add_compile_options(-std=c++11 -pthread -fopenmp)
 
 find_package (Boost REQUIRED COMPONENTS filesystem)
+find_package (OpenMP REQUIRED)
 find_package (OpenCV 3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
@@ -22,6 +23,12 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(libviso2)
 find_package(libopenvslam)
+
+if (OPENMP_FOUND)
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 if(SEGNET_DIR)
 	message("SegNet is set")
@@ -156,6 +163,14 @@ if (libopenvslam_FOUND)
 else()
 	message("OpenVSlam demo will NOT be built")
 endif()
+
+
+add_executable (preprocess_image_bag
+	nodes/preprocess_image_bag.cpp
+)
+target_link_libraries (preprocess_image_bag
+	${common_libs}
+)
 
 
 ###

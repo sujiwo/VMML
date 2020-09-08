@@ -225,6 +225,29 @@ multiScaleRetinexGpu(const cv::Mat &inp,
 
 
 Matf
+simpleColorBalance2(const Matf &inp, const float lowClip, const float highClip)
+{
+	uint current = 0;
+	const uint total = inp.total();
+	double low_val, high_val;
+
+	std::vector<float> uniquez(inp.begin(), inp.end());
+	std::sort(uniquez.begin(), uniquez.end());
+	int clow = floor(float(lowClip) * float(total));
+	int chigh = floor(float(highClip) * float(total));
+	low_val = uniquez[clow];
+	high_val = uniquez[chigh];
+
+	Matf minImg, maxImg;
+	cv::min(inp, high_val, minImg);
+	cv::max(minImg, low_val, maxImg);
+
+	return maxImg;
+}
+
+
+
+Matf
 simpleColorBalance(const Matf &inp, const float lowClip, const float highClip)
 {
 	uint current = 0;
@@ -277,7 +300,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	auto t2 = getCurrentTime();
 	cout << "MSR: " << to_seconds(t2-t1) << endl;
 
-	Matf intensity1 = simpleColorBalance(firstRetinex, lowClip, highClip);
+	Matf intensity1 = simpleColorBalance2(firstRetinex, lowClip, highClip);
 
 	double intensMin, intensMax;
 	cv::minMaxIdx(intensity1, &intensMin, &intensMax);

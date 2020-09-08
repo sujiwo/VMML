@@ -146,6 +146,22 @@ ProgramOptions::removeOptions(const std::string &optName)
 
 
 void
+ProgramOptions::clearOptions()
+{
+	auto &allOpts = const_cast<std::vector< boost::shared_ptr<boost::program_options::option_description> >&> (_options.options());
+	vector<string> optShortName;
+	for (auto x: allOpts) {
+		auto sn = x->long_name();
+		if (sn!="help")
+			optShortName.push_back(sn);
+	}
+
+	for (auto sn: optShortName)
+		removeOptions(sn);
+}
+
+
+void
 ProgramOptions::openWorkDir(const std::string &f)
 {
 	if (f.empty()) {

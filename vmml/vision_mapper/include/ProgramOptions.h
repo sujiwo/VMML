@@ -81,6 +81,9 @@ public:
 
 	void removeOptions(const std::string &optName);
 
+	// Clear all options (excluding --help)
+	void clearOptions();
+
 	/*
 	 * Add an option. When user sets it, optionally its value will be stored to S
 	 */
