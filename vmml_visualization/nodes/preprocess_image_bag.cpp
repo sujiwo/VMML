@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	rosbag::Bag outputBagFd(outputPath.string(), rosbag::bagmode::Write);
 
 	const int numcpu = omp_get_num_procs(),
-			msgmax = 100,
+			msgmax = inputImageStream.size(),
 			steps = int(ceil (msgmax / double(numcpu)));
 
 	vector<PreprocWorkers> imageResults;
