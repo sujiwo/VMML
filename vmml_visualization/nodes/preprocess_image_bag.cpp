@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
 
 		for (int p=0; p<max_par_msg; ++p)
 			outputBagFd.write(topic, imageResults[p].msgTime, imageResults[p].imageOutputMsg);
+		cout << "Messages: " << (iteration+1)*numcpu << endl;
 	}
 
 /*

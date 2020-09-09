@@ -298,7 +298,7 @@ cv::Mat multiScaleRetinexCP(const cv::Mat &rgbImage,
 	auto t1 = getCurrentTime();
 	Matf firstRetinex = multiScaleRetinex(intensity, sigma1, sigma2, sigma3);
 	auto t2 = getCurrentTime();
-	cout << "MSR: " << to_seconds(t2-t1) << endl;
+//	cout << "MSR: " << to_seconds(t2-t1) << endl;
 
 	Matf intensity1 = simpleColorBalance2(firstRetinex, lowClip, highClip);
 

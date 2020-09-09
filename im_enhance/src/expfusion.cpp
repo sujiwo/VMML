@@ -212,7 +212,8 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 		}
 	}
 
-	cv::resize(imageSmooth, imageSmooth, cv::Size(), 0.5, 0.5, cv::INTER_CUBIC);
+	const float resizeWorkFactor = 0.3333333333333;
+	cv::resize(imageSmooth, imageSmooth, cv::Size(), resizeWorkFactor, resizeWorkFactor, cv::INTER_CUBIC);
 	cv::normalize(imageSmooth, imageSmooth, 0.0, 1.0, cv::NORM_MINMAX);
 
 	// computeTextureWeights()
@@ -294,7 +295,7 @@ cv::Mat exposureFusion(const cv::Mat &rgbImage)
 	cv::eigen2cv(out, t_vec);
 
 	Matf Tx = t_vec.reshape(1, imageSmooth.cols).t();
-	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_AREA);
+	cv::resize(Tx, Tx, rgbFloat.size(), 0, 0, cv::INTER_CUBIC);
 //	tsmooth() is done
 
 	Matb isBad = Tx < 0.5;

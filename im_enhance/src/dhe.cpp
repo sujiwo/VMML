@@ -62,6 +62,7 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &bgrImage, const float alpha)
 	}
 */
 
+	auto t1=getCurrentTime();
 	auto bit = Iscaled.begin();
 	for (auto ait=Iint.begin(); ait!=Iint.end(); ++ait) {
 		auto av = *ait;
@@ -69,6 +70,8 @@ cv::Mat dynamicHistogramEqualization(const cv::Mat &bgrImage, const float alpha)
 		*bit = bv;
 		++bit;
 	}
+	auto t2=getCurrentTime();
+	cout << "Backproject: " << to_seconds(t2-t1) << endl;
 
 	Iscaled.setTo(1, Iint==255);
 	Iscaled *= 255.0;
@@ -158,6 +161,8 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 	cv::sqrt(dS, dS);
 
 	Matf Rho = Matf::zeros(I.size());
+	auto t1=getCurrentTime();
+#pragma omp parallel for
 	for (auto r=0; r<Rho.rows; ++r) {
 		for (auto c=0; c<Rho.cols; ++c) {
 			Matf tmpI, tmpS;
@@ -172,6 +177,8 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 			Rho(r,c) = f;
 		}
 	}
+	auto t2=getCurrentTime();
+	cout << "Correlation: " << to_seconds(t2-t1) << endl;
 
 	cv::Mat rd = Rho.mul(dS);
 	rd.convertTo(rd, CV_32S);
@@ -180,6 +187,7 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 	hist_s = Matf::zeros(256,1);
 
 	Mati Intensity;
+	t1=getCurrentTime();
 	I.convertTo(Intensity, CV_32SC1);
 	for (auto n=0; n<255; ++n) {
 		cv::Mat temp;
@@ -189,6 +197,8 @@ void build_is_histogram(const vector<Matf> &HSV, Matf &hist_i, Matf &hist_s)
 		rd.copyTo(temp, Intensity==n);
 		hist_s(n+1,0) = float(cv::sum(temp).val[0]);
 	}
+	t2=getCurrentTime();
+	cout << "Histogram: " << to_seconds(t2-t1) << endl;
 }
 
 
