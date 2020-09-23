@@ -186,9 +186,9 @@ multiScaleRetinex(const cv::Mat &inp, const float sigma1,
 
 	cv::Mat ssRetx = singleScaleRetinex(inp, sigma1);
 	msrex = msrex + ssRetx;
-	ssRetx = singleScaleRetinex(inp, sigma2, false);
+	ssRetx = singleScaleRetinex(inp, sigma2, true);
 	msrex = msrex + ssRetx;
-	ssRetx = singleScaleRetinex(inp, sigma3, false);
+	ssRetx = singleScaleRetinex(inp, sigma3, true);
 	msrex = msrex + ssRetx;
 
 	msrex /= 3;

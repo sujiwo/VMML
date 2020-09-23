@@ -18,6 +18,7 @@
 #include "im_enhance.h"
 #include "npy.hpp"
 #include "src/matutils.h"
+#include "src/timer.h"
 
 
 using namespace std;
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
 
 	const float alpha = 0.3975;
 
+	auto t1 = ice::getCurrentTime();
 	int ch = stoi(argv[2]);
 	switch (ch) {
 	case 1: res = ice::autoAdjustGammaRGB(image); break;
@@ -45,6 +47,8 @@ int main(int argc, char *argv[])
 	case 4: res = ice::exposureFusion(image); break;
 	case 5: res = ice::dynamicHistogramEqualization(image); break;
 	}
+	auto t2 = ice::getCurrentTime();
+	cout << "Preprocessing time: " << ice::to_seconds(t2-t1) << endl;
 
 	fs::path outputImage(inputImage.parent_path() / (inputImage.stem().string()+'-'+to_string(ch)+inputImage.extension().string()));
 	cv::imwrite(outputImage.string(), res);
