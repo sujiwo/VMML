@@ -47,10 +47,10 @@ if(SEGNET_DIR)
 endif()
 
 
-add_service_files(
-FILES
-	place_recognizer.srv
-)
+#add_service_files(
+#FILES
+#	place_recognizer.srv
+#)
 
 generate_messages(
 	DEPENDENCIES
@@ -179,21 +179,21 @@ install(
 #)
 
 # Place Indexer-only Node
-add_executable(
-	index_creator
-		nodes/index_creator.cpp
-)
-
-target_link_libraries(
-	index_creator
-		vmml_mapper
-		${common_libs}
-)
-
-install(
-	TARGETS index_creator
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	index_creator
+#		nodes/index_creator.cpp
+#)
+#
+#target_link_libraries(
+#	index_creator
+#		vmml_mapper
+#		${common_libs}
+#)
+#
+#install(
+#	TARGETS index_creator
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 #add_executable(
 #	test_imagedb
@@ -253,21 +253,21 @@ install(
 #)
 
 # Place Recognizer Service Node
-add_executable(
-	place_recognizer_srv
-		nodes/place_recognizer_srv.cpp
-)
-
-target_link_libraries(
-	place_recognizer_srv
-		vmml_mapper
-		${common_libs}
-)
-
-install(
-	TARGETS place_recognizer_srv
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#add_executable(
+#	place_recognizer_srv
+#		nodes/place_recognizer_srv.cpp
+#)
+#
+#target_link_libraries(
+#	place_recognizer_srv
+#		vmml_mapper
+#		${common_libs}
+#)
+#
+#install(
+#	TARGETS place_recognizer_srv
+#	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 #add_executable(
 #	image_trajectory
