@@ -9,13 +9,17 @@
 #define PLACE_RECOGNIZER_INCREMENTALBOW_H_
 
 
-#include <vector>
-#include <map>
 #include <memory>
-#include <set>
+#include <map>
+#include <unordered_set>
+#include <unordered_map>
+#include <queue>
 #include <string>
+#include <list>
+#include <utility>
 #include <opencv2/core.hpp>
 #include <opencv2/core/hal/hal.hpp>
+#include <opencv2/features2d.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_member.hpp>
 
@@ -124,8 +128,8 @@ public:
 	std::string toString() const;
 
 	unsigned char* bits_;
-	unsigned size_in_bytes_;
-	unsigned size_in_bits_;
+	unsigned int size_in_bytes_;
+	unsigned int size_in_bits_;
 
 	// Serialization support
 	template <class Archive>
@@ -556,9 +560,10 @@ private:
 
 };
 
+} /* namespace PlaceRecognizer */
+
 
 #include "IncrementalBoW_serialization.h"
 
-} /* namespace PlaceRecognizer */
 
 #endif /* PLACE_RECOGNIZER_INCREMENTALBOW_H_ */

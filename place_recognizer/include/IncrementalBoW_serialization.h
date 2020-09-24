@@ -5,13 +5,14 @@
  *      Author: sujiwo
  */
 
-#ifndef _IMAGEDATABASE_SERIALIZATION_H_
-#define _IMAGEDATABASE_SERIALIZATION_H_
+#ifndef _INCREMENTALBOW_SERIALIZATION_H_
+#define _INCREMENTALBOW_SERIALIZATION_H_
 
-#include <boost/serialization/unordered_set.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/unordered_set.hpp>
+#include <boost/serialization/utility.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/list.hpp>
@@ -147,6 +148,6 @@ void IncrementalBoW::load(Archive &ar, const unsigned int v)
 }
 
 
-}		// namespace Vmml
+}		// namespace PlaceRecognizer
 
-#endif /* _IMAGEDATABASE_SERIALIZATION_H_ */
+#endif /* _INCREMENTALBOW_SERIALIZATION_H_ */

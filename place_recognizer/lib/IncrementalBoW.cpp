@@ -925,7 +925,6 @@ IncrementalBoW::loadFromDisk(const std::string &f)
 	indexStore >> *this;
 
 	indexFileFd.close();
-
 }
 
 
