@@ -64,7 +64,8 @@ if(rosbag_viewer_FOUND)
 	find_package(sensor_msgs REQUIRED)
 	find_package(cv_bridge REQUIRED)
 	add_executable(ibow_mapper 
-		nodes/ibow_mapper.cpp)
+		nodes/ibow_mapper.cpp
+		lib/ImageBag.cpp)
 	target_include_directories(
 		ibow_mapper 
 			PUBLIC 
@@ -73,5 +74,9 @@ if(rosbag_viewer_FOUND)
 		ibow_mapper
 			place_recognizer
 			random_access_bag
+	)
+	install(
+		TARGETS ibow_mapper
+			RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 	)
 endif()

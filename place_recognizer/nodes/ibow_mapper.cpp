@@ -9,7 +9,7 @@
 #include <boost/program_options.hpp>
 #include "IncrementalBoW.h"
 #include "ProgramOptionParser.h"
-#include "RandomAccessBag.h"
+#include "ImageBag.h"
 
 
 using namespace std;
@@ -21,28 +21,42 @@ class IBoW_Mapper_App
 public:
 
 static const int defaultNumOfFeatures = 3000;
+static constexpr float defaultSampleImageRate = 7.5;
 
 IBoW_Mapper_App(int argc, char *argv[])
 {
 	auto options = prepare_options();
 	options.parseCommandLineArgs(argc, argv);
 
-	// XXX: Modify this to use option parser
-	featureDetector = cv::ORB::create(3000);
-	bagFd.open(argv[2], rosbag::BagMode::Read);
+	auto numFeats = options.get<int>("numfeats", defaultNumOfFeatures);
+	featureDetector = cv::ORB::create(numFeats);
 
-	auto vTopicList = RandomAccessBag::getTopicList(bagFd);
-	imageBag.reset(new RandomAccessBag(bagFd, argv[1]));
+	bagFd.open(options.get<string>("bagfile", ""), rosbag::BagMode::Read);
 
-	imageBag->desample(7.5, messageList);
-}
+	auto imageTopic = options.get<string>("topic", "");
+	if (imageTopic.empty())
+		imageTopic = PlaceRecognizer::ImageBag::suggestTopic(bagFd);
+	imageBag.reset(new PlaceRecognizer::ImageBag(bagFd, imageTopic));
 
-void processFrame(const uint bagMessageNumber)
-{
+	imageBag->desample(options.get<float>("desample", defaultSampleImageRate), messageList);
 }
 
 void run()
 {
+	for (auto mId: messageList) {
+		auto frameImg = imageBag->at(mId);
+
+		std::vector<cv::KeyPoint> kpList;
+		cv::Mat descriptors;
+		featureDetector->detectAndCompute(frameImg, cv::Mat(), kpList, descriptors, false);
+
+		if (mId==messageList.front()) {
+
+		}
+		else {
+
+		}
+	}
 }
 
 static
@@ -52,7 +66,7 @@ prepare_options()
 	PrgOpt::ProgramOption opts;
 	opts.addSimpleOptions("bagfile", "Path to bagfile to be read");
 	opts.addSimpleOptions("numfeats", string("Number of features from single image; default is "+to_string(defaultNumOfFeatures)));
-	opts.addSimpleOptions("desample", "Reduce sample frequency of the bag");
+	opts.addSimpleOptions("desample", "Reduce sample frequency of the bag; default is "+to_string(defaultSampleImageRate));
 	opts.addSimpleOptions("topic", "Image topic from bag");
 	return opts;
 }
@@ -60,10 +74,10 @@ prepare_options()
 private:
 	cv::Ptr<cv::Feature2D> featureDetector;
 	rosbag::Bag bagFd;
-	RandomAccessBag::Ptr imageBag;
+	PlaceRecognizer::ImageBag::Ptr imageBag;
 	string outputMapFilename;
 	RandomAccessBag::DesampledMessageList messageList;
-
+	bool isCompressedImage=false;
 	PlaceRecognizer::IncrementalBoW mapperProc;
 };
 

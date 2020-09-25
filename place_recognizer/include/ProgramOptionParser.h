@@ -57,7 +57,7 @@ public:
 	 * Get values from command line, set to default if not available
 	 */
 	template<typename tp>
-	tp get(const std::string &cf, const tp &defaultValue) const
+	tp get(const std::string &cf, tp defaultValue) const
 	{
 		try {
 			return _optionValues.at(cf).as<tp>();
