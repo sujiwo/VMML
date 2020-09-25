@@ -9,8 +9,11 @@ find_package(catkin REQUIRED COMPONENTS
 	message_generation
 )
 
+# See if we can compile mapper executable
+find_package(rosbag_viewer) 
+
 find_package (Boost REQUIRED COMPONENTS system serialization filesystem program_options)
-find_package (OpenCV 3 REQUIRED)
+find_package (OpenCV REQUIRED)
 find_package (OpenMP REQUIRED)
 
 if (OPENMP_FOUND)
@@ -27,9 +30,7 @@ add_service_files(
 
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES place_recognizer
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+  LIBRARIES place_recognizer
 )
 
 include_directories(
@@ -44,3 +45,33 @@ add_library(
 	place_recognizer
 		lib/IncrementalBoW.cpp
 )
+
+target_link_libraries(
+	place_recognizer
+		${OpenCV_LIBS}
+		${catkin_LIBRARIES}
+		Boost::serialization
+		Boost::system
+)
+
+install(
+	TARGETS place_recognizer
+	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+if(rosbag_viewer_FOUND)
+	message(STATUS "rosbag_viewer found; will compile mapper executables")
+	find_package(sensor_msgs REQUIRED)
+	find_package(cv_bridge REQUIRED)
+	add_executable(ibow_mapper 
+		nodes/ibow_mapper.cpp)
+	target_include_directories(
+		ibow_mapper 
+			PUBLIC 
+			${rosbag_viewer_INCLUDE_DIRS})
+	target_link_libraries(
+		ibow_mapper
+			place_recognizer
+			random_access_bag
+	)
+endif()
