@@ -32,6 +32,7 @@ public:
 
 	/*
 	 * Add an option. When user sets it, optionally its value will be stored to S
+	 * T must be specifically expressed if you want type outside of string
 	 */
 	template<typename T=std::string>
 	void addSimpleOptions(const std::string &opt, const std::string &description, T* S=nullptr, bool isRequired=false)
@@ -61,7 +62,7 @@ public:
 	{
 		try {
 			return _optionValues.at(cf).as<tp>();
-		} catch (std::out_of_range &e) { return defaultValue; }
+		} catch (std::exception &e) { return defaultValue; }
 	}
 
 	inline void parseCommandLineArgs(int argc, char *argv[])

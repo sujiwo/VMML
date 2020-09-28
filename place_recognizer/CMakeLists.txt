@@ -6,6 +6,7 @@ add_compile_options(-std=c++11 -frtti -fopenmp)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
+	sensor_msgs
 	message_generation
 )
 
@@ -28,9 +29,16 @@ add_service_files(
 		place_recognizer.srv
 )
 
+generate_messages(
+	DEPENDENCIES
+		sensor_msgs
+		std_msgs
+)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES place_recognizer
+  CATKIN_DEPENDS message_runtime std_msgs sensor_msgs
 )
 
 include_directories(

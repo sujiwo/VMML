@@ -7,6 +7,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/features2d.hpp>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include "IncrementalBoW.h"
 #include "ProgramOptionParser.h"
 #include "ImageBag.h"
@@ -14,6 +15,7 @@
 
 using namespace std;
 namespace po=boost::program_options;
+using Path = boost::filesystem::path;
 
 
 class IBoW_Mapper_App
@@ -37,8 +39,20 @@ IBoW_Mapper_App(int argc, char *argv[])
 	if (imageTopic.empty())
 		imageTopic = PlaceRecognizer::ImageBag::suggestTopic(bagFd);
 	imageBag.reset(new PlaceRecognizer::ImageBag(bagFd, imageTopic));
+	cout << "Using `" << imageBag->getTopic() << "' as image topic" << endl;
 
+	startTimeSeconds = options.get<float>("start-time", startTimeSeconds);
+	maxSecondsFromStart = options.get<float>("stop-time", maxSecondsFromStart);
+	imageBag->setTimeConstraint(startTimeSeconds, maxSecondsFromStart);
 	imageBag->desample(options.get<float>("desample", defaultSampleImageRate), messageList);
+	cout << "# of target frames: " << imageBag->size() << endl;
+
+	auto _mapOutputPath = options.get<string>("mapfile", "");
+	if (_mapOutputPath.empty()) {
+		//
+	}
+	else mapOutputPath = Path(_mapOutputPath);
+	return;
 }
 
 void run()
@@ -51,12 +65,16 @@ void run()
 		featureDetector->detectAndCompute(frameImg, cv::Mat(), kpList, descriptors, false);
 
 		if (mId==messageList.front()) {
-
+			mapperProc.addImage(mId, kpList, descriptors);
 		}
 		else {
-
+			mapperProc.addImage2(mId, kpList, descriptors);
 		}
+
+		cout << mId << "/" << imageBag->size() << endl;
 	}
+
+//	mapperProc.
 }
 
 static
@@ -64,10 +82,15 @@ PrgOpt::ProgramOption
 prepare_options()
 {
 	PrgOpt::ProgramOption opts;
+
+	// XXX: put bagfile as positional argument
 	opts.addSimpleOptions("bagfile", "Path to bagfile to be read");
-	opts.addSimpleOptions("numfeats", string("Number of features from single image; default is "+to_string(defaultNumOfFeatures)));
-	opts.addSimpleOptions("desample", "Reduce sample frequency of the bag; default is "+to_string(defaultSampleImageRate));
+	opts.addSimpleOptions<int>("numfeats", string("Number of features from single image; default is "+to_string(defaultNumOfFeatures)));
+	opts.addSimpleOptions<float>("desample", "Reduce sample frequency of the bag; default is "+to_string(defaultSampleImageRate));
 	opts.addSimpleOptions("topic", "Image topic from bag");
+	opts.addSimpleOptions<decltype(IBoW_Mapper_App::startTimeSeconds)>("start-time", "Seconds from start of bag time");
+	opts.addSimpleOptions<decltype(IBoW_Mapper_App::startTimeSeconds)>("stop-time", "Maximum seconds from start");
+	opts.addSimpleOptions("mapfile", "Map file output path");
 	return opts;
 }
 
@@ -79,6 +102,12 @@ private:
 	RandomAccessBag::DesampledMessageList messageList;
 	bool isCompressedImage=false;
 	PlaceRecognizer::IncrementalBoW mapperProc;
+
+	// Time constraint for bag
+	float startTimeSeconds=0,
+		maxSecondsFromStart=-1;
+
+	Path mapOutputPath;
 };
 
 
