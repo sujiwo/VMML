@@ -11,6 +11,7 @@
 #include "IncrementalBoW.h"
 #include "ProgramOptionParser.h"
 #include "ImageBag.h"
+#include "npy.hpp"
 
 
 using namespace std;
@@ -47,6 +48,9 @@ IBoW_Mapper_App(int argc, char *argv[])
 	imageBag->desample(options.get<float>("desample", defaultSampleImageRate), messageList);
 	cout << "# of target frames: " << imageBag->size() << endl;
 
+	// Dump message IDs by using Numpy
+	npy::saveMat(messageList, "/tmp/debugmapper.log");
+
 	auto _mapOutputPath = options.get<string>("mapfile", "");
 	if (_mapOutputPath.empty()) {
 		//
@@ -73,6 +77,10 @@ void run()
 
 		cout << mId << "/" << imageBag->size() << endl;
 	}
+
+	cout << "Saving to " << mapOutputPath.string() << "... ";
+	mapperProc.saveToDisk(mapOutputPath.string());
+	cout << "Done\n";
 
 //	mapperProc.
 }
