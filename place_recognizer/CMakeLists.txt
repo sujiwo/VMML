@@ -6,6 +6,7 @@ add_compile_options(-std=c++11 -frtti -fopenmp)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
+	cv_bridge
 	sensor_msgs
 	message_generation
 )
@@ -38,7 +39,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES place_recognizer
-  CATKIN_DEPENDS message_runtime std_msgs sensor_msgs
+  CATKIN_DEPENDS message_runtime std_msgs sensor_msgs cv_bridge
 )
 
 include_directories(
@@ -92,5 +93,11 @@ if(rosbag_viewer_FOUND)
 	target_link_libraries(
 		recognizer_srv
 			place_recognizer
+			Boost::system
+			Boost::program_options
 			${catkin_LIBRARIES})
+	install(
+		TARGETS recognizer_srv
+			RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+	
 endif()
