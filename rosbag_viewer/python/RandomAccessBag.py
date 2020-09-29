@@ -57,7 +57,7 @@ class RandomAccessBag:
         tp = bisect(self.timestamps, tm)
         return self.entries[tp]
     
-    def desample(self, hz):
+    def desample(self, hz, onlyMsgList=False):
         """Reduce frequency of the messages by removing redundant entries. May be inaccurate"""
         lengthInSeconds = (self.entries[-1].time - self.entries[0].time).to_sec()
         messages = []
@@ -70,6 +70,8 @@ class RandomAccessBag:
                 ent = self._getEntryAtDurationSecond(tm)
                 messages.append(ent)
                 tm += tInterval
+        if onlyMsgList==True:
+            return messages
         self.entries = messages
         self.timestamps = [ent.time for ent in self.entries]
     
@@ -81,6 +83,22 @@ class RandomAccessBag:
         for c in bagFd._connections.values():
             rdBags.append(RandomAccessBag(bagFd, c.topic))
         return rdBags
+    
+
+from cv_bridge import CvBridge
+
+class ImageBag(RandomAccessBag):
+    """Access ROS bag that contains sensor_msgs/Image or sensor_msgs/CompressedImage, returns numpy Array directly"""
+    
+    def __init__ (self, bagFd, topic, start_time=None, end_time=None):
+        RandomAccessBag.__init__(self, bagFd, topic, start_time, end_time)
+        if (self.connection.datatype!="sensor_msgs/Image" and self.connection.datatype!="sensor_msgs/CompressedImage"):
+            raise TypeError("Requested topic is not of Image type")
+        self.bridge = CvBridge()
+        
+    def __getitem__(self, i):
+        entryMsg = RandomAccessBag.__getitem__(self, i)
+        return self.bridge.imgmsg_to_cv2(entryMsg, "bgr8")
     
     
 if __name__ == "__main__":
