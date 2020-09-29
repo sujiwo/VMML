@@ -93,11 +93,17 @@ prepare_options()
 
 	// XXX: put bagfile as positional argument
 	opts.addSimpleOptions("bagfile", "Path to bagfile to be read");
-	opts.addSimpleOptions<int>("numfeats", string("Number of features from single image; default is "+to_string(defaultNumOfFeatures)));
-	opts.addSimpleOptions<float>("desample", "Reduce sample frequency of the bag; default is "+to_string(defaultSampleImageRate));
+	opts.addSimpleOptions<int>
+		("numfeats", string("Number of features from single image; default is "+to_string(defaultNumOfFeatures)));
+	opts.addSimpleOptions<float>
+		("desample", "Reduce sample frequency of the bag; default is "+to_string(defaultSampleImageRate));
 	opts.addSimpleOptions("topic", "Image topic from bag");
-	opts.addSimpleOptions<decltype(IBoW_Mapper_App::startTimeSeconds)>("start-time", "Seconds from start of bag time");
-	opts.addSimpleOptions<decltype(IBoW_Mapper_App::startTimeSeconds)>("stop-time", "Maximum seconds from start");
+	opts.addSimpleOptions
+		<decltype(IBoW_Mapper_App::startTimeSeconds)>
+		("start-time", "Seconds from start of bag time");
+	opts.addSimpleOptions
+		<decltype(IBoW_Mapper_App::startTimeSeconds)>
+		("stop-time", "Maximum seconds from start");
 	opts.addSimpleOptions("mapfile", "Map file output path");
 	return opts;
 }
