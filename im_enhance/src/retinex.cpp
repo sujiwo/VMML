@@ -7,7 +7,6 @@
 #include "im_enhance.h"
 #include "timer.h"
 #include "matutils.h"
-#include "npy.hpp"
 
 
 using namespace std;

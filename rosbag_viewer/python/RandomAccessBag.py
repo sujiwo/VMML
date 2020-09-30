@@ -94,21 +94,24 @@ class ImageBag(RandomAccessBag):
         RandomAccessBag.__init__(self, bagFd, topic, start_time, end_time)
         if (self.connection.datatype!="sensor_msgs/Image" and self.connection.datatype!="sensor_msgs/CompressedImage"):
             raise TypeError("Requested topic is not of Image type")
+        if (self.connection.datatype=="sensor_msgs/CompressedImage"):
+            self.isCompressed = True
+        else:
+            self.isCompressed = False
         self.bridge = CvBridge()
         
     def __getitem__(self, i):
         entryMsg = RandomAccessBag.__getitem__(self, i)
-        return self.bridge.imgmsg_to_cv2(entryMsg, "bgr8")
+        if (self.isCompressed):
+            return self.bridge.compressed_imgmsg_to_cv2(entryMsg, "bgr8")
+        else:
+            return self.bridge.imgmsg_to_cv2(entryMsg, "bgr8")
     
     
 if __name__ == "__main__":
-    bagFd = rosbag.Bag("/media/sujiwo/VisionMapTest/ready/ouster64-conv.bag")
-    rdBag = RandomAccessBag(bagFd, "/front_rgb/image_raw")
-    rdBag.desample(10.0)
+    queryBag=ImageBag('/media/sujiwo/PlaceRecognition/ouster64-prep-4.bag', '/front_rgb/image_raw')
+    img = queryBag[13713]
     
     pass
-#     for topic, msg, timestamp in bagFd.read_messages("/front_rgb/image_raw"):
-#         print(topic)
-#         print(timestamp)
-#         h = msg.header
-#         pass
+    
+    
