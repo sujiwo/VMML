@@ -53,25 +53,30 @@ class RandomAccessBag:
         return float(len(self.entries)) / dt
     
     def _getEntryAtDurationSecond(self, fSec):
+        return self.entries[self._getIndexAtDurationSecond(fSec)]
+    
+    def _getIndexAtDurationSecond(self, fSec):
         tm = self.entries[0].time + rospy.Duration.from_sec(fSec)
-        tp = bisect(self.timestamps, tm)
-        return self.entries[tp]
+        return bisect(self.timestamps, tm)
     
     def desample(self, hz, onlyMsgList=False):
         """Reduce frequency of the messages by removing redundant entries. May be inaccurate"""
         lengthInSeconds = (self.entries[-1].time - self.entries[0].time).to_sec()
         messages = []
+        indices = []
         tInterval = 1.0 / float(hz)
         posWk = 0
         for twork in np.arange(0.0, lengthInSeconds, 1.0):
             tMax = min(twork+1.0, lengthInSeconds)
             tm = twork + tInterval
             while tm < tMax:
-                ent = self._getEntryAtDurationSecond(tm)
+                idx = self._getIndexAtDurationSecond(fSec)
+                ent = self.entries[idx]
                 messages.append(ent)
+                indices.append(idx)
                 tm += tInterval
         if onlyMsgList==True:
-            return messages
+            return indices
         self.entries = messages
         self.timestamps = [ent.time for ent in self.entries]
     
