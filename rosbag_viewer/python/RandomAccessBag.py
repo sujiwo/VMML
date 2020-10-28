@@ -70,7 +70,7 @@ class RandomAccessBag:
             tMax = min(twork+1.0, lengthInSeconds)
             tm = twork + tInterval
             while tm < tMax:
-                idx = self._getIndexAtDurationSecond(fSec)
+                idx = self._getIndexAtDurationSecond(tm)
                 ent = self.entries[idx]
                 messages.append(ent)
                 indices.append(idx)
