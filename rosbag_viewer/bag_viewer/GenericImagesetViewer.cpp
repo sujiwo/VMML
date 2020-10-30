@@ -42,6 +42,8 @@ GenericImagesetViewer::GenericImagesetViewer(QWidget *parent) :
 	this->connect(timeOffsetIndicator, SIGNAL(clicked()), this,
 			SLOT(timeOffsetIndicator_clicked()));
 	ui->imagePlace->setOuterLayout(ui->imageLayout);
+
+	originalWindowTitle = this->windowTitle().toStdString();
 }
 
 

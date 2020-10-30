@@ -77,6 +77,9 @@ void BagViewer::setBagFile(const std::string &bagfilename)
 	bagFdPtr = std::shared_ptr<rosbag::Bag>(
 	  new rosbag::Bag(bagfilename, rosbag::BagMode::Read));
 
+	auto filenameShow = boost::filesystem::basename(bagfilename);
+	this->setWindowTitle(QString(filenameShow));
+
 	ui->topicSelector->clear();
 
 	auto vTopicList = RandomAccessBag::getTopicList(*bagFdPtr);

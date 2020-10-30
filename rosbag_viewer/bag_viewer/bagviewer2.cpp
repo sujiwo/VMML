@@ -20,6 +20,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <GenericImagesetViewer.h>
+#include <boost/filesystem.hpp>
 #include "ui_GenericImagesetViewer.h"
 
 
@@ -38,6 +39,7 @@ public:
 		vTopicList = RandomAccessBag::getTopicList(*bagFdPtr);
 		auto imgTopics = getImageTopics();
 		setActiveTopic(imgTopics[0]);
+		basename = boost::filesystem::basename(bagpath)+boost::filesystem::extension(bagpath);
 	}
 
 	void setActiveTopic(const string &tp)
@@ -83,10 +85,14 @@ public:
 	virtual tduration length() const
 	{ return bagSrc->length().toBoost(); }
 
+	const string getName() const
+	{ return basename; }
+
 private:
 	std::shared_ptr<rosbag::Bag> bagFdPtr = nullptr;
 	RandomAccessBag::Ptr bagSrc;
 	map<string,string> vTopicList;
+	string basename;
 
 	string currentActiveTopic;
 };
@@ -107,6 +113,8 @@ public:
 
 	void setDatasource(std::shared_ptr<ImageBagDataset> &ds)
 	{
+		this->setWindowTitle(QString::fromStdString(this->originalWindowTitle + " :: " + ds->getName()));
+
 		realDataset = ds;
 		imageTopics = realDataset->getImageTopics();
 		shared_ptr<ImageDataset> imgSetPtr = static_pointer_cast<ImageDataset>(ds);

@@ -81,6 +81,8 @@ protected:
 	ClickableLabel *timeOffsetIndicator;
 	enum { OFFSET_INTEGER, OFFSET_TIME } timeOffsetIndicatorMode = OFFSET_TIME;
 	void updateTimeOffsetIndicator();
+
+	std::string originalWindowTitle;
 };
 
 }	// namespace DsViewer
