@@ -59,15 +59,35 @@ class RandomAccessBag:
         tm = self.entries[0].time + rospy.Duration.from_sec(fSec)
         return bisect(self.timestamps, tm)
     
-    def desample(self, hz, onlyMsgList=False):
-        """Reduce frequency of the messages by removing redundant entries. May be inaccurate"""
-        lengthInSeconds = (self.entries[-1].time - self.entries[0].time).to_sec()
+    """Reduce frequency of the messages by removing redundant entries. May be inaccurate
+    @param hz: Frequency of sampling. Must be less than original message frequence; otherwise undefined.
+    @param onlyMsgList: Whether to return only list of position or change the message list
+    @param startOffsetTime: offset of time (in seconds) from start of bag, default to 0
+    @param stopOffsetTime: offset of time (seconds) from start of bag to tag end of sampling, default to -1 (end of bag)
+    """
+    def desample(self, hz, onlyMsgList=False, startOffsetTime=0.0, stopOffsetTime=-1):
+        
+        if (startOffsetTime==0.0):
+            startOffsetTime = self.entries[0].time
+            td = 0.0
+        else:
+            td = float(startOffsetTime)
+            startOffsetTime = self.entries[0].time + rospy.Duration.from_sec(startOffsetTime)
+        if (stopOffsetTime==-1):
+            stopOffsetTime = self.entries[-1].time
+        else:
+            stopOffsetTime = self.entries[0].time + rospy.Duration.from_sec(stopOffsetTime)
+        lengthInSeconds = (stopOffsetTime - startOffsetTime).to_sec()
+        if (lengthInSeconds<0):
+            raise ValueError("Error: stopOffsetTime is less than startOffsetTime")
+        
+        # XXX: Unfinished
         messages = []
         indices = []
         tInterval = 1.0 / float(hz)
         posWk = 0
-        for twork in np.arange(0.0, lengthInSeconds, 1.0):
-            tMax = min(twork+1.0, lengthInSeconds)
+        for twork in np.arange(td, td+lengthInSeconds, 1.0):
+            tMax = min(twork+1.0, td+lengthInSeconds)
             tm = twork + tInterval
             while tm < tMax:
                 idx = self._getIndexAtDurationSecond(tm)
@@ -114,8 +134,8 @@ class ImageBag(RandomAccessBag):
     
     
 if __name__ == "__main__":
-    queryBag=ImageBag('/media/sujiwo/PlaceRecognition/ouster64-prep-4.bag', '/front_rgb/image_raw')
-    img = queryBag[13713]
+    queryBag=ImageBag('/Data/MapServer/Logs/vls128-conv.bag', '/front_rgb/image_raw')
+    samples = queryBag.desample(5.0, True, 138.03, 267.22)
     
     pass
     
