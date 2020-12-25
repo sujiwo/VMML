@@ -36,6 +36,9 @@ class RandomAccessBag:
     
     def type(self):
         return self.connection.datatype
+    
+    def __repr__(self):
+        return "ROS Bag of type=`{}', topic=`{}'".format(self.type(), self.topic())
         
     def __len__(self):
         return len(self.entries)
