@@ -134,6 +134,10 @@ class ImageBag(RandomAccessBag):
             return self.bridge.compressed_imgmsg_to_cv2(entryMsg, "bgr8")
         else:
             return self.bridge.imgmsg_to_cv2(entryMsg, "bgr8")
+        
+    def __repr__(self):
+        return "ROS Image Bag, topic=`{}'".format(self.type(), self.topic())
+
     
     
 if __name__ == "__main__":
