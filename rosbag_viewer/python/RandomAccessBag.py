@@ -2,6 +2,7 @@ import rospy
 import rosbag
 import numpy as np
 from bisect import bisect
+from numbers import Number
 
 
 class RandomAccessBag:
@@ -64,26 +65,36 @@ class RandomAccessBag:
     
     """Reduce frequency of the messages by removing redundant entries. May be inaccurate
     @param hz: Frequency of sampling. Must be less than original message frequence; otherwise undefined.
-    Default is hz==-1 for original frequency
     @param onlyMsgList: Whether to return only list of position or change the message list
-    @param startOffsetTime: offset of time (in seconds) from start of bag, default to 0
-    @param stopOffsetTime: offset of time (seconds) from start of bag to tag end of sampling, default to -1 (end of bag)
+    @param startTime: offset of time (in seconds) from start of bag, default to 0
+    @param stopTime: offset of time (seconds) from start of bag to tag end of sampling, default to -1 (end of bag)
     """
-    def desample(self, hz=-1, onlyMsgList=False, startOffsetTime=0.0, stopOffsetTime=-1):
-        
-        if (startOffsetTime==0.0):
-            startOffsetTime = self.entries[0].time
-            td = 0.0
+    def desample(self, hz=-1, onlyMsgList=False, startTime=0.0, stopTime=-1):
+        if isinstance(startTime, Number) and isinstance(stopTime, Number):
+            if (startTime==0.0):
+                startTime = self.entries[0].time
+                td = 0.0
+            else:
+                td = float(startTime)
+                startTime = self.entries[0].time + rospy.Duration.from_sec(startTime)
+            if (stopTime==-1):
+                stopTime = self.entries[-1].time
+            else:
+                stopTime = self.entries[0].time + rospy.Duration.from_sec(stopTime)
+            lengthInSeconds = (stopTime - startTime).to_sec()
+            if (lengthInSeconds<0):
+                raise ValueError("Error: stopTime is less than startTime")
+            
+        elif hasattr(startTime, "to_sec") and hasattr(stopTime, "to_sec"):
+            if startTime < self.entries[0].time or stopTime > self.entries[-1].time:
+                raise ValueError("Requested time is out of range")
+            else:
+                startTime = (startTime-self.entries[0].time).to_sec()
+                stopTime = (stopTime-self.entries[0].time).to_sec()
+                return self.desample(hz, onlyMsgList, startTime, stopTime)
+            pass
         else:
-            td = float(startOffsetTime)
-            startOffsetTime = self.entries[0].time + rospy.Duration.from_sec(startOffsetTime)
-        if (stopOffsetTime==-1):
-            stopOffsetTime = self.entries[-1].time
-        else:
-            stopOffsetTime = self.entries[0].time + rospy.Duration.from_sec(stopOffsetTime)
-        lengthInSeconds = (stopOffsetTime - startOffsetTime).to_sec()
-        if (lengthInSeconds<0):
-            raise ValueError("Error: stopOffsetTime is less than startOffsetTime")
+            raise ValueError("Unknown values for start time or stop time")
         
         # XXX: Unfinished
         messages = []
