@@ -6,7 +6,14 @@ from numbers import Number
 
 
 class RandomAccessBag:
-    """RandomAccessBag is a wrapper for ROS Bag that allows random access to any message within a single topic"""
+    """
+    RandomAccessBag is a wrapper for ROS Bag that allows random access to any message within a single topic
+    
+    Attributes
+    ----------
+    - entries:
+    - timestamps: Timestamp at each message's recording time
+    """
     
     def __init__ (self, bagFd, topic, start_time=None, end_time=None):
 #         assert(type(bagFd)==rosbag.bag.Bag)
@@ -153,7 +160,7 @@ class ImageBag(RandomAccessBag):
             return self.bridge.imgmsg_to_cv2(entryMsg, "bgr8")
         
     def __repr__(self):
-        return "ROS Image Bag, topic=`{}'".format(self.type(), self.topic())
+        return "ROS Image Bag, topic=`{}'".format(self.topic())
 
     
     
