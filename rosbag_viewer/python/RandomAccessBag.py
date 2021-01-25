@@ -5,17 +5,18 @@ from bisect import bisect
 from numbers import Number
 
 
-class RandomAccessBag:
+class RandomAccessBag(object):
     """
     RandomAccessBag is a wrapper for ROS Bag that allows random access to any message within a single topic
     
     Attributes
     ----------
-    - entries:
+    - entries: list of bagEntry as index to each message's position in the file 
     - timestamps: Timestamp at each message's recording time
     """
+    hasDesampled = False
     
-    def __init__ (self, bagFd, topic, start_time=None, end_time=None):
+    def __init__ (self, bagFd, topic):
 #         assert(type(bagFd)==rosbag.bag.Bag)
         if (isinstance(bagFd, str)):
             self.bagFd = rosbag.Bag(bagFd, mode="r")
@@ -27,14 +28,8 @@ class RandomAccessBag:
                 self.connection = cn
                 break
             
-        startTimeR = self.bagFd._chunks[0].start_time
-        if (isinstance(start_time, float) or isinstance(start_time, int)):
-            start_time = startTimeR + rospy.Duration.from_sec(start_time)
-        if (isinstance(end_time, float) or isinstance(end_time, int)):
-            end_time = startTimeR + rospy.Duration.from_sec(end_time)
-            
         self.entries = []
-        for entry in self.bagFd._get_entries([self.connection], start_time, end_time):
+        for entry in self.bagFd._get_entries([self.connection]):
             self.entries.append(entry)
         self.entries.sort(key=lambda en: en.time)
         self.timestamps = [ent.time for ent in self.entries]
@@ -80,6 +75,9 @@ class RandomAccessBag:
     @param stopTime: offset of time (seconds) from start of bag to tag end of sampling, default to -1 (end of bag)
     """
     def desample(self, hz=-1, onlyMsgList=False, startTime=0.0, stopTime=-1):
+        if (self.hasDesampled==True):
+            raise RuntimeError("Random bag cannot be desampled more than once")
+        
         if isinstance(startTime, Number) and isinstance(stopTime, Number):
             if (startTime==0.0):
                 startTime = self.entries[0].time
@@ -129,6 +127,7 @@ class RandomAccessBag:
             return indices
         self.entries = messages
         self.timestamps = [ent.time for ent in self.entries]
+        hasDesampled = True
     
     @staticmethod
     def getAllConnections(bagFd):
