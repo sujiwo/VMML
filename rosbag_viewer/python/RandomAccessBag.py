@@ -68,6 +68,9 @@ class RandomAccessBag:
     
     def _getIndexAtDurationSecond(self, fSec):
         tm = self.entries[0].time + rospy.Duration.from_sec(fSec)
+        # Special entry 0
+        if tm==self.entries[0].time:
+            return 0
         return bisect(self.timestamps, tm)
     
     """Reduce frequency of the messages by removing redundant entries. May be inaccurate
