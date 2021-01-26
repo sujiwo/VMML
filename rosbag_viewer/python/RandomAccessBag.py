@@ -28,9 +28,10 @@ class RandomAccessBag(object):
                 self.connection = cn
                 break
             
-        self.entries = []
-        for entry in self.bagFd._get_entries([self.connection]):
-            self.entries.append(entry)
+#         self.entries = []
+#         for entry in self.bagFd._get_entries([self.connection]):
+#             self.entries.append(entry)
+        self.entries = [e for e in self.bagFd._get_entries([self.connection])]
         self.entries.sort(key=lambda en: en.time)
         self.timestamps = [ent.time for ent in self.entries]
         
@@ -104,7 +105,6 @@ class RandomAccessBag(object):
         else:
             raise ValueError("Unknown values for start time or stop time")
         
-        # XXX: Unfinished
         messages = []
         indices = []
         if hz==-1:
@@ -144,8 +144,8 @@ from cv_bridge import CvBridge
 class ImageBag(RandomAccessBag):
     """Access ROS bag that contains sensor_msgs/Image or sensor_msgs/CompressedImage, returns numpy Array directly"""
     
-    def __init__ (self, bagFd, topic, start_time=None, end_time=None):
-        RandomAccessBag.__init__(self, bagFd, topic, start_time, end_time)
+    def __init__ (self, bagFd, topic):
+        super(ImageBag, self).__init__(bagFd, topic)
         if (self.connection.datatype!="sensor_msgs/Image" and self.connection.datatype!="sensor_msgs/CompressedImage"):
             raise TypeError("Requested topic is not of Image type")
         if (self.connection.datatype=="sensor_msgs/CompressedImage"):
