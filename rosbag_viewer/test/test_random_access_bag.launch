@@ -1,3 +1,0 @@
-<launch>
-	<test test-name="test_random_access_bag" pkg="offline_tools" type="bag_test" />
-</launch>
